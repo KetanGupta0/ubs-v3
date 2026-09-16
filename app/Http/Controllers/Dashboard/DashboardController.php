@@ -10,19 +10,11 @@ use Inertia\Response;
 /**
  * Landing screens for each role.
  *
- * Placeholders for now. Phase 3 fills the admin one, Phase 4 the client one
- * and Phase 5 the student one. They exist already so that sign in has
- * somewhere real to land and the role routing can be tested.
+ * The admin dashboard moved to its own controller in Phase 3. These two are
+ * still placeholders: Phase 4 fills the client one and Phase 5 the student one.
  */
 class DashboardController extends Controller
 {
-    public function admin(Request $request): Response
-    {
-        return Inertia::render('admin/Dashboard', [
-            'user' => $this->summary($request),
-        ]);
-    }
-
     public function client(Request $request): Response
     {
         return Inertia::render('client/Dashboard', [

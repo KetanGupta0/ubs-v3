@@ -1,6 +1,16 @@
 <script setup>
 import { computed } from 'vue';
 
+import { useField } from '@/composables/useField';
+
+/*
+ * Attributes are placed on the control, never on the wrapper. Left to fall
+ * through, an id passed in here would land on the outer element too, and a
+ * label pointing at that id would resolve to the wrapper instead of the input,
+ * which is a label that looks right and does nothing.
+ */
+defineOptions({ inheritAttrs: false });
+
 const props = defineProps({
     modelValue: { type: [String, Number], default: '' },
     type: { type: String, default: 'text' },
@@ -10,6 +20,9 @@ const props = defineProps({
 });
 
 defineEmits(['update:modelValue']);
+
+const field = useField();
+const isInvalid = computed(() => props.invalid || field.value.invalid);
 
 const sizes = {
     sm: 'h-9 text-sm',
@@ -23,7 +36,7 @@ const classes = computed(() => [
     'transition-[border-color,box-shadow] duration-[var(--duration-fast)]',
     'disabled:cursor-not-allowed disabled:opacity-60',
     sizes[props.size],
-    props.invalid
+    isInvalid.value
         ? 'border-danger-500 focus:border-danger-500'
         : 'border-[var(--border-strong)] focus:border-brand-500',
 ]);
@@ -40,11 +53,13 @@ const classes = computed(() => [
         </span>
 
         <input
+            :id="field.id"
+            :aria-describedby="field.describedBy"
             v-bind="$attrs"
             :type="type"
             :value="modelValue"
             :disabled="disabled"
-            :aria-invalid="invalid || undefined"
+            :aria-invalid="isInvalid || undefined"
             :class="[classes, $slots.leading && 'pl-10', $slots.trailing && 'pr-10']"
             @input="$emit('update:modelValue', $event.target.value)"
         >

@@ -37,6 +37,12 @@ class UserFactory extends Factory
         return $this->state(fn () => ['role' => Role::Admin]);
     }
 
+    /** The founding account, which holds every permission implicitly. */
+    public function owner(): static
+    {
+        return $this->state(fn () => ['role' => Role::Admin, 'is_owner' => true]);
+    }
+
     public function client(): static
     {
         return $this->state(fn () => ['role' => Role::Client]);

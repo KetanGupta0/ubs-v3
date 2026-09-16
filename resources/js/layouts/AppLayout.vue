@@ -37,15 +37,41 @@ const page = usePage();
 const user = computed(() => page.props.auth?.user ?? null);
 const role = computed(() => user.value?.role ?? 'student');
 
-const items = computed(() => navigationFor(role.value));
-const primary = computed(() => primaryNavFor(role.value));
-const secondary = computed(() => secondaryNavFor(role.value));
+/*
+ * Only admin navigation is filtered. Clients and students carry no permissions
+ * at all, so null keeps their navigation whole, while a staff account with
+ * nothing granted correctly sees only what everybody gets.
+ */
+const permissions = computed(() =>
+    role.value === 'admin' ? (page.props.auth?.permissions ?? []) : null,
+);
+
+const items = computed(() => navigationFor(role.value, permissions.value));
+const primary = computed(() => primaryNavFor(role.value, permissions.value));
+const secondary = computed(() => secondaryNavFor(role.value, permissions.value));
 
 const collapsed = ref(false);
 const moreOpen = ref(false);
 
+/*
+ * The most specific match wins, and only that one.
+ *
+ * A plain prefix test lit up Dashboard on every single admin page, because
+ * every admin path begins with /admin. Two highlighted items tell you nothing
+ * about where you are.
+ */
+const activeHref = computed(() => {
+    const url = page.url;
+
+    return items.value
+        .map((item) => item.href)
+        .filter(Boolean)
+        .filter((href) => url === href || url.startsWith(`${href.replace(/\/$/, '')}/`))
+        .sort((a, b) => b.length - a.length)[0] ?? null;
+});
+
 function isActive(item) {
-    return Boolean(item.href) && page.url.startsWith(item.href);
+    return Boolean(item.href) && item.href === activeHref.value;
 }
 </script>
 

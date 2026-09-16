@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsurePasswordIsOwned;
+use App\Http\Middleware\EnsureUserHasPermission;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectIfAuthenticated;
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => EnsureUserHasRole::class,
             'password.owned' => EnsurePasswordIsOwned::class,
+            'permission' => EnsureUserHasPermission::class,
             'guest' => RedirectIfAuthenticated::class,
 
             // Sanctum does not check token abilities on its own. Without these

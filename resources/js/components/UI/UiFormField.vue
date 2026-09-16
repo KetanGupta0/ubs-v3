@@ -8,6 +8,8 @@
  */
 import { computed, useId } from 'vue';
 
+import { provideField } from '@/composables/useField';
+
 const props = defineProps({
     label: { type: String, default: null },
     hint: { type: String, default: null },
@@ -28,6 +30,12 @@ const describedBy = computed(() => {
     if (props.error) ids.push(errorId.value);
     return ids.length ? ids.join(' ') : undefined;
 });
+
+provideField(computed(() => ({
+    id: fieldId.value,
+    describedBy: describedBy.value,
+    invalid: Boolean(props.error),
+})));
 </script>
 
 <template>

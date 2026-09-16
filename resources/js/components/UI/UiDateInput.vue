@@ -9,6 +9,16 @@
 import { computed } from 'vue';
 import { Calendar } from 'lucide-vue-next';
 
+import { useField } from '@/composables/useField';
+
+/*
+ * Attributes are placed on the control, never on the wrapper. Left to fall
+ * through, an id passed in here would land on the outer element too, and a
+ * label pointing at that id would resolve to the wrapper instead of the input,
+ * which is a label that looks right and does nothing.
+ */
+defineOptions({ inheritAttrs: false });
+
 const props = defineProps({
     modelValue: { type: [String, Object, null], default: null },
     /** true renders a from/to pair bound to { from, to }. */
@@ -22,6 +32,13 @@ const emit = defineEmits(['update:modelValue']);
 
 const value = computed(() => props.modelValue ?? (props.range ? { from: '', to: '' } : ''));
 
+/*
+ * Only the single date takes the field's id. A range is two controls, and a
+ * label can only point at one of them, so each carries its own aria-label.
+ */
+const field = useField();
+const isInvalid = computed(() => props.invalid || field.value.invalid);
+
 function updateRange(key, next) {
     emit('update:modelValue', { ...value.value, [key]: next });
 }
@@ -29,7 +46,7 @@ function updateRange(key, next) {
 const fieldClass = computed(() => [
     'h-10 w-full rounded-[var(--radius-field)] border bg-[var(--surface)] pl-9 pr-3 text-sm',
     'text-[var(--text-strong)] transition-[border-color]',
-    props.invalid ? 'border-danger-500' : 'border-[var(--border-strong)] focus:border-brand-500',
+    isInvalid.value ? 'border-danger-500' : 'border-[var(--border-strong)] focus:border-brand-500',
 ]);
 </script>
 
@@ -65,6 +82,8 @@ const fieldClass = computed(() => [
         <span v-else class="relative block">
             <Calendar class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2" style="color: var(--text-muted)" />
             <input
+                :id="range ? undefined : field.id"
+                :aria-describedby="range ? undefined : field.describedBy"
                 v-bind="$attrs"
                 type="date"
                 :value="value"

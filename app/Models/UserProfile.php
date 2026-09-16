@@ -18,4 +18,10 @@ class UserProfile extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /** Set for a student who came in through a college tie-up. */
+    public function college(): BelongsTo
+    {
+        return $this->belongsTo(College::class);
+    }
 }

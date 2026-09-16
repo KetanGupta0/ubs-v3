@@ -61,7 +61,7 @@ time code can be read straight out of the log.
 
 ## Status
 
-**Phases 0, 1 and 2 are complete.**
+**Phases 0 to 3 are complete.**
 
 Phase 0 built the foundation: brand identity and logo set, design tokens with
 full light and dark themes, a component library, the shared server driven table
@@ -77,4 +77,11 @@ products, service and training pages, supporting and legal pages, an enquiry
 system that routes to the leads inbox, and the metadata and sitemap search
 engines need.
 
-Phases 3 through 9 are described in the plan. Phase 3 is the admin core.
+Phase 3 built the admin core: an enquiries inbox that converts an enquiry into an
+account, client and student account creation with credentials delivered by email
+and SMS and a forced password change before anything opens, colleges and their
+memorandums, catalogue management for everything the public site renders, staff
+accounts with real permissions, company and message settings, and an audit log of
+every change with secrets redacted.
+
+Phases 4 through 9 are described in the plan. Phase 4 is the client module.

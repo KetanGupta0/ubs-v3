@@ -30,12 +30,20 @@ it('sends a guest to the sign in form', function () {
     }
 });
 
-it('grants an administrator every permission implicitly', function () {
-    $admin = User::factory()->admin()->create();
+it('grants the owner every permission implicitly', function () {
+    $owner = User::factory()->owner()->create();
     $student = User::factory()->student()->create();
 
-    expect($admin->hasPermission('billing.manage'))->toBeTrue()
+    expect($owner->hasPermission('billing.manage'))->toBeTrue()
         ->and($student->hasPermission('billing.manage'))->toBeFalse();
+});
+
+it('does not hand a staff administrator everything just for being an administrator', function () {
+    // The whole point of the permission list. A staff account created to run
+    // the leads inbox must not also be able to change the company's billing.
+    $staff = User::factory()->admin()->create();
+
+    expect($staff->hasPermission('billing.manage'))->toBeFalse();
 });
 
 it('grants a specific permission to a non administrator', function () {

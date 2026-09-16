@@ -43,6 +43,15 @@ class HandleInertiaRequests extends Middleware
                 'user' => fn () => $request->user()?->only([
                     'id', 'name', 'email', 'mobile', 'role', 'avatar_url',
                 ]),
+
+                /*
+                 * What this account may do, so the navigation can leave out
+                 * what it cannot. This is presentation only; every route is
+                 * gated on the server regardless of what the client was sent.
+                 */
+                'permissions' => fn () => $request->user()?->isAdmin()
+                    ? $request->user()->permissionKeys()
+                    : [],
             ],
 
             /*

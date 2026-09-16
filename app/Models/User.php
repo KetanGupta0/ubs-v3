@@ -39,6 +39,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'timezone',
         'locale',
         'must_change_password',
+        // is_owner is deliberately absent: unrestricted access is not
+        // something a submitted form should ever be able to grant.
     ];
 
     protected $hidden = [
@@ -59,6 +61,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'role' => Role::class,
             'status' => UserStatus::class,
             'must_change_password' => 'boolean',
+            'is_owner' => 'boolean',
         ];
     }
 
@@ -124,17 +127,26 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
-     * Administrators hold every permission implicitly. Everyone else holds only
-     * what has been granted, which keeps the pivot table meaningful instead of
-     * needing a row per admin per capability.
+     * The owner holds every permission implicitly, which saves a row per
+     * capability for the one account that is never restricted. Everybody else,
+     * staff included, holds exactly what has been granted: an administrator
+     * hired to run the leads inbox is not thereby handed the bank details.
      */
     public function hasPermission(string $key): bool
     {
-        if ($this->isAdmin()) {
+        if ($this->is_owner) {
             return true;
         }
 
         return $this->permissions->contains('key', $key);
+    }
+
+    /** Every capability this account holds, for the client side navigation. */
+    public function permissionKeys(): array
+    {
+        return $this->is_owner
+            ? Permission::query()->pluck('key')->all()
+            : $this->permissions->pluck('key')->all();
     }
 
     public function hasTwoFactorEnabled(): bool

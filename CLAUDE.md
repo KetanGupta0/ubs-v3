@@ -136,9 +136,35 @@ Rules for the marketing pages:
 - Facet lists are ordered by how many products carry each value, because a
   facet list is a browsing aid rather than an index.
 
+## Admin panel
+
+`routes/admin.php`, `App\Http\Controllers\Admin\*`, `resources/js/pages/admin`.
+
+- **The owner holds every permission; nobody else does.** `users.is_owner` is what
+  `hasPermission()` checks, and it is deliberately not fillable. Every other
+  administrator, staff included, holds exactly what is in `permission_user`, so
+  `permission:` middleware actually bites. Staff cannot widen their own
+  permissions and cannot restrict or suspend the owner.
+- **Creating an account is `App\Services\Admin\AccountCreator`.** It sets a
+  temporary password, forces a change before anything else opens, and records a
+  `credential_deliveries` row per channel. A delivery failure marks the row failed
+  and never rolls back the account: a provider being down is not a reason to lose
+  a record somebody just typed in.
+- **Every change goes through `App\Services\Admin\Auditor`.** It stores only what
+  actually moved, as before and after, with passwords, secrets and tokens replaced
+  by dots. There is no route to edit or delete an entry.
+- **Provider credentials are never editable from a screen.** The settings page
+  shows configured or not configured and nothing else. Keys belong in the
+  environment; defaults live in `config/company.php`, never `env()` at the point
+  of use.
+- **A label reaches its control through `UiFormField`**, which provides the id and
+  `aria-describedby` and the inputs inject it. Do not pass an id into `UiInput`
+  by hand, and keep `inheritAttrs: false` on controls that render a wrapper, or
+  the id lands on the wrapper and the label points at nothing.
+
 ## Not yet built
 
-Phases 3 through 9 in the plan. Navigation entries that render as "Soon" are
+Phases 4 through 9 in the plan. Navigation entries that render as "Soon" are
 deliberate placeholders, wired but not yet routed.
 
 There are no JavaScript tests yet. Client only logic is currently verified by

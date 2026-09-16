@@ -58,4 +58,14 @@ return [
         ],
     ],
 
+    /*
+     * Payments. Credentials live in the environment, never in the database, so
+     * they are not in a backup and not one click from a screen.
+     */
+    'razorpay' => [
+        'key_id' => env('RAZORPAY_KEY_ID'),
+        'key_secret' => env('RAZORPAY_KEY_SECRET'),
+        'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
+    ],
+
 ];

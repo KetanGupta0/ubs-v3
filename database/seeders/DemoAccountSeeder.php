@@ -46,6 +46,12 @@ class DemoAccountSeeder extends Seeder
             );
 
             $user->profile()->firstOrCreate([]);
+
+            // The founding account is the owner, so it holds every capability
+            // without needing a row per permission.
+            if ($role === Role::Admin && ! $user->is_owner) {
+                $user->forceFill(['is_owner' => true])->save();
+            }
         }
 
         $this->command?->info('Demo accounts ready. Password for all three: '.self::PASSWORD);

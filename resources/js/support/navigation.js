@@ -12,23 +12,29 @@ import {
     LayoutDashboard, FolderKanban, FileText, Receipt, LifeBuoy, MessagesSquare,
     KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy,
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
-    UserPlus, Package, ShieldCheck,
+    UserPlus, Package, ShieldCheck, Building2, Wrench, HelpCircle, UserCog,
+    ScrollText,
 } from 'lucide-vue-next';
 
 export const navigation = {
     admin: [
         { label: 'Dashboard', icon: LayoutDashboard, href: '/admin', primary: true },
-        { label: 'Leads', icon: Inbox, href: null, primary: true },
-        { label: 'Clients', icon: Briefcase, href: null, primary: true },
+        { label: 'Leads', icon: Inbox, href: '/admin/leads', permission: 'leads.view', primary: true },
+        { label: 'Clients', icon: Briefcase, href: '/admin/clients', permission: 'clients.view', primary: true },
+        { label: 'Students', icon: Users, href: '/admin/students', permission: 'students.view', primary: true },
+        { label: 'Colleges', icon: Building2, href: '/admin/colleges', permission: 'students.view' },
         { label: 'Projects', icon: FolderKanban, href: null },
-        { label: 'Students', icon: Users, href: null, primary: true },
-        { label: 'Courses', icon: GraduationCap, href: null },
-        { label: 'Batches', icon: CalendarCheck, href: null },
-        { label: 'Catalogue', icon: Package, href: null },
-        { label: 'Invoices', icon: Receipt, href: null },
+        { label: 'Solutions', icon: Package, href: '/admin/solutions', permission: 'catalogue.view' },
+        { label: 'Services', icon: Wrench, href: '/admin/services', permission: 'catalogue.view' },
+        { label: 'Courses', icon: GraduationCap, href: '/admin/courses', permission: 'catalogue.view' },
+        { label: 'Batches', icon: CalendarCheck, href: '/admin/batches', permission: 'catalogue.view' },
+        { label: 'Site content', icon: HelpCircle, href: '/admin/content', permission: 'catalogue.view' },
+        { label: 'Invoices', icon: Receipt, href: null, permission: 'billing.view' },
         { label: 'Chat', icon: MessagesSquare, href: null },
         { label: 'Reports', icon: BarChart3, href: null },
-        { label: 'Settings', icon: Settings, href: null },
+        { label: 'Staff', icon: UserCog, href: '/admin/staff', permission: 'staff.manage' },
+        { label: 'Settings', icon: Settings, href: '/admin/settings', permission: 'settings.view' },
+        { label: 'Audit log', icon: ScrollText, href: '/admin/audit-log', permission: 'audit.view' },
         { label: 'Security', icon: ShieldCheck, href: '/settings/security' },
     ],
 
@@ -66,19 +72,33 @@ export const roleLabels = {
     student: 'Student',
 };
 
-export function navigationFor(role) {
-    return navigation[role] ?? navigation.student;
+/**
+ * Items an account can actually reach.
+ *
+ * An entry carrying a permission is left out for a staff account that does not
+ * hold it, because an item that always answers "you do not have access to that"
+ * is worse than no item at all. The routes are gated on the server too; this is
+ * only about not showing somebody a door they cannot open.
+ */
+export function navigationFor(role, permissions = null) {
+    const items = navigation[role] ?? navigation.student;
+
+    if (!permissions) {
+        return items;
+    }
+
+    return items.filter((item) => !item.permission || permissions.includes(item.permission));
 }
 
 /** Four tab bar slots. More items live behind the More sheet. */
-export function primaryNavFor(role) {
-    return navigationFor(role).filter((item) => item.primary).slice(0, 4);
+export function primaryNavFor(role, permissions = null) {
+    return navigationFor(role, permissions).filter((item) => item.primary).slice(0, 4);
 }
 
-export function secondaryNavFor(role) {
-    const primary = new Set(primaryNavFor(role).map((item) => item.label));
+export function secondaryNavFor(role, permissions = null) {
+    const primary = new Set(primaryNavFor(role, permissions).map((item) => item.label));
 
-    return navigationFor(role).filter((item) => !primary.has(item.label));
+    return navigationFor(role, permissions).filter((item) => !primary.has(item.label));
 }
 
 export { UserPlus };

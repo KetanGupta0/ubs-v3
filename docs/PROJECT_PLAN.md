@@ -1,8 +1,8 @@
 # Unboundbyte Solutions Private Limited — Platform Plan
 
 **Document owner:** engineering
-**Status:** approved; Phases 0 to 2 delivered
-**Last updated:** 2026-09-15
+**Status:** approved; Phases 0 to 3 delivered
+**Last updated:** 2026-09-16
 
 ---
 
@@ -230,24 +230,38 @@ section renders nothing until a real client or student agrees to be quoted,
 because an invented endorsement on a real company's site is a lie told to
 someone deciding whether to trust us.
 
-### Phase 3 — Admin core
+### Phase 3 — Admin core — delivered
 
 The control plane both later modules plug into.
 
-- Admin shell, global search, command palette, notification centre.
-- Dashboard: revenue, pipeline, active projects, active batches, dues, enrolments.
+- Admin shell with role aware navigation, filtered by permission so a staff account is
+  never shown a door it cannot open.
+- Dashboard that leads with what needs doing — stale enquiries, unassigned enquiries,
+  accounts that never signed in, batches starting soon with empty seats — and only then
+  shows how things stand.
 - **Client account creation.** Admin only, no self signup. On creation the system
-  generates credentials and sends a welcome message with them to the registered email
-  and mobile, forces a password change on first login, and logs the delivery.
+  generates a temporary password and sends it to the registered email and mobile, forces
+  a password change before anything else in the dashboard opens, and records each
+  delivery with its outcome so a failure is visible and resendable. A delivery failure
+  never rolls back the account.
 - Student account creation from the admin side, alongside student self registration.
-- Leads inbox: assign, status, notes, convert lead to client.
-- Catalogue management for everything the public site renders.
-- Staff users, roles, permissions.
-- Settings: company profile, tax details, invoice numbering, mail and SMS providers,
-  payment gateway keys, templates for every automated message.
-- System audit log.
+- Leads inbox: assign, status, notes, convert an enquiry into a client or student
+  account with the enquiry still linked to what it became.
+- Catalogue management for everything the public site renders: solutions, services,
+  courses, internships, batches, questions and testimonials.
+- Colleges: the memorandum, its dates, the coordinator and the students who came in
+  through it. A college with students cannot be deleted, only made inactive.
+- Staff accounts and permissions. The owner holds everything implicitly; every other
+  administrator holds exactly what is ticked, cannot widen their own permissions, and
+  cannot restrict or suspend the owner.
+- Settings: company profile, tax details, invoice numbering and the wording of every
+  automated message. **Provider credentials are deliberately not editable**: the screen
+  shows whether each provider is configured and nothing more, because a key typed into a
+  settings form ends up in a database backup.
+- Audit log of every change, with before and after, secrets redacted, and no route to
+  edit or remove an entry from inside the application.
 
-**Exit:** admin can run the public site content and create both kinds of accounts.
+**Exit met:** admin can run the public site content and create both kinds of accounts.
 
 ### Phase 4 — Client module
 
@@ -405,7 +419,9 @@ Phase 4 and Phase 5 are independent of each other once Phase 3 lands.
 If the business wants value early rather than everything at once, ship in this order:
 
 1. Phases 0, 1, 2 and the leads inbox from Phase 3. This puts a selling website online.
+   *Done.*
 2. Phase 3 and Phase 5. Training runs on the platform and starts collecting fees.
+   *Phase 3 done.*
 3. Phase 4. Client delivery moves onto the platform.
 4. Phases 6, 7, 8, 9.
 
