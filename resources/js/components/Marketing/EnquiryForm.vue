@@ -25,6 +25,8 @@ const props = defineProps({
     contextLabel: { type: String, default: null },
     /** Budget and timeline only make sense on a build enquiry. */
     showProjectFields: { type: Boolean, default: false },
+    /** College name and headcount, for a tie-up enquiry. */
+    showCollegeFields: { type: Boolean, default: false },
     compact: { type: Boolean, default: false },
 });
 
@@ -43,6 +45,8 @@ const form = useForm({
     course_slug: props.courseSlug,
     budget_band: '',
     timeline: '',
+    college_name: '',
+    student_count: '',
     source_page: typeof window !== 'undefined' ? window.location.pathname : null,
     // Never shown to a person. A crude bot fills every field it finds.
     website: '',
@@ -76,6 +80,10 @@ const placeholder = computed(() => {
             return 'What does your current process look like, and where does it hurt most?';
         case 'training':
             return 'What are you hoping to be able to do by the end, and what have you tried already?';
+        case 'internship':
+            return 'Which year are you in, what does your college require, and what have you built so far?';
+        case 'college':
+            return 'Which course and year are the students in, how many, and what does your curriculum require?';
         case 'service':
             return 'What do you have running today, and what needs to change about it?';
         default:
@@ -86,7 +94,10 @@ const placeholder = computed(() => {
 function submit() {
     form.post('/enquiries', {
         preserveScroll: true,
-        onSuccess: () => form.reset('name', 'email', 'mobile', 'company', 'message', 'budget_band', 'timeline'),
+        onSuccess: () => form.reset(
+            'name', 'email', 'mobile', 'company', 'message',
+            'budget_band', 'timeline', 'college_name', 'student_count',
+        ),
     });
 }
 </script>
@@ -172,9 +183,25 @@ function submit() {
                     </template>
                 </UiFormField>
 
-                <UiFormField label="Company" :error="form.errors.company">
+                <UiFormField v-if="!showCollegeFields" label="Company" :error="form.errors.company">
                     <template #default="field">
                         <UiInput :id="field.id" v-model="form.company" :invalid="field.invalid" autocomplete="organization" />
+                    </template>
+                </UiFormField>
+
+                <UiFormField
+                    v-else
+                    label="Your role"
+                    hint="For example training and placement officer."
+                    :error="form.errors.company"
+                >
+                    <template #default="field">
+                        <UiInput
+                            :id="field.id"
+                            v-model="form.company"
+                            :invalid="field.invalid"
+                            placeholder="Training and placement officer"
+                        />
                     </template>
                 </UiFormField>
             </div>
@@ -198,6 +225,36 @@ function submit() {
                             v-model="form.timeline"
                             :options="timelines"
                             placeholder="Not decided"
+                        />
+                    </template>
+                </UiFormField>
+            </div>
+
+            <div v-if="showCollegeFields" :class="compact ? 'space-y-4' : 'grid gap-4 sm:grid-cols-2'">
+                <UiFormField label="College or institute" required :error="form.errors.college_name">
+                    <template #default="field">
+                        <UiInput
+                            :id="field.id"
+                            v-model="form.college_name"
+                            :invalid="field.invalid"
+                            placeholder="Name of your institution"
+                        />
+                    </template>
+                </UiFormField>
+
+                <UiFormField
+                    label="Roughly how many students?"
+                    hint="An estimate is fine."
+                    :error="form.errors.student_count"
+                >
+                    <template #default="field">
+                        <UiInput
+                            :id="field.id"
+                            v-model="form.student_count"
+                            type="number"
+                            min="1"
+                            :invalid="field.invalid"
+                            placeholder="40"
                         />
                     </template>
                 </UiFormField>

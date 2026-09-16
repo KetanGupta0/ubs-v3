@@ -20,6 +20,7 @@ class Course extends Model
     {
         return [
             'syllabus' => 'array',
+            'documents_provided' => 'array',
             'outcomes' => 'array',
             'prerequisites' => 'array',
             'tools' => 'array',
@@ -39,6 +40,40 @@ class Course extends Model
     public function scopePubliclyVisible(Builder $query): Builder
     {
         return $query->where('is_published', true)->where('visibility', 'public');
+    }
+
+    /**
+     * Courses and programmes, but not internships.
+     *
+     * Internships share this table because they are structurally the same, but
+     * they are a different product sold to a different person, so the two
+     * listings must never bleed into each other.
+     */
+    public function scopeTaught(Builder $query): Builder
+    {
+        return $query->whereIn('type', ['course', 'programme']);
+    }
+
+    public function scopeInternships(Builder $query): Builder
+    {
+        return $query->where('type', 'internship');
+    }
+
+    public function isInternship(): bool
+    {
+        return $this->type === 'internship';
+    }
+
+    /** "6 weeks" or "6 months", whichever the offering is sold by. */
+    public function durationLabel(): ?string
+    {
+        if ($this->duration_months) {
+            return $this->duration_months.' '.str('month')->plural($this->duration_months);
+        }
+
+        return $this->duration_weeks
+            ? $this->duration_weeks.' '.str('week')->plural($this->duration_weeks)
+            : null;
     }
 
     public function getRouteKeyName(): string
@@ -79,7 +114,12 @@ class Course extends Model
             'summary' => $this->summary,
             'level' => $this->level,
             'durationWeeks' => $this->duration_weeks,
+            'durationMonths' => $this->duration_months,
+            'durationLabel' => $this->durationLabel(),
             'hoursPerWeek' => $this->hours_per_week,
+            'mode' => $this->mode,
+            'projectFocus' => $this->project_focus,
+            'documentCount' => count($this->documents_provided ?? []),
             'price' => $this->effectivePrice(),
             'originalPrice' => $this->isDiscounted() ? $this->price : null,
             'accent' => $this->accent,

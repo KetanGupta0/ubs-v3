@@ -9,7 +9,7 @@ history matters.
 | Table | Key columns |
 | --- | --- |
 | `users` | name, email, mobile, password, role (`admin`/`client`/`student`), status, avatar, email_verified_at, mobile_verified_at, must_change_password, last_login_at |
-| `user_profiles` | user_id, company, designation, address, city, state, pincode, gstin, dob, guardian_name, guardian_mobile |
+| `user_profiles` | user_id, company, designation, address, city, state, pincode, gstin, dob, guardian_name, guardian_mobile, college_id, enrollment_number, course_of_study, current_semester, graduation_year |
 | `permissions` / `role_permissions` | granular capability flags for sub admins |
 | `otp_codes` | user_id, channel (`email`/`sms`), code_hash, purpose, expires_at, consumed_at, attempts |
 | `two_factor_secrets` | user_id, secret, confirmed_at, recovery_codes |
@@ -27,7 +27,7 @@ identity, and a person could in principle be both a client and a student.
 | `solution_categories` | name, slug, icon, sort_order |
 | `solutions` | title, slug, category_id, summary, description, industry, platforms, tech_stack (json), features (json), modules (json), price_band_min, price_band_max, timeline_weeks, hero_media, gallery (json), is_featured, is_published, seo (json) |
 | `services` | title, slug, type (`development`/`upgrade`/`maintenance`), description, deliverables (json), engagement_models (json) |
-| `leads` | name, email, mobile, company, message, source_page, solution_id, course_id, status, assigned_to, converted_user_id |
+| `leads` | reference, name, email, mobile, company, college_name, student_count, message, interest, source_page, solution_id, service_id, course_id, status, assigned_to, converted_user_id |
 | `testimonials`, `faqs`, `pages` | content managed from admin |
 
 ## Client module (Phase 4)
@@ -53,7 +53,10 @@ identity, and a person could in principle be both a client and a student.
 
 | Table | Key columns |
 | --- | --- |
-| `courses` | title, slug, type (`course`/`programme`), summary, description, level, duration_weeks, price, visibility (`public`/`lms_only`), thumbnail, syllabus (json), is_published |
+| `courses` | title, slug, type (`course`/`programme`/`internship`), summary, description, level, duration_weeks, duration_months, hours_per_week, price, sale_price, visibility (`public`/`lms_only`), mode, project_focus, documents_provided (json), syllabus (json), is_published |
+| `colleges` | name, slug, city, state, university, coordinator name/email/mobile, mou_signed_on, mou_expires_on, is_active |
+| `internship_documents` | user_id, course_id, batch_id, kind (`offer_letter`/`certificate`/`project_report`/`mentor_evaluation`), number, issued_at, verification_code, pdf_path, issued_by |
+| `mentor_reviews` | user_id, batch_id, week_number, reviewer_id, summary, marks, reviewed_at |
 | `course_modules` | course_id, title, order, unlock_rule (json) |
 | `lessons` | module_id, title, order, content, video_url, duration_minutes, unlock_at, prerequisite_lesson_id, requires_payment, min_quiz_score |
 | `materials` | lesson_id, course_id, title, path, mime, size, is_downloadable |
@@ -72,6 +75,11 @@ identity, and a person could in principle be both a client and a student.
 | `leaderboard_points` | user_id, course_id, batch_id, source, points, awarded_at |
 | `activity_logs` | user_id, subject, action, meta (json), occurred_at |
 | `student_warnings` | user_id, batch_id, live_session_id, level (`notice`/`warning`/`escalation`), reason, issued_by, acknowledged_at, guardian_notified_at |
+
+An internship shares the `courses` table rather than getting its own, because
+structurally it is the same object: a cohort with a schedule, a syllabus, a mentor and an
+assessment. What differs is the paperwork it produces, which is why `documents_provided`
+and the `internship_documents` table exist.
 
 The warning table is deliberately auditable. Escalating a student is a serious act, so who
 issued it, why, and whether the student acknowledged it are all recorded.

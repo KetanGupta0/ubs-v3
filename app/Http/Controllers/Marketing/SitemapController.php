@@ -23,6 +23,8 @@ class SitemapController extends Controller
             ['loc' => url('/solutions'), 'priority' => '0.9', 'changefreq' => 'weekly'],
             ['loc' => url('/services'), 'priority' => '0.9', 'changefreq' => 'monthly'],
             ['loc' => url('/training'), 'priority' => '0.9', 'changefreq' => 'weekly'],
+            ['loc' => url('/internships'), 'priority' => '0.9', 'changefreq' => 'weekly'],
+            ['loc' => url('/for-colleges'), 'priority' => '0.7', 'changefreq' => 'monthly'],
             ['loc' => url('/about'), 'priority' => '0.6', 'changefreq' => 'monthly'],
             ['loc' => url('/process'), 'priority' => '0.6', 'changefreq' => 'monthly'],
             ['loc' => url('/technology'), 'priority' => '0.6', 'changefreq' => 'monthly'],
@@ -45,9 +47,16 @@ class SitemapController extends Controller
                 'priority' => '0.8',
                 'changefreq' => 'monthly',
             ]))
-            // Only publicly visible courses, matching what the site renders.
-            ->concat(Course::query()->publiclyVisible()->get()->map(fn (Course $c) => [
+            // Only publicly visible offerings, each under the path the site
+            // actually serves it from.
+            ->concat(Course::query()->publiclyVisible()->taught()->get()->map(fn (Course $c) => [
                 'loc' => url("/training/{$c->slug}"),
+                'lastmod' => $c->updated_at?->toAtomString(),
+                'priority' => '0.8',
+                'changefreq' => 'weekly',
+            ]))
+            ->concat(Course::query()->publiclyVisible()->internships()->get()->map(fn (Course $c) => [
+                'loc' => url("/internships/{$c->slug}"),
                 'lastmod' => $c->updated_at?->toAtomString(),
                 'priority' => '0.8',
                 'changefreq' => 'weekly',

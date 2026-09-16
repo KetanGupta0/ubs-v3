@@ -55,6 +55,18 @@ class HomeController extends Controller
 
             'featuredCourses' => Course::query()
                 ->publiclyVisible()
+                ->taught()
+                ->where('is_featured', true)
+                ->with('batches')
+                ->orderBy('sort_order')
+                ->limit(3)
+                ->get()
+                ->map->toCardArray()
+                ->values(),
+
+            'featuredInternships' => Course::query()
+                ->publiclyVisible()
+                ->internships()
                 ->where('is_featured', true)
                 ->with('batches')
                 ->orderBy('sort_order')
@@ -66,7 +78,8 @@ class HomeController extends Controller
             'stats' => [
                 'solutions' => Solution::query()->published()->count(),
                 'categories' => SolutionCategory::query()->count(),
-                'courses' => Course::query()->publiclyVisible()->count(),
+                'courses' => Course::query()->publiclyVisible()->taught()->count(),
+                'internships' => Course::query()->publiclyVisible()->internships()->count(),
             ],
 
             /*

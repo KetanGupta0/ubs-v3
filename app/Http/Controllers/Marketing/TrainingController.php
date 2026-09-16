@@ -26,6 +26,7 @@ class TrainingController extends Controller
 
         $courses = Course::query()
             ->publiclyVisible()
+            ->taught()
             ->with('batches')
             ->when($level, fn (Builder $q, string $value) => $q->where('level', $value))
             ->when($type, fn (Builder $q, string $value) => $q->where('type', $value))
@@ -36,8 +37,8 @@ class TrainingController extends Controller
         return Inertia::render('marketing/training/Index', [
             'courses' => $courses->map->toCardArray()->values(),
             'filters' => ['level' => $level, 'type' => $type],
-            'levels' => Course::query()->publiclyVisible()->distinct()->orderBy('level')->pluck('level'),
-            'totalCount' => Course::query()->publiclyVisible()->count(),
+            'levels' => Course::query()->publiclyVisible()->taught()->distinct()->orderBy('level')->pluck('level'),
+            'totalCount' => Course::query()->publiclyVisible()->taught()->count(),
             'seo' => Seo::for(
                 'Live training — programmes taught by working developers',
                 'Live technical training on Google Meet, with attendance, assessment, projects and a certificate that can be verified. Full stack, Laravel, Vue, Python and databases.',
@@ -52,8 +53,12 @@ class TrainingController extends Controller
 
     public function show(Course $course): Response
     {
-        // A course that is not publicly visible must not be reachable by URL.
-        abort_unless($course->is_published && $course->visibility === 'public', 404);
+        // Not publicly visible, or an internship, must not resolve here. An
+        // internship has its own page, and the two listings must not bleed.
+        abort_unless(
+            $course->is_published && $course->visibility === 'public' && ! $course->isInternship(),
+            404,
+        );
 
         $batches = $course->batches()
             ->where('is_published', true)
@@ -74,6 +79,7 @@ class TrainingController extends Controller
             'batches' => $batches->map->toPublicArray()->values(),
             'related' => Course::query()
                 ->publiclyVisible()
+                ->taught()
                 ->whereKeyNot($course->getKey())
                 ->with('batches')
                 ->orderBy('sort_order')

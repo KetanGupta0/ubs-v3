@@ -15,12 +15,26 @@ login form.
 | --- | --- |
 | Public visitor | Marketing website, animated solution catalogue, course listings, enquiry forms |
 | Client | Private dashboard for projects, proposals, documents, payments, maintenance, chat |
-| Student | Full LMS with live classes, attendance, quizzes, certificates, batch chat |
+| Student or intern | Full LMS with live classes, attendance, quizzes, certificates, batch chat |
+| College | A coordinator view of their batch: attendance, progress and the documents |
 | Admin | Control panel over both business lines |
 
 The two revenue lines are **(1) software development and maintenance** and **(2) live
-training**. The platform must make both discoverable to strangers and manageable for
-existing customers.
+training for college students**. The training side has two distinct products:
+
+- **Internships.** Mostly college students meeting a curriculum requirement. Six weeks to
+  six months, remote, with a brief rather than a tutorial and a mentor who reviews their
+  code weekly. The student pays a fee. Every internship must produce four documents the
+  college will accept: an offer letter, a completion certificate that can be verified
+  online, a project report, and a signed mentor evaluation.
+- **Courses and programmes.** Longer, subject focused, for students who want a technology
+  properly and for working developers.
+
+Students arrive two ways: individually, and as a batch sent by a college under a signed
+memorandum. Both have to work.
+
+The platform must make all of this discoverable to strangers and manageable for existing
+customers.
 
 ### Non negotiable qualities
 
@@ -179,7 +193,12 @@ The part that converts strangers. Highest visual investment.
 - **Services:** development, upgrade and modernisation of existing software, maintenance
   and AMC, each with scope, deliverables and engagement models.
 - **Training:** public course and programme listings, syllabus, schedule, fees, batch
-  dates, and a register call to action. Courses marked LMS only are hidden here.
+  dates, and a register call to action. Courses marked LMS only are hidden here, and
+  internships are listed separately.
+- **Internships:** a separate listing from courses, since it is a different product sold
+  to a different person. Each states its duration, weekly hours, project focus, fee and
+  the four documents it produces. Plus a page written for a training and placement officer
+  who wants to send a batch.
 - Supporting pages: about, process, technology, FAQ, careers stub, contact, legal pages.
 - Contact and enquiry forms land in the admin leads inbox with source attribution, plus
   email and SMS alerts to admin and an auto acknowledgement to the sender.
@@ -200,7 +219,9 @@ only. Supporting pages for about, process, technology, frequently asked
 questions, contact and legal. Every form writes to the leads table carrying the
 page it came from, alerts the team by email and SMS, and confirms to the sender
 with a reference. Per page metadata, Open Graph images, JSON-LD and a generated
-sitemap.
+sitemap. Internships are listed separately from courses with their own pages, plus a
+page written for a training and placement officer, and enquiry paths for both an
+individual student and a college batch.
 
 Two honesty decisions worth recording. There are no screenshots of client
 systems, because we have no client permission to publish any; product pages
@@ -276,7 +297,35 @@ The training business, in full.
   guardian alert. Every flag is logged with a reason, and the trainer sees the history.
 - **Transactions history**, printable and downloadable, same as the client side.
 
-**Exit:** a batch can be run from enrolment to certificate without leaving the platform.
+**Internships.** An internship is stored as a course with `type` set to internship,
+because structurally it is the same object: a cohort, a schedule, a syllabus, a mentor and
+an assessment. What it adds is the paperwork a college requires, and that is not optional
+for a student facing a submission deadline:
+
+- **Offer letter**, generated on letterhead before the internship starts.
+- **Completion certificate**, on completion, with a public verification link.
+- **Project report**, assembled from the student's own submissions across the internship
+  rather than written in a panic at the end.
+- **Mentor evaluation**, signed by the reviewing engineer, with marks against the criteria
+  the university asks for.
+- A document generator that can also fill a college's own form, since many departments
+  insist on their own format.
+- Weekly mentor review sessions recorded against the student, because the evaluation has
+  to be defensible.
+
+**Colleges.** A college is a first class record, not a text field:
+
+- Memorandum details, validity, and a named coordinator on each side.
+- **Batch enrolment** from a list, creating accounts in bulk and sending credentials to
+  each student by email and SMS.
+- A **coordinator view** showing that college's students only: attendance, submissions and
+  mentor assessment.
+- **Monthly progress reports** per student, exportable in a form a department can file.
+- Early warning to the coordinator when a student stops attending, while it can still be
+  fixed rather than after the internship has failed.
+
+**Exit:** a batch can be run from enrolment to certificate without leaving the platform,
+and a college coordinator can answer their department's questions without emailing us.
 
 ### Phase 6 — Realtime chat
 
@@ -383,6 +432,8 @@ Sensible defaults are chosen so work is not blocked. Say the word to change any 
 | Scope is very large | Strict phase gates, every phase independently shippable |
 | Google Meet has no official auto attendance | Attendance is marked in app by the trainer, with a one tap roster; optional Google Calendar API integration for link generation |
 | Chat media abuse | Image and audio only, size caps, private storage, signed URLs, per user rate limits |
+| A certificate that means nothing | Issued only on completion, meaning attendance, assessment and the project. A student who does not do the work does not get one, which is the only thing that makes it worth anything |
+| A college's own document format | The generator fills a supplied template, so a department that insists on its own form is handled rather than refused |
 | Credentials sent over SMS and email | One time password, forced rotation on first login, delivery logged, never stored in plain text |
 | Two business lines diluting the brand | Public site splits the two paths above the fold instead of blending them |
 

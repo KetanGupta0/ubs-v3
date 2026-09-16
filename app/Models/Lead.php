@@ -79,7 +79,15 @@ class Lead extends Model
         return match (true) {
             (bool) $this->solution_id => 'Solution: '.($this->solution?->title ?? 'unknown'),
             (bool) $this->service_id => 'Service: '.($this->service?->title ?? 'unknown'),
-            (bool) $this->course_id => 'Training: '.($this->course?->title ?? 'unknown'),
+
+            // An internship and a course share a table, so the label comes from
+            // what the offering actually is rather than from the table it is in.
+            (bool) $this->course_id => ($this->course?->isInternship() ? 'Internship: ' : 'Training: ')
+                .($this->course?->title ?? 'unknown'),
+
+            $this->interest === 'college' => 'College tie-up'
+                .($this->college_name ? ': '.$this->college_name : ''),
+
             default => 'General enquiry',
         };
     }

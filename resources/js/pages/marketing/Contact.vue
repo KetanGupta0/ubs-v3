@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue';
 import { Link } from '@inertiajs/vue3';
-import { Code2, GraduationCap, MessageCircle, Clock, ShieldCheck } from 'lucide-vue-next';
+import { Building2, Code2, GraduationCap, MessageCircle, Clock, ShieldCheck } from 'lucide-vue-next';
 
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import Seo from '@/components/Seo.vue';
@@ -19,7 +19,8 @@ const interest = ref('solution');
 
 const tabs = [
     { value: 'solution', label: 'Software project', icon: Code2 },
-    { value: 'training', label: 'Training', icon: GraduationCap },
+    { value: 'internship', label: 'Internship', icon: GraduationCap },
+    { value: 'college', label: 'College tie-up', icon: Building2 },
     { value: 'general', label: 'Something else', icon: MessageCircle },
 ];
 
@@ -45,9 +46,9 @@ const assurances = [
 
                 <h1 class="text-3xl font-semibold leading-tight sm:text-4xl">Tell us what you need</h1>
                 <p class="mt-4 max-w-2xl text-base leading-relaxed" style="color: var(--text-muted)">
-                    Whether it is software you want built, a system that needs rescuing, or a
-                    programme you are thinking of joining. The more specific you are, the more
-                    useful our reply can be.
+                    Software you want built, a system that needs rescuing, an internship you
+                    are applying for, or a batch your college wants to place. The more specific
+                    you are, the more useful our reply can be.
                 </p>
 
                 <div class="mt-6 flex flex-wrap gap-x-8 gap-y-3">
@@ -64,7 +65,7 @@ const assurances = [
 
         <section class="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
             <div
-                class="mb-6 grid grid-cols-3 gap-1 rounded-xl p-1"
+                class="mb-6 grid grid-cols-2 gap-1 rounded-xl p-1 sm:grid-cols-4"
                 style="background: var(--surface-sunken)"
                 role="tablist"
             >
@@ -93,6 +94,7 @@ const assurances = [
                 :key="interest"
                 :interest="interest"
                 :show-project-fields="interest === 'solution'"
+                :show-college-fields="interest === 'college'"
                 compact
             />
         </section>

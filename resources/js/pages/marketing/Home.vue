@@ -29,6 +29,7 @@ const props = defineProps({
     categories: { type: Array, default: () => [] },
     services: { type: Array, default: () => [] },
     featuredCourses: { type: Array, default: () => [] },
+    featuredInternships: { type: Array, default: () => [] },
     stats: { type: Object, default: () => ({}) },
     testimonials: { type: Array, default: () => [] },
     seo: { type: Object, required: true },
@@ -50,10 +51,10 @@ const technologies = [
 ];
 
 const trainingPoints = [
+    'Internships with the four documents your college asks for',
     'Live on Google Meet, at a fixed time each week',
-    'Attendance, assessment and a project that gets reviewed',
-    'A certificate an employer can verify online',
-    'Taught by people who build software for a living',
+    'A mentor who reviews your code, not a recorded video',
+    'A project you can defend at a viva or an interview',
 ];
 
 const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
@@ -92,8 +93,9 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
                             style="animation-delay: 160ms; color: var(--text-muted)"
                         >
                             Unboundbyte Solutions builds custom software, modernises systems you
-                            already run, and maintains them afterwards. Then we teach the people
-                            who will use them. Two halves of the same problem, handled by one team.
+                            already run, and maintains them afterwards. We also run internships and
+                            live courses for college students. Two halves of the same problem,
+                            handled by one team.
                         </p>
 
                         <div
@@ -115,8 +117,8 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
                         >
                             <div v-for="stat in [
                                 { value: stats.solutions, label: 'products in the catalogue' },
-                                { value: stats.categories, label: 'industry categories' },
-                                { value: stats.courses, label: 'live programmes' },
+                                { value: stats.internships, label: 'student internships' },
+                                { value: stats.courses, label: 'live courses' },
                             ]" :key="stat.label">
                                 <dt class="sr-only">{{ stat.label }}</dt>
                                 <dd>
@@ -190,10 +192,10 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
                         <GraduationCap class="h-5 w-5" aria-hidden="true" />
                     </span>
 
-                    <h3 class="mt-5 text-xl font-semibold">I want to learn to build</h3>
+                    <h3 class="mt-5 text-xl font-semibold">I am a student, and I want to build</h3>
                     <p class="mt-2 text-sm leading-relaxed" style="color: var(--text-muted)">
-                        Live programmes taught by people who ship software, not recorded videos
-                        left to go stale.
+                        Internships that meet your college requirement and leave you with a real
+                        project, plus longer live courses if you want a subject properly.
                     </p>
 
                     <ul class="mt-5 space-y-2">
@@ -208,10 +210,13 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
                         </li>
                     </ul>
 
-                    <UiButton class="mt-6" href="/training" variant="secondary">
-                        See programmes
-                        <template #trailing><ArrowUpRight class="h-3.5 w-3.5" /></template>
-                    </UiButton>
+                    <div class="mt-6 flex flex-wrap gap-2">
+                        <UiButton href="/internships">
+                            See internships
+                            <template #trailing><ArrowUpRight class="h-3.5 w-3.5" /></template>
+                        </UiButton>
+                        <UiButton href="/training" variant="secondary">Courses</UiButton>
+                    </div>
                 </UiCard>
             </div>
         </section>
@@ -313,13 +318,83 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
             <p class="sr-only">We build on {{ technologies.join(', ') }}.</p>
         </section>
 
+        <!-- ------------------------------------------------------- internships -->
+        <section v-if="featuredInternships.length" class="py-16 sm:py-20" style="background: var(--surface-sunken)">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="flex flex-wrap items-end justify-between gap-6">
+                    <SectionHeading
+                        eyebrow="For college students"
+                        title="Internships that produce something you can show"
+                        body="Remote, with a brief instead of a tutorial and a mentor who reviews your code every week. Every one ends with the four documents your college asks for."
+                    />
+
+                    <UiButton variant="secondary" href="/internships">
+                        All {{ stats.internships }} internships
+                        <template #trailing><ArrowRight class="h-4 w-4" /></template>
+                    </UiButton>
+                </div>
+
+                <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    <Link
+                        v-for="(item, index) in featuredInternships"
+                        :key="item.slug"
+                        :href="`/internships/${item.slug}`"
+                        class="animate-fade-up group flex flex-col rounded-[var(--radius-card)] border bg-[var(--surface)] p-6 shadow-[var(--shadow-card)] transition-[transform,box-shadow] duration-[var(--duration-base)] hover:-translate-y-1 hover:shadow-[var(--shadow-pop)]"
+                        :style="{ borderColor: 'var(--border-subtle)', animationDelay: `${index * 80}ms` }"
+                    >
+                        <div class="flex flex-wrap items-center gap-1.5">
+                            <UiBadge tone="brand" size="sm">{{ item.durationLabel }}</UiBadge>
+                            <UiBadge size="sm" class="capitalize">{{ item.level }}</UiBadge>
+                        </div>
+
+                        <h3 class="mt-4 text-lg font-semibold leading-snug">{{ item.title }}</h3>
+                        <p class="mt-1.5 text-sm" style="color: var(--text-muted)">{{ item.tagline }}</p>
+
+                        <p
+                            v-if="item.projectFocus"
+                            class="mt-4 rounded-lg px-3 py-2 text-xs leading-relaxed"
+                            style="background: var(--surface-sunken); color: var(--text-base)"
+                        >
+                            <span class="font-semibold">You build:</span> {{ item.projectFocus }}
+                        </p>
+
+                        <div class="mt-auto flex items-end justify-between border-t pt-4" style="border-color: var(--border-subtle); margin-top: 1.25rem">
+                            <span>
+                                <span class="text-lg font-semibold tnum" style="color: var(--text-strong)">
+                                    ₹{{ item.price.toLocaleString('en-IN') }}
+                                </span>
+                                <span
+                                    v-if="item.originalPrice"
+                                    class="ml-1.5 text-sm line-through tnum"
+                                    style="color: var(--text-muted)"
+                                >
+                                    ₹{{ item.originalPrice.toLocaleString('en-IN') }}
+                                </span>
+                            </span>
+
+                            <ArrowUpRight
+                                class="h-4 w-4 text-brand-600 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 dark:text-brand-400"
+                            />
+                        </div>
+                    </Link>
+                </div>
+
+                <p class="mt-6 text-sm" style="color: var(--text-muted)">
+                    Sending a whole batch from your college?
+                    <Link href="/for-colleges" class="font-semibold text-brand-600 hover:underline dark:text-brand-400">
+                        See how a tie-up works
+                    </Link>
+                </p>
+            </div>
+        </section>
+
         <!-- ---------------------------------------------------------- training -->
         <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <div class="flex flex-wrap items-end justify-between gap-6">
                 <SectionHeading
-                    eyebrow="Live training"
-                    title="Taught by people who ship software"
-                    body="Every programme runs live on Google Meet with attendance, assessment and a project that gets reviewed by someone who does this for a living."
+                    eyebrow="Live courses"
+                    title="Go deeper on one subject"
+                    body="Longer programmes for students and working developers who want a technology properly rather than a taste of it. Live on Google Meet, with assessment and a reviewed project."
                 />
 
                 <UiButton variant="secondary" href="/training">

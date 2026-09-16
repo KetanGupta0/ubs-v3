@@ -25,6 +25,7 @@ class CatalogueSeeder extends Seeder
         $this->seedSolutions();
         $this->seedServices();
         $this->seedCourses();
+        $this->seedInternships();
         $this->seedFaqs();
     }
 
@@ -127,6 +128,36 @@ class CatalogueSeeder extends Seeder
         $this->command?->info('Seeded '.count($courses).' public courses plus one that is LMS only.');
     }
 
+    /**
+     * Internships, stored as courses with `type` set to internship.
+     *
+     * Structurally an internship is the same object: a cohort with a schedule,
+     * a syllabus, a mentor and an assessment. What differs is the paperwork it
+     * produces, which is why those columns exist rather than a second table.
+     */
+    protected function seedInternships(): void
+    {
+        $internships = require database_path('data/internships.php');
+
+        foreach ($internships as $internship) {
+            $record = Course::query()->updateOrCreate(['slug' => $internship['slug']], [
+                ...$internship,
+                'type' => 'internship',
+                'description' => $this->paragraphs($internship['description'] ?? null),
+                'visibility' => 'public',
+                'is_published' => true,
+                'seo' => [
+                    'title' => $internship['title'].' — for college students, by Unboundbyte',
+                    'description' => Str::limit($internship['summary'], 150),
+                ],
+            ]);
+
+            $this->seedBatchesFor($record);
+        }
+
+        $this->command?->info('Seeded '.count($internships).' internships.');
+    }
+
     /** Two upcoming batches per course, so the public pages have real dates. */
     protected function seedBatchesFor(Course $course): void
     {
@@ -135,8 +166,27 @@ class CatalogueSeeder extends Seeder
             [['day' => 'Sat', 'from' => '10:00', 'to' => '13:00']],
         ];
 
+        $gap = $course->type === 'internship' ? 4 : 6;
+
+        /*
+         * Fill levels vary per offering rather than being the same everywhere.
+         * A "only 4 seats left" badge on every single card reads as a sales
+         * trick, which is exactly the impression the rest of this site is
+         * trying not to give. Derived from the slug so it is stable across
+         * re-seeds instead of shuffling on every run.
+         */
+        $seed = crc32($course->slug);
+
         foreach ([0, 1] as $offset) {
-            $starts = now()->addWeeks(2 + ($offset * 6))->startOfWeek();
+            $starts = now()->addWeeks(2 + ($offset * $gap))->startOfWeek();
+
+            $capacity = $offset === 0 ? 24 : 30;
+
+            // The nearer batch fills between a third and nearly full; the later
+            // one has barely opened.
+            $taken = $offset === 0
+                ? (int) round($capacity * (0.35 + (($seed % 60) / 100)))
+                : (int) ($seed % 7);
 
             Batch::query()->updateOrCreate(
                 ['code' => strtoupper(Str::of($course->slug)->limit(6, '')->replace('-', '')).'-'.$starts->format('My')],
@@ -146,8 +196,8 @@ class CatalogueSeeder extends Seeder
                     'starts_on' => $starts,
                     'ends_on' => $starts->copy()->addWeeks($course->duration_weeks ?? 8),
                     'schedule' => $schedules[$offset],
-                    'capacity' => $offset === 0 ? 24 : 30,
-                    'seats_taken' => $offset === 0 ? 20 : 4,
+                    'capacity' => $capacity,
+                    'seats_taken' => min($taken, $capacity),
                     'status' => 'upcoming',
                     'is_published' => true,
                 ],

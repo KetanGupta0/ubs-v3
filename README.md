@@ -5,7 +5,8 @@ one codebase:
 
 1. **Software development and maintenance** — client acquisition, delivery tracking,
    billing and support.
-2. **Live training** — course sales, a full learning management system, and live classes.
+2. **Live training for college students** — internships that meet a curriculum
+   requirement, longer courses, and a full learning management system behind both.
 
 ## Audiences
 
@@ -13,8 +14,9 @@ one codebase:
   raise enquiries.
 - **Clients** get a private dashboard for proposals, projects, documents, payments,
   maintenance and chat. Accounts are created by an admin only.
-- **Students** get a learning management system with live classes, attendance, quizzes,
-  assignments, certificates and batch chat. They can self register.
+- **Students and interns** get a learning management system with live classes,
+  attendance, quizzes, assignments, certificates and batch chat. They can self register,
+  or arrive as a batch sent by their college.
 - **Admins** run both sides from one control panel.
 
 All three sign in through a single login form, with password, one time password, or

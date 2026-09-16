@@ -122,6 +122,14 @@ Rules for the marketing pages:
 - **Course visibility is enforced server side.** Anything marked `lms_only`
   must not appear in a listing, must 404 by URL, and must stay out of the
   sitemap. There are tests for all three.
+- **Internships and courses share the `courses` table** but are different
+  products for different people. `type` is `internship`, `course` or
+  `programme`; use the `internships()` and `taught()` scopes. Each route checks
+  what the row actually is, so an internship 404s under `/training` and a course
+  404s under `/internships`. Tests cover both directions.
+- **Scarcity has to be real.** Seeded batch fill levels vary per offering. A
+  "only 4 seats left" badge on every card reads as a sales trick, which is the
+  opposite of what the rest of the site is doing.
 - **Every public page renders `Seo.vue`** with a title, description, canonical
   URL and, where it applies, structured data. Descriptions are capped at 158
   characters counted as characters, not bytes.

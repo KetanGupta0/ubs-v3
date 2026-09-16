@@ -12,8 +12,8 @@ return [
         'slug' => 'full-stack-web-development',
         'type' => 'programme',
         'tagline' => 'From first line of HTML to a deployed application',
-        'summary' => 'A six month live programme that takes you from nothing to shipping a real application, built and deployed by you.',
-        'description' => 'Most people who learn to code alone stop at the point where tutorials end and real problems begin: authentication, deployment, someone else\'s database, a bug you cannot search for.\n\nThis programme is built around that gap. You write software every week, it gets reviewed by someone who builds software for a living, and by the end you have deployed an application that other people can use.',
+        'summary' => 'A six month live programme, built for college students, that takes you from nothing to shipping a real application you deployed yourself.',
+        'description' => 'Most college syllabi stop exactly where the interesting part starts. You learn the theory, you write code that runs once for a practical exam, and nobody shows you authentication, deployment, someone else\'s database, or a bug you cannot search for.\n\nThis programme is built around that gap. You write software every week, it gets reviewed by someone who builds software for a living, and by the end you have deployed an application other people can use. Most of our students are in their second, third or final year, doing this alongside college.',
         'level' => 'beginner',
         'duration_weeks' => 24,
         'hours_per_week' => 8,
@@ -21,7 +21,7 @@ return [
         'sale_price' => 35000,
         'accent' => 'brand',
         'is_featured' => true,
-        'audience' => ['Graduates looking for a first developer role', 'Working professionals changing field', 'Founders who want to build their own first version'],
+        'audience' => ['College students who want more than their syllabus gives them', 'Final year students preparing for placements', 'Graduates looking for a first developer role', 'Working professionals changing field'],
         'prerequisites' => ['A computer and a stable internet connection', 'Comfort with English written instructions', 'No prior programming required'],
         'tools' => ['HTML', 'CSS', 'JavaScript', 'PHP', 'Laravel', 'Vue.js', 'MySQL', 'Git', 'Linux'],
         'outcomes' => [
@@ -56,7 +56,7 @@ return [
         'sale_price' => null,
         'accent' => 'accent',
         'is_featured' => true,
-        'audience' => ['Developers with some Laravel experience', 'Teams standardising how they build', 'Freelancers moving to larger projects'],
+        'audience' => ['Students who already build in Laravel and want to go deeper', 'Developers with some Laravel experience', 'Teams standardising how they build', 'Freelancers moving to larger projects'],
         'prerequisites' => ['Comfortable with PHP', 'Have built at least one Laravel application', 'Familiar with Git'],
         'tools' => ['Laravel', 'Pest', 'Redis', 'Horizon', 'MySQL', 'Docker', 'GitHub Actions'],
         'outcomes' => [
@@ -90,7 +90,7 @@ return [
         'sale_price' => 16000,
         'accent' => 'emerald',
         'is_featured' => false,
-        'audience' => ['Front end developers', 'Full stack developers wanting stronger front end skills', 'Teams standardising components'],
+        'audience' => ['Students whose college projects look broken on a phone', 'Front end developers', 'Full stack developers wanting stronger front end skills', 'Teams standardising components'],
         'prerequisites' => ['Solid JavaScript', 'Some Vue or React experience'],
         'tools' => ['Vue 3', 'Vite', 'Pinia', 'Vitest', 'Tailwind CSS', 'TypeScript'],
         'outcomes' => [
@@ -123,7 +123,7 @@ return [
         'sale_price' => 22000,
         'accent' => 'amber',
         'is_featured' => true,
-        'audience' => ['Analysts and operations staff', 'Commerce and finance graduates', 'Anyone maintaining a large recurring spreadsheet'],
+        'audience' => ['Computer science, statistics and commerce students', 'Students whose major project involves data', 'Analysts and operations staff', 'Anyone maintaining a large recurring spreadsheet'],
         'prerequisites' => ['Comfortable with spreadsheets', 'No programming required'],
         'tools' => ['Python', 'pandas', 'SQL', 'PostgreSQL', 'Jupyter', 'Matplotlib'],
         'outcomes' => [
@@ -155,7 +155,7 @@ return [
         'sale_price' => null,
         'accent' => 'violet',
         'is_featured' => false,
-        'audience' => ['Application developers', 'Backend engineers', 'Analysts writing heavy queries'],
+        'audience' => ['Final year students building a major project', 'Application developers', 'Backend engineers', 'Analysts writing heavy queries'],
         'prerequisites' => ['Have written some SQL', 'Understand tables and joins'],
         'tools' => ['MySQL', 'PostgreSQL', 'explain plans', 'Index tooling'],
         'outcomes' => [

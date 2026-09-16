@@ -22,16 +22,18 @@ const scrolled = ref(false);
 const footerCompany = [
     { label: 'Solutions', href: '/solutions' },
     { label: 'Services', href: '/services' },
+    { label: 'Internships', href: '/internships' },
     { label: 'Training', href: '/training' },
-    { label: 'Technology', href: '/technology' },
+    { label: 'For colleges', href: '/for-colleges' },
+    { label: 'Process', href: '/process' },
     { label: 'Contact', href: '/contact' },
 ];
 
 const links = [
     { label: 'Solutions', href: '/solutions' },
     { label: 'Services', href: '/services' },
+    { label: 'Internships', href: '/internships' },
     { label: 'Training', href: '/training' },
-    { label: 'Process', href: '/process' },
     { label: 'About', href: '/about' },
 ];
 
