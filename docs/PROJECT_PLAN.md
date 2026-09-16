@@ -1,7 +1,7 @@
 # Unboundbyte Solutions Private Limited — Platform Plan
 
 **Document owner:** engineering
-**Status:** draft for approval
+**Status:** approved; Phase 0 delivered
 **Last updated:** 2026-09-15
 
 ---
@@ -124,6 +124,14 @@ Set up the skeleton everything else is built on.
 - CI: lint, static analysis, test run on every push.
 
 **Exit:** a styled empty app with a working component gallery at `/design`.
+
+**Delivered.** The logo set (mark, horizontal, stacked, monochrome, favicon and
+the PWA icon sizes), the token layer with light and dark defined together, the
+component library, the shared table with exports, both app shells, the phone tab
+bar and More sheet, the installable manifest, and a CI pipeline that runs style,
+tests against MySQL and a production asset build. The gallery at `/design` is a
+working page rather than a mockup: its table is a real server driven table, so a
+regression in search, sorting, filtering or export fails there first.
 
 ### Phase 1 — Identity and access
 

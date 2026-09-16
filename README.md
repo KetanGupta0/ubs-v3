@@ -32,6 +32,23 @@ for realtime, Sanctum for the mobile APIs.
 | [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) | Phase by phase build plan, brand identity, technology decisions, risks |
 | [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | Indicative database schema across all modules |
 
+## Running it
+
+```sh
+composer install && npm install
+cp .env.example .env && php artisan key:generate
+php artisan migrate && php artisan db:seed --class=DemoTableSeeder
+npm run dev        # and, in another shell:
+php artisan serve
+```
+
+Then open `/` for the site and `/design` for the live component gallery.
+
 ## Status
 
-Planning approved stage. Implementation starts at Phase 0.
+**Phase 0 is complete.** The foundation is in place: brand identity and logo set,
+design tokens with full light and dark themes, a component library, the shared
+server driven table that every dashboard list will use, the public and
+authenticated app shells including the phone tab bar, and continuous integration.
+
+Phases 1 through 9 are described in the plan. Phase 1 is identity and access.
