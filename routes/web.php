@@ -3,10 +3,8 @@
 use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\DesignController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
-Route::get('/', fn () => Inertia::render('Welcome'))->name('home');
-
+require __DIR__.'/marketing.php';
 require __DIR__.'/auth.php';
 
 /*

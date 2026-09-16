@@ -1,2 +1,17 @@
 User-agent: *
-Disallow:
+Allow: /
+
+# Private areas. Nothing useful to a crawler, and indexing them only produces
+# dead links for signed out visitors.
+Disallow: /admin
+Disallow: /client
+Disallow: /student
+Disallow: /settings
+Disallow: /login
+Disallow: /register
+Disallow: /password
+Disallow: /verify-email
+Disallow: /two-factor-challenge
+Disallow: /design
+
+Sitemap: /sitemap.xml

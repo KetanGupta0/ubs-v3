@@ -19,12 +19,20 @@ import UiToaster from '@/components/UI/UiToaster.vue';
 const menuOpen = ref(false);
 const scrolled = ref(false);
 
+const footerCompany = [
+    { label: 'Solutions', href: '/solutions' },
+    { label: 'Services', href: '/services' },
+    { label: 'Training', href: '/training' },
+    { label: 'Technology', href: '/technology' },
+    { label: 'Contact', href: '/contact' },
+];
+
 const links = [
-    { label: 'Solutions', href: '#solutions' },
-    { label: 'Services', href: '#services' },
-    { label: 'Training', href: '#training' },
-    { label: 'Process', href: '#process' },
-    { label: 'Contact', href: '#contact' },
+    { label: 'Solutions', href: '/solutions' },
+    { label: 'Services', href: '/services' },
+    { label: 'Training', href: '/training' },
+    { label: 'Process', href: '/process' },
+    { label: 'About', href: '/about' },
 ];
 
 function onScroll() {
@@ -56,15 +64,18 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                 </Link>
 
                 <nav class="hidden flex-1 items-center gap-1 lg:flex" aria-label="Main">
-                    <a
+                    <Link
                         v-for="link in links"
                         :key="link.label"
                         :href="link.href"
-                        class="rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--surface-sunken)]"
-                        style="color: var(--text-base)"
+                        :class="[
+                            'rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--surface-sunken)]',
+                            $page.url.startsWith(link.href) && 'text-brand-600 dark:text-brand-400',
+                        ]"
+                        :style="$page.url.startsWith(link.href) ? {} : { color: 'var(--text-base)' }"
                     >
                         {{ link.label }}
-                    </a>
+                    </Link>
                 </nav>
 
                 <div class="ml-auto flex items-center gap-2">
@@ -73,7 +84,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                         <UiButton variant="ghost" size="sm" href="/login">Sign in</UiButton>
                     </span>
 
-                    <UiButton size="sm" href="#contact" :inertia="false">
+                    <UiButton size="sm" href="/contact">
                         Start a project
                         <template #trailing><ArrowUpRight class="h-3.5 w-3.5" /></template>
                     </UiButton>
@@ -109,10 +120,11 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                     <div>
                         <h3 class="text-sm font-semibold">Company</h3>
                         <ul class="mt-3 space-y-2 text-sm" style="color: var(--text-muted)">
-                            <li><a href="#solutions" class="transition hover:text-[var(--text-strong)]">Solutions</a></li>
-                            <li><a href="#services" class="transition hover:text-[var(--text-strong)]">Services</a></li>
-                            <li><a href="#training" class="transition hover:text-[var(--text-strong)]">Training</a></li>
-                            <li><a href="#contact" class="transition hover:text-[var(--text-strong)]">Contact</a></li>
+                            <li v-for="item in footerCompany" :key="item.href">
+                                <Link :href="item.href" class="transition hover:text-[var(--text-strong)]">
+                                    {{ item.label }}
+                                </Link>
+                            </li>
                         </ul>
                     </div>
 
@@ -120,7 +132,10 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                         <h3 class="text-sm font-semibold">Account</h3>
                         <ul class="mt-3 space-y-2 text-sm" style="color: var(--text-muted)">
                             <li><Link href="/login" class="transition hover:text-[var(--text-strong)]">Sign in</Link></li>
-                            <li><Link href="/design" class="transition hover:text-[var(--text-strong)]">Design system</Link></li>
+                            <li><Link href="/register" class="transition hover:text-[var(--text-strong)]">Student sign up</Link></li>
+                            <li><Link href="/faq" class="transition hover:text-[var(--text-strong)]">FAQ</Link></li>
+                            <li><Link href="/legal/privacy" class="transition hover:text-[var(--text-strong)]">Privacy</Link></li>
+                            <li><Link href="/legal/terms" class="transition hover:text-[var(--text-strong)]">Terms</Link></li>
                         </ul>
                     </div>
                 </div>
@@ -137,7 +152,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
 
         <UiDrawer :open="menuOpen" title="Menu" @close="menuOpen = false">
             <nav class="space-y-1">
-                <a
+                <Link
                     v-for="link in links"
                     :key="link.label"
                     :href="link.href"
@@ -146,7 +161,15 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                     @click="menuOpen = false"
                 >
                     {{ link.label }}
-                </a>
+                </Link>
+                <Link
+                    href="/contact"
+                    class="block rounded-xl px-3 py-3 text-base font-medium transition hover:bg-[var(--surface-sunken)]"
+                    style="color: var(--text-strong)"
+                    @click="menuOpen = false"
+                >
+                    Contact
+                </Link>
             </nav>
 
             <template #footer>

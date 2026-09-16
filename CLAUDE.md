@@ -104,9 +104,33 @@ Rules that are easy to break and expensive to get wrong:
 Development sends mail and SMS to `storage/logs/laravel.log`. Notifications are
 queued, so drain the queue before expecting to read a code from it.
 
+## Public site
+
+Content lives in the database and is seeded from `database/data/*.php`. The
+seeder matches on slug and updates in place, so a copy edit re-seeds without
+duplicating rows. Those files use single quoted PHP strings, which is right for
+copy full of apostrophes, so `\n\n` arrives literally and the seeder converts it.
+
+Rules for the marketing pages:
+
+- **No fabricated proof.** No client screenshots (we have no permission to
+  publish any), no invented testimonials, no logo wall. Product pages carry a
+  clearly labelled illustrative interface, and the testimonials section renders
+  nothing until there is a real quote.
+- **Prices are bands, never figures.** A number on a catalogue page is a guess
+  presented as a price. Every band is captioned as indicative.
+- **Course visibility is enforced server side.** Anything marked `lms_only`
+  must not appear in a listing, must 404 by URL, and must stay out of the
+  sitemap. There are tests for all three.
+- **Every public page renders `Seo.vue`** with a title, description, canonical
+  URL and, where it applies, structured data. Descriptions are capped at 158
+  characters counted as characters, not bytes.
+- Facet lists are ordered by how many products carry each value, because a
+  facet list is a browsing aid rather than an index.
+
 ## Not yet built
 
-Phases 2 through 9 in the plan. Navigation entries that render as "Soon" are
+Phases 3 through 9 in the plan. Navigation entries that render as "Soon" are
 deliberate placeholders, wired but not yet routed.
 
 There are no JavaScript tests yet. Client only logic is currently verified by

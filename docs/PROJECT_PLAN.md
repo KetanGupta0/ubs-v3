@@ -1,7 +1,7 @@
 # Unboundbyte Solutions Private Limited — Platform Plan
 
 **Document owner:** engineering
-**Status:** approved; Phases 0 and 1 delivered
+**Status:** approved; Phases 0 to 2 delivered
 **Last updated:** 2026-09-15
 
 ---
@@ -187,6 +187,27 @@ The part that converts strangers. Highest visual investment.
   analytics, Core Web Vitals budget.
 
 **Exit:** a public site good enough that a visitor believes the work here is serious.
+
+**Delivered.** Fifteen products across five categories, each with its modules,
+technology, integrations, an indicative budget band and an indicative timeline,
+and its own page with a feature tour. The catalogue is searchable and filterable
+by category, industry, platform and technology, with the state in the query
+string so a filtered view can be shared. Three service pages covering
+development, modernisation and maintenance, with deliverables, process and
+engagement models. Public course listings with real batch dates and seat counts,
+excluding anything marked as existing inside the learning management system
+only. Supporting pages for about, process, technology, frequently asked
+questions, contact and legal. Every form writes to the leads table carrying the
+page it came from, alerts the team by email and SMS, and confirms to the sender
+with a reference. Per page metadata, Open Graph images, JSON-LD and a generated
+sitemap.
+
+Two honesty decisions worth recording. There are no screenshots of client
+systems, because we have no client permission to publish any; product pages
+carry a clearly labelled illustrative interface instead. And the testimonials
+section renders nothing until a real client or student agrees to be quoted,
+because an invented endorsement on a real company's site is a lie told to
+someone deciding whether to trust us.
 
 ### Phase 3 — Admin core
 

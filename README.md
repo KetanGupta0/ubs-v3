@@ -59,7 +59,7 @@ time code can be read straight out of the log.
 
 ## Status
 
-**Phases 0 and 1 are complete.**
+**Phases 0, 1 and 2 are complete.**
 
 Phase 0 built the foundation: brand identity and logo set, design tokens with
 full light and dark themes, a component library, the shared server driven table
@@ -70,5 +70,9 @@ Phase 1 built identity and access: one sign in form with five ways in, optional
 two factor authentication, password reset, email and mobile verification, session
 and device management, an authentication audit log, and the versioned mobile API.
 
-Phases 2 through 9 are described in the plan. Phase 2 is the public marketing
-website.
+Phase 2 built the public website: a searchable, filterable catalogue of fifteen
+products, service and training pages, supporting and legal pages, an enquiry
+system that routes to the leads inbox, and the metadata and sitemap search
+engines need.
+
+Phases 3 through 9 are described in the plan. Phase 3 is the admin core.

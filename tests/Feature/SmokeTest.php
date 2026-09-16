@@ -2,12 +2,6 @@
 
 use App\Models\User;
 
-it('renders the public landing page', function () {
-    $this->get('/')
-        ->assertOk()
-        ->assertInertia(fn ($page) => $page->component('Welcome'));
-});
-
 it('renders the design system gallery outside production', function () {
     User::factory()->count(3)->create();
 
