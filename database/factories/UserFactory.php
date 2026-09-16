@@ -2,9 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Enums\Role;
+use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -12,34 +13,62 @@ use Illuminate\Support\Str;
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
-    protected static ?string $password;
+    protected $model = User::class;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected static ?string $password = null;
+
     public function definition(): array
     {
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'mobile' => '+91'.fake()->unique()->numerify('9#########'),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'mobile_verified_at' => now(),
+            'password' => static::$password ??= bcrypt('Password123!'),
+            'role' => Role::Student,
+            'status' => UserStatus::Active,
             'remember_token' => Str::random(10),
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
+    public function admin(): static
+    {
+        return $this->state(fn () => ['role' => Role::Admin]);
+    }
+
+    public function client(): static
+    {
+        return $this->state(fn () => ['role' => Role::Client]);
+    }
+
+    public function student(): static
+    {
+        return $this->state(fn () => ['role' => Role::Student]);
+    }
+
+    public function suspended(): static
+    {
+        return $this->state(fn () => ['status' => UserStatus::Suspended]);
+    }
+
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn () => [
             'email_verified_at' => null,
+            'mobile_verified_at' => null,
         ]);
+    }
+
+    /** An account created by an administrator, still holding its issued password. */
+    public function mustChangePassword(): static
+    {
+        return $this->state(fn () => ['must_change_password' => true]);
+    }
+
+    /** Signed up through Google, so there is no password at all. */
+    public function passwordless(): static
+    {
+        return $this->state(fn () => ['password' => null]);
     }
 }

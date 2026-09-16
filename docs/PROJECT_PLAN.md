@@ -1,7 +1,7 @@
 # Unboundbyte Solutions Private Limited — Platform Plan
 
 **Document owner:** engineering
-**Status:** approved; Phase 0 delivered
+**Status:** approved; Phases 0 and 1 delivered
 **Last updated:** 2026-09-15
 
 ---
@@ -150,6 +150,19 @@ One login form, many ways in. Built early because both business modules depend o
 - Role based redirect after login into the correct dashboard.
 
 **Exit:** all three roles can log in five different ways and land in the right place.
+
+**Delivered.** One users table carrying role and status, with profiles and a
+granular permission list for sub admins. A single sign in form accepting an email
+address or a mobile number in any of the forms people type it. One time codes
+over email and SMS, stored hashed, single use, expiring, capped at five guesses
+and rate limited per destination. Google sign in that refuses an unverified
+Google address and only ever auto creates a student. Optional authenticator app
+two factor with single use recovery codes, enforced on every route in including
+Google and one time codes. Password reset, the forced first password change for
+admin created accounts, email and mobile verification, a session and device list
+with revocation, and an audit log that masks the identifiers it records. A
+versioned mobile API issuing per device Sanctum tokens, with a scoped short lived
+token for the two factor step and push token registration.
 
 ### Phase 2 — Public marketing website
 

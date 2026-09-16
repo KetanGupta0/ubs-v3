@@ -10,7 +10,7 @@
 import { ref, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
-    Menu, Bell, Search, LogOut, User, Settings, PanelLeftClose, PanelLeft,
+    Bell, Search, LogOut, Settings, ShieldCheck, PanelLeftClose, PanelLeft,
     MoreHorizontal, ChevronRight,
 } from 'lucide-vue-next';
 
@@ -160,9 +160,15 @@ function isActive(item) {
                             </div>
 
                             <div class="mt-1 space-y-0.5">
-                                <UiDropdownItem><User class="h-4 w-4" /> Profile</UiDropdownItem>
-                                <UiDropdownItem><Settings class="h-4 w-4" /> Settings</UiDropdownItem>
-                                <UiDropdownItem danger><LogOut class="h-4 w-4" /> Sign out</UiDropdownItem>
+                                <UiDropdownItem href="/settings/security">
+                                    <ShieldCheck class="h-4 w-4" /> Security
+                                </UiDropdownItem>
+                                <UiDropdownItem href="/password/change">
+                                    <Settings class="h-4 w-4" /> Change password
+                                </UiDropdownItem>
+                                <UiDropdownItem href="/logout" method="post" danger>
+                                    <LogOut class="h-4 w-4" /> Sign out
+                                </UiDropdownItem>
                             </div>
                         </UiDropdown>
                     </div>

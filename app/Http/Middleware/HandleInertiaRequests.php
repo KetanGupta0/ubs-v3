@@ -45,12 +45,27 @@ class HandleInertiaRequests extends Middleware
                 ]),
             ],
 
-            // One shot feedback surfaced by the toast system in the app shell.
+            /*
+             * One shot data flashed for the next render.
+             *
+             * The first four are picked up by the toaster in the app shell. The
+             * rest are payloads a screen needs exactly once and must never
+             * survive a refresh: a two factor secret, a set of recovery codes,
+             * where a one time code was sent. Sharing them here is what makes a
+             * redirect back able to carry them, and flashing is what stops them
+             * lingering.
+             */
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'info' => fn () => $request->session()->get('info'),
                 'warning' => fn () => $request->session()->get('warning'),
+                'status' => fn () => $request->session()->get('status'),
+
+                'otpSentTo' => fn () => $request->session()->get('otpSentTo'),
+                'otpIdentifier' => fn () => $request->session()->get('otpIdentifier'),
+                'twoFactorSetup' => fn () => $request->session()->get('twoFactorSetup'),
+                'recoveryCodes' => fn () => $request->session()->get('recoveryCodes'),
             ],
 
             'ziggy' => fn () => [

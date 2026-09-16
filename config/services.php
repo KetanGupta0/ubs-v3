@@ -35,4 +35,27 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
+    /*
+     * SMS delivery. 'log' writes to the log instead of sending, and is the
+     * default everywhere except production so development never messages a
+     * real phone or spends credit.
+     */
+    'sms' => [
+        'driver' => env('SMS_DRIVER', 'log'),
+        'log_channel' => env('SMS_LOG_CHANNEL', 'stack'),
+
+        'msg91' => [
+            'auth_key' => env('MSG91_AUTH_KEY'),
+            'sender_id' => env('MSG91_SENDER_ID'),
+            'otp_template_id' => env('MSG91_OTP_TEMPLATE_ID'),
+            'route' => env('MSG91_ROUTE', 4),
+        ],
+    ],
+
 ];

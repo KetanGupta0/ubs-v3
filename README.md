@@ -44,11 +44,31 @@ php artisan serve
 
 Then open `/` for the site and `/design` for the live component gallery.
 
+## Demo accounts
+
+Seeded outside production only. The password for all three is `Password123!`.
+
+| Role | Email |
+| --- | --- |
+| Admin | `admin@unboundbyte.test` |
+| Client | `client@unboundbyte.test` |
+| Student | `student@unboundbyte.test` |
+
+Mail and SMS both write to `storage/logs/laravel.log` in development, so a one
+time code can be read straight out of the log.
+
 ## Status
 
-**Phase 0 is complete.** The foundation is in place: brand identity and logo set,
-design tokens with full light and dark themes, a component library, the shared
-server driven table that every dashboard list will use, the public and
-authenticated app shells including the phone tab bar, and continuous integration.
+**Phases 0 and 1 are complete.**
 
-Phases 1 through 9 are described in the plan. Phase 1 is identity and access.
+Phase 0 built the foundation: brand identity and logo set, design tokens with
+full light and dark themes, a component library, the shared server driven table
+every dashboard list uses, the public and authenticated app shells including the
+phone tab bar, and continuous integration.
+
+Phase 1 built identity and access: one sign in form with five ways in, optional
+two factor authentication, password reset, email and mobile verification, session
+and device management, an authentication audit log, and the versioned mobile API.
+
+Phases 2 through 9 are described in the plan. Phase 2 is the public marketing
+website.

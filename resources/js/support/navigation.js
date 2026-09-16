@@ -12,12 +12,12 @@ import {
     LayoutDashboard, FolderKanban, FileText, Receipt, LifeBuoy, MessagesSquare,
     KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy,
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
-    UserPlus, Package,
+    UserPlus, Package, ShieldCheck,
 } from 'lucide-vue-next';
 
 export const navigation = {
     admin: [
-        { label: 'Dashboard', icon: LayoutDashboard, href: null, primary: true },
+        { label: 'Dashboard', icon: LayoutDashboard, href: '/admin', primary: true },
         { label: 'Leads', icon: Inbox, href: null, primary: true },
         { label: 'Clients', icon: Briefcase, href: null, primary: true },
         { label: 'Projects', icon: FolderKanban, href: null },
@@ -29,10 +29,11 @@ export const navigation = {
         { label: 'Chat', icon: MessagesSquare, href: null },
         { label: 'Reports', icon: BarChart3, href: null },
         { label: 'Settings', icon: Settings, href: null },
+        { label: 'Security', icon: ShieldCheck, href: '/settings/security' },
     ],
 
     client: [
-        { label: 'Overview', icon: LayoutDashboard, href: null, primary: true },
+        { label: 'Overview', icon: LayoutDashboard, href: '/client', primary: true },
         { label: 'Projects', icon: FolderKanban, href: null, primary: true },
         { label: 'Documents', icon: FileText, href: null },
         { label: 'Payments', icon: Receipt, href: null, primary: true },
@@ -40,10 +41,11 @@ export const navigation = {
         { label: 'Chat', icon: MessagesSquare, href: null, primary: true },
         { label: 'API keys', icon: KeyRound, href: null },
         { label: 'Subscriptions', icon: RefreshCw, href: null },
+        { label: 'Security', icon: ShieldCheck, href: '/settings/security' },
     ],
 
     student: [
-        { label: 'Dashboard', icon: LayoutDashboard, href: null, primary: true },
+        { label: 'Dashboard', icon: LayoutDashboard, href: '/student', primary: true },
         { label: 'My courses', icon: BookOpen, href: null, primary: true },
         { label: 'Live classes', icon: CalendarCheck, href: null, primary: true },
         { label: 'Quizzes', icon: ClipboardList, href: null },
@@ -54,6 +56,7 @@ export const navigation = {
         { label: 'Chat', icon: MessagesSquare, href: null, primary: true },
         { label: 'Announcements', icon: Megaphone, href: null },
         { label: 'Payments', icon: Receipt, href: null },
+        { label: 'Security', icon: ShieldCheck, href: '/settings/security' },
     ],
 };
 

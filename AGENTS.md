@@ -72,7 +72,43 @@ php artisan test    # suite
 npm run build       # catches template and import errors
 ```
 
+## Authentication
+
+One `users` table for all three roles. `role` picks the dashboard, permissions
+decide what a staff account may do once inside.
+
+Every route in converges on `App\Services\Auth\LoginPipeline`: password, one
+time code, Google and the mobile API all call `complete()`. Suspension checks,
+the two factor gate and the audit entry live there and nowhere else, so a new
+sign in route cannot accidentally skip one. Add routes in, never a second
+pipeline.
+
+Rules that are easy to break and expensive to get wrong:
+
+- **Never confirm whether an account exists.** Sign in, one time code and
+  password reset all answer identically for a real and an unknown identifier.
+  Tests assert the messages are byte for byte the same.
+- **Codes are hashed, single use, expiring and capped.** Issuing a new one
+  consumes the previous one, so a second request replaces the guessing surface
+  rather than widening it.
+- **Escape LIKE wildcards** in anything a user typed that reaches a query.
+- **Sanctum does not enforce abilities by itself.** Authenticated API routes
+  carry `abilities:api-access`, which is what stops the short lived two factor
+  challenge token opening the rest of the API.
+- **Google linking requires a verified Google email.** Accepting an unverified
+  one hands an existing account to whoever can claim that address.
+- Anything flashed for a single render, such as a two factor secret or a set of
+  recovery codes, has to be listed in `HandleInertiaRequests::share` under
+  `flash` or it never reaches the client.
+
+Development sends mail and SMS to `storage/logs/laravel.log`. Notifications are
+queued, so drain the queue before expecting to read a code from it.
+
 ## Not yet built
 
-Phases 1 through 9 in the plan. Navigation entries that render as "Soon" are
+Phases 2 through 9 in the plan. Navigation entries that render as "Soon" are
 deliberate placeholders, wired but not yet routed.
+
+There are no JavaScript tests yet. Client only logic is currently verified by
+driving a real browser. Two bugs in Phase 1 were only visible that way, so check
+behaviour in a browser before calling a front end change done.
