@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
             DemoAccountSeeder::class,
             CatalogueSeeder::class,
             MessageTemplateSeeder::class,
+            DeliverySeeder::class,
         ]);
     }
 }

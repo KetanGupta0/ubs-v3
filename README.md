@@ -61,7 +61,7 @@ time code can be read straight out of the log.
 
 ## Status
 
-**Phases 0 to 3 are complete.**
+**Phases 0 to 4 are complete.**
 
 Phase 0 built the foundation: brand identity and logo set, design tokens with
 full light and dark themes, a component library, the shared server driven table
@@ -84,4 +84,12 @@ memorandums, catalogue management for everything the public site renders, staff
 accounts with real permissions, company and message settings, and an audit log of
 every change with secrets redacted.
 
-Phases 4 through 9 are described in the plan. Phase 4 is the client module.
+Phase 4 built the client module: projects with milestones and a timeline, proposals
+and quotations a client accepts or declines on the record, a versioned document
+repository, maintenance contracts with a real SLA clock, payments through
+Razorpay with GST compliant invoices and receipts, a full transactions ledger,
+subscriptions with renewal reminders, API keys with quotas, and the mobile API
+for all of it.
+
+Phases 5 through 9 are described in the plan. Phase 5 is the learning management
+system.

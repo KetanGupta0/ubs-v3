@@ -162,11 +162,46 @@ Rules for the marketing pages:
   by hand, and keep `inheritAttrs: false` on controls that render a wrapper, or
   the id lands on the wrapper and the label points at nothing.
 
+## Client module and money
+
+`routes/client.php`, `App\Http\Controllers\Client\*`, `resources/js/pages/client`,
+plus `App\Services\Billing` and `App\Services\Payments`.
+
+- **Money is paise, as integers, everywhere.** `App\Support\Money` converts at the
+  edges: `Money::toPaise($input)` coming in, `Money::display($paise)` going out.
+  A rupee in a float is a rounding error waiting to appear on an invoice.
+- **A client's own relations are the only way in.** Every read starts from
+  `->forClient($user)` and ends in `firstOrFail()`, so somebody else's record is
+  not found rather than found and refused: a 403 confirms it exists. Route model
+  binding is deliberately not used for client owned records.
+- **The amount comes from the invoice, never from the request.** `Checkout::begin()`
+  prices the attempt server side. A checkout that reads its amount from the page
+  lets a lakh rupee invoice be settled with one rupee.
+- **An invoice freezes who was billed and by whom.** It is issued when the request
+  is raised, not when it is paid, and re-rendering it from live settings is never
+  correct. The PDF is cached on disk for the same reason.
+- **The SLA clock is copied onto the ticket** when it is raised. Reading it back
+  off the contract later would let an edit rewrite whether we met the promise.
+- **A sent proposal is immutable.** Revise it into a new version instead; the old
+  one keeps the answer it was given.
+- **An API key is shown once.** Only a hash and the prefix are stored. Lost keys
+  are rotated, not recovered.
+- **`$request->validate()` drops optional fields the request did not send**, so
+  `$validated['project_id']` is a fatal error exactly when the field was left
+  blank. Use `$this->validatedInput($request, $rules)` from the base controller,
+  which fills every declared key. This has caused three separate 500s.
+- **A constrained eager load returns null for anything left out of the select.**
+  `with('user:id,name')` then reading `$user->role->value` is a 500, not a blank.
+
 ## Not yet built
 
-Phases 4 through 9 in the plan. Navigation entries that render as "Soon" are
+Phases 5 through 9 in the plan. Navigation entries that render as "Soon" are
 deliberate placeholders, wired but not yet routed.
 
 There are no JavaScript tests yet. Client only logic is currently verified by
-driving a real browser. Two bugs in Phase 1 were only visible that way, so check
-behaviour in a browser before calling a front end change done.
+driving a real browser. Bugs in every phase so far have been visible only that
+way, so check behaviour in a browser before calling a front end change done.
+The most recent: an API key was issued and its one readable copy never reached
+the screen, because the flash payload was not listed in
+`HandleInertiaRequests::share`. That is the same mistake as Phase 1's, which is
+why both now have tests.

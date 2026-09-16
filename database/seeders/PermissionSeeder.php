@@ -8,7 +8,7 @@ use Illuminate\Database\Seeder;
 /**
  * The capability list staff accounts are granted from.
  *
- * Administrators hold everything implicitly, so these matter for sub admins:
+ * The owner holds everything implicitly, so these matter for everybody else:
  * someone who should run the leads inbox without also seeing billing.
  *
  * Keys are added as each phase lands. Re-running this is safe.
@@ -32,6 +32,14 @@ class PermissionSeeder extends Seeder
                 'leads.view' => 'View the leads inbox',
                 'leads.assign' => 'Assign leads',
                 'leads.convert' => 'Convert a lead to a client',
+            ],
+            'Delivery' => [
+                'projects.view' => 'View projects',
+                'projects.manage' => 'Create and edit projects',
+                'proposals.manage' => 'Write and send proposals',
+                'documents.manage' => 'Upload and manage client documents',
+                'support.manage' => 'Answer support tickets',
+                'api.manage' => 'Issue and revoke API keys',
             ],
             'Catalogue' => [
                 'catalogue.view' => 'View the catalogue',

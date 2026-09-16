@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\Client\ClientApiController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -45,5 +46,25 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('devices/push-token', [AuthController::class, 'registerPushToken'])->name('devices.push-token');
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::post('auth/logout-all', [AuthController::class, 'logoutAll'])->name('auth.logout-all');
+
+        /*
+         * The client module.
+         *
+         * Role gated as well as token gated: a student's token is a valid token,
+         * and valid is not the same as entitled.
+         */
+        Route::middleware('role:client')->prefix('client')->name('client.')->group(function () {
+            Route::get('overview', [ClientApiController::class, 'overview'])->name('overview');
+            Route::get('projects', [ClientApiController::class, 'projects'])->name('projects.index');
+            Route::get('projects/{project}', [ClientApiController::class, 'project'])
+                ->whereNumber('project')
+                ->name('projects.show');
+            Route::get('documents', [ClientApiController::class, 'documents'])->name('documents.index');
+            Route::get('tickets', [ClientApiController::class, 'tickets'])->name('tickets.index');
+            Route::post('tickets', [ClientApiController::class, 'storeTicket'])->name('tickets.store');
+            Route::get('payments', [ClientApiController::class, 'payments'])->name('payments.index');
+            Route::get('transactions', [ClientApiController::class, 'transactions'])->name('transactions.index');
+            Route::get('invoices', [ClientApiController::class, 'invoices'])->name('invoices.index');
+        });
     });
 });

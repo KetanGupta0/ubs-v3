@@ -92,6 +92,60 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(AuthAuditLog::class);
     }
 
+    /* ------------------------------------------- client module (Phase 4) */
+
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class, 'client_id');
+    }
+
+    public function proposals(): HasMany
+    {
+        return $this->hasMany(Proposal::class, 'client_id');
+    }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(Document::class, 'client_id');
+    }
+
+    public function maintenanceContracts(): HasMany
+    {
+        return $this->hasMany(MaintenanceContract::class, 'client_id');
+    }
+
+    public function supportTickets(): HasMany
+    {
+        return $this->hasMany(SupportTicket::class, 'client_id');
+    }
+
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class, 'client_id');
+    }
+
+    public function apiKeys(): HasMany
+    {
+        return $this->hasMany(ApiKey::class, 'client_id');
+    }
+
+    /* ------------------------------------- money, shared with the LMS */
+
+    public function paymentRequests(): HasMany
+    {
+        return $this->hasMany(PaymentRequest::class);
+    }
+
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
     /* -------------------------------------------------------------- scopes */
 
     public function scopeRole(Builder $query, Role|string $role): Builder

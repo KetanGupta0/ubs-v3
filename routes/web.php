@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 require __DIR__.'/marketing.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
+require __DIR__.'/client.php';
 
 /*
  * Role dashboards.
@@ -20,10 +21,6 @@ require __DIR__.'/admin.php';
  * more than it protects.
  */
 Route::middleware(['auth', 'password.owned'])->group(function () {
-    Route::get('/client', [DashboardController::class, 'client'])
-        ->middleware('role:client')
-        ->name('client.dashboard');
-
     Route::get('/student', [DashboardController::class, 'student'])
         ->middleware('role:student')
         ->name('student.dashboard');

@@ -75,6 +75,7 @@ class HandleInertiaRequests extends Middleware
                 'otpIdentifier' => fn () => $request->session()->get('otpIdentifier'),
                 'twoFactorSetup' => fn () => $request->session()->get('twoFactorSetup'),
                 'recoveryCodes' => fn () => $request->session()->get('recoveryCodes'),
+                'issuedApiKey' => fn () => $request->session()->get('issuedApiKey'),
             ],
 
             'ziggy' => fn () => [

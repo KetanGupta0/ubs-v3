@@ -2,16 +2,22 @@
 
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BatchController;
+use App\Http\Controllers\Admin\BillingController;
 use App\Http\Controllers\Admin\CollegeController;
 use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\PeopleController;
+use App\Http\Controllers\Admin\ProjectController;
+use App\Http\Controllers\Admin\ProposalController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SolutionController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\SubscriptionController;
+use App\Http\Controllers\Admin\SupportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -114,6 +120,116 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('content/testimonials', [ContentController::class, 'storeTestimonial'])->name('content.testimonials.store');
             Route::put('content/testimonials/{testimonial}', [ContentController::class, 'updateTestimonial'])->name('content.testimonials.update');
             Route::delete('content/testimonials/{testimonial}', [ContentController::class, 'destroyTestimonial'])->name('content.testimonials.destroy');
+        });
+
+        /* --------------------------------------------------------- delivery */
+        Route::middleware('permission:projects.view')->group(function () {
+            Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
+            Route::get('projects/{project}', [ProjectController::class, 'show'])
+                ->whereNumber('project')
+                ->name('projects.show');
+        });
+
+        Route::middleware('permission:projects.manage')->group(function () {
+            Route::get('projects/new', [ProjectController::class, 'create'])->name('projects.create');
+            Route::post('projects', [ProjectController::class, 'store'])->name('projects.store');
+            Route::get('projects/{project}/edit', [ProjectController::class, 'edit'])->name('projects.edit');
+            Route::put('projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+            Route::delete('projects/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+
+            Route::post('projects/{project}/milestones', [ProjectController::class, 'storeMilestone'])->name('projects.milestones.store');
+            Route::put('projects/{project}/milestones/{milestone}', [ProjectController::class, 'updateMilestone'])->name('projects.milestones.update');
+            Route::post('projects/{project}/milestones/{milestone}/complete', [ProjectController::class, 'completeMilestone'])->name('projects.milestones.complete');
+            Route::delete('projects/{project}/milestones/{milestone}', [ProjectController::class, 'destroyMilestone'])->name('projects.milestones.destroy');
+
+            Route::post('projects/{project}/updates', [ProjectController::class, 'storeUpdate'])->name('projects.updates.store');
+            Route::delete('projects/{project}/updates/{update}', [ProjectController::class, 'destroyUpdate'])->name('projects.updates.destroy');
+        });
+
+        /* -------------------------------------------------------- proposals */
+        Route::middleware('permission:proposals.manage')->group(function () {
+            Route::get('proposals', [ProposalController::class, 'index'])->name('proposals.index');
+            Route::get('proposals/new', [ProposalController::class, 'create'])->name('proposals.create');
+            Route::post('proposals', [ProposalController::class, 'store'])->name('proposals.store');
+            Route::get('proposals/{proposal}', [ProposalController::class, 'show'])
+                ->whereNumber('proposal')
+                ->name('proposals.show');
+            Route::put('proposals/{proposal}', [ProposalController::class, 'update'])->name('proposals.update');
+            Route::post('proposals/{proposal}/send', [ProposalController::class, 'send'])->name('proposals.send');
+            Route::post('proposals/{proposal}/revise', [ProposalController::class, 'revise'])->name('proposals.revise');
+            Route::post('proposals/{proposal}/withdraw', [ProposalController::class, 'withdraw'])->name('proposals.withdraw');
+            Route::delete('proposals/{proposal}', [ProposalController::class, 'destroy'])->name('proposals.destroy');
+
+            Route::put('proposals/{proposal}/quotation', [ProposalController::class, 'updateQuotation'])->name('proposals.quotation.update');
+            Route::post('proposals/{proposal}/items', [ProposalController::class, 'storeItem'])->name('proposals.items.store');
+            Route::put('proposals/{proposal}/items/{item}', [ProposalController::class, 'updateItem'])->name('proposals.items.update');
+            Route::delete('proposals/{proposal}/items/{item}', [ProposalController::class, 'destroyItem'])->name('proposals.items.destroy');
+        });
+
+        /* -------------------------------------------------------- documents */
+        Route::middleware('permission:documents.manage')->group(function () {
+            Route::get('documents', [DocumentController::class, 'index'])->name('documents.index');
+            Route::post('documents', [DocumentController::class, 'store'])->name('documents.store');
+            Route::put('documents/{document}', [DocumentController::class, 'update'])->name('documents.update');
+            Route::get('documents/{document}/download', [DocumentController::class, 'download'])->name('documents.download');
+            Route::delete('documents/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+            Route::post('document-folders', [DocumentController::class, 'storeFolder'])->name('documents.folders.store');
+        });
+
+        /* ---------------------------------------------- support and contracts */
+        Route::middleware('permission:support.manage')->group(function () {
+            Route::get('tickets', [SupportController::class, 'index'])->name('tickets.index');
+            Route::get('tickets/{ticket}', [SupportController::class, 'show'])->name('tickets.show');
+            Route::post('tickets/{ticket}/reply', [SupportController::class, 'reply'])->name('tickets.reply');
+            Route::put('tickets/{ticket}', [SupportController::class, 'update'])->name('tickets.update');
+
+            Route::get('contracts', [SupportController::class, 'contracts'])->name('contracts.index');
+            Route::get('contracts/new', [SupportController::class, 'createContract'])->name('contracts.create');
+            Route::post('contracts', [SupportController::class, 'storeContract'])->name('contracts.store');
+            Route::get('contracts/{contract}/edit', [SupportController::class, 'editContract'])->name('contracts.edit');
+            Route::put('contracts/{contract}', [SupportController::class, 'updateContract'])->name('contracts.update');
+            Route::delete('contracts/{contract}', [SupportController::class, 'destroyContract'])->name('contracts.destroy');
+        });
+
+        /* ----------------------------------------------- money, both lines */
+        Route::middleware('permission:billing.view')->group(function () {
+            Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
+            Route::get('billing/{payment}', [BillingController::class, 'show'])
+                ->whereNumber('payment')
+                ->name('billing.show');
+            Route::get('invoices', [BillingController::class, 'invoices'])->name('invoices.index');
+            Route::get('invoices/{invoice}/pdf', [BillingController::class, 'invoicePdf'])->name('invoices.pdf');
+        });
+
+        Route::middleware('permission:billing.manage')->group(function () {
+            Route::get('billing/new', [BillingController::class, 'create'])->name('billing.create');
+            Route::post('billing', [BillingController::class, 'store'])->name('billing.store');
+            Route::post('billing/{payment}/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
+            Route::post('billing/{payment}/offline', [BillingController::class, 'recordOffline'])->name('billing.offline');
+        });
+
+        Route::middleware('permission:billing.refund')->group(function () {
+            Route::post('transactions/{transaction}/refund', [BillingController::class, 'refund'])->name('billing.refund');
+            Route::post('refunds/{refund}/complete', [BillingController::class, 'completeRefund'])->name('billing.refund.complete');
+        });
+
+        /* -------------------------------- subscriptions and API key plans */
+        Route::middleware('permission:billing.view')->group(function () {
+            Route::get('subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+        });
+
+        Route::middleware('permission:billing.manage')->group(function () {
+            Route::post('subscriptions', [SubscriptionController::class, 'store'])->name('subscriptions.store');
+            Route::put('subscriptions/{subscription}', [SubscriptionController::class, 'update'])->name('subscriptions.update');
+            Route::post('subscriptions/{subscription}/renew', [SubscriptionController::class, 'renew'])->name('subscriptions.renew');
+            Route::post('subscriptions/{subscription}/cancel', [SubscriptionController::class, 'cancel'])->name('subscriptions.cancel');
+        });
+
+        Route::middleware('permission:api.manage')->group(function () {
+            Route::get('api-plans', [SubscriptionController::class, 'plans'])->name('api-plans.index');
+            Route::post('api-plans', [SubscriptionController::class, 'storePlan'])->name('api-plans.store');
+            Route::put('api-plans/{plan}', [SubscriptionController::class, 'updatePlan'])->name('api-plans.update');
+            Route::post('api-keys/{apiKey}/revoke', [SubscriptionController::class, 'revokeKey'])->name('api-keys.revoke');
         });
 
         /* --------------------------------------------------------- colleges */

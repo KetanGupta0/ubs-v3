@@ -30,7 +30,12 @@ identity, and a person could in principle be both a client and a student.
 | `leads` | reference, name, email, mobile, company, college_name, student_count, message, interest, source_page, solution_id, service_id, course_id, status, assigned_to, converted_user_id |
 | `testimonials`, `faqs`, `pages` | content managed from admin |
 
-## Client module (Phase 4)
+## Client module (Phase 4, built)
+
+Every money column below stores **paise as an integer**. A decimal column still
+arrives in PHP as a float unless every read remembers not to, and a total
+assembled from floats drifts onto an invoice somebody then has to defend.
+
 
 | Table | Key columns |
 | --- | --- |
@@ -84,7 +89,7 @@ and the `internship_documents` table exist.
 The warning table is deliberately auditable. Escalating a student is a serious act, so who
 issued it, why, and whether the student acknowledged it are all recorded.
 
-## Money (Phases 4 and 5, shared)
+## Money (Phases 4 and 5, shared; built in Phase 4)
 
 One ledger serves both business lines, so reporting does not have to union two systems.
 

@@ -1,7 +1,7 @@
 # Unboundbyte Solutions Private Limited — Platform Plan
 
 **Document owner:** engineering
-**Status:** approved; Phases 0 to 3 delivered
+**Status:** approved; Phases 0 to 4 delivered
 **Last updated:** 2026-09-16
 
 ---
@@ -263,27 +263,39 @@ The control plane both later modules plug into.
 
 **Exit met:** admin can run the public site content and create both kinds of accounts.
 
-### Phase 4 — Client module
+### Phase 4 — Client module — delivered
 
 Everything a paying client sees. Nothing more.
 
-- **Projects.** One client may hold many. Each has scope, team, phase, and a live
-  development tracker with milestones, progress percentage, and a visual timeline.
+- **Projects.** One client may hold many. Each has scope, team, phase, milestones and a
+  timeline. Internal notes live on the same timeline, hidden from the client, because a
+  delivery team needs somewhere to write things that are not for the client to read.
 - **Proposals and quotations** with line items, versions, validity, and online accept or
-  reject with a recorded timestamp.
-- **Documents** repository, folder tree, versioning, preview, download, access control.
-- **Maintenance:** AMC contract, covered scope, ticket raising, SLA clock, ticket history.
-- **Payments:** admin raises a payment request for a service fee, a development milestone,
-  or a renewal. Client pays online through the gateway. The system issues a numbered
-  GST compliant invoice and a receipt.
-- **Transactions history:** full ledger, filterable, printable, downloadable as PDF or
-  spreadsheet.
-- **Subscriptions and renewals** with expiry reminders at configurable intervals.
-- **API key purchasing**, for products that need keys. Purchase, issue, rotate, revoke,
-  usage quota and usage graph.
-- Notifications, plus client side reports on project progress, spend, and tickets.
+  reject recorded with a timestamp and the address it came from. Line items lock the
+  moment a proposal is sent; changing one means a new version, and the old one is kept
+  exactly as it was answered.
+- **Documents** repository with folders, versioning and access control. A replacement is a
+  new row pointing at the one it supersedes, so the previous file stays downloadable.
+  Nothing is served by URL: every download goes through a check on who is asking.
+- **Maintenance:** AMC contract, covered scope, exclusions, ticket raising and an SLA
+  clock frozen onto each ticket at the moment it is raised, so editing a contract cannot
+  retrospectively change whether a promise was met.
+- **Payments:** an administrator raises a request, and the invoice is issued at the same
+  moment rather than after payment, so the client has the document they need to get it
+  approved internally. Tax splits into CGST and SGST or IGST from the place of supply.
+  Payment goes through Razorpay where it is configured and a refusing stand in where it
+  is not, so the whole path can be walked in development without moving money.
+- **Transactions history:** the full ledger including failed attempts, filterable,
+  printable and downloadable as CSV, spreadsheet or PDF, with a receipt per payment.
+- **Subscriptions and renewals**, with reminders at 30, 14 and 3 days and a record of
+  which windows have already been sent.
+- **API keys.** Purchase, issue, rotate, revoke, quota and a usage chart. The secret is
+  shown once and stored only as a hash: a key we could read back is a key anybody with a
+  database backup can read.
+- Notifications on both channels, client side reports on delivery, spend and support, and
+  the mobile API for all of it.
 
-**Exit:** a client can be onboarded, quoted, tracked, billed, and supported end to end.
+**Exit met:** a client can be onboarded, quoted, tracked, billed, and supported end to end.
 
 ### Phase 5 — Learning management system
 
@@ -422,7 +434,7 @@ If the business wants value early rather than everything at once, ship in this o
    *Done.*
 2. Phase 3 and Phase 5. Training runs on the platform and starts collecting fees.
    *Phase 3 done.*
-3. Phase 4. Client delivery moves onto the platform.
+3. Phase 4. Client delivery moves onto the platform. *Done.*
 4. Phases 6, 7, 8, 9.
 
 ## 7. Open decisions

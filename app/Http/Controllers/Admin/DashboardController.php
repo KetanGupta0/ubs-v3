@@ -8,8 +8,15 @@ use App\Models\AuditLog;
 use App\Models\Batch;
 use App\Models\Course;
 use App\Models\Lead;
+use App\Models\MaintenanceContract;
+use App\Models\PaymentRequest;
+use App\Models\Project;
+use App\Models\Proposal;
 use App\Models\Solution;
+use App\Models\SupportTicket;
+use App\Models\Transaction;
 use App\Models\User;
+use App\Support\Money;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -88,6 +95,14 @@ class DashboardController extends Controller
             'publishedSolutions' => Solution::query()->published()->count(),
             'liveOfferings' => Course::query()->publiclyVisible()->count(),
             'upcomingBatches' => Batch::query()->where('status', 'upcoming')->count(),
+
+            'activeProjects' => Project::query()->active()->count(),
+            'openTickets' => SupportTicket::query()->open()->count(),
+            'outstanding' => Money::display((int) PaymentRequest::query()->pending()->sum('total')),
+            'collectedThisMonth' => Money::display((int) Transaction::query()
+                ->successful()
+                ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])
+                ->sum('amount')),
         ];
     }
 
@@ -143,6 +158,70 @@ class DashboardController extends Controller
                 'body' => 'The welcome message may not have reached them. You can resend the credentials.',
                 'href' => '/admin/clients?filter[never_signed_in]=true',
                 'action' => 'Review accounts',
+            ];
+        }
+
+        $breaching = SupportTicket::query()
+            ->open()
+            ->where(function ($query) {
+                $query->where(fn ($q) => $q->whereNull('first_response_at')
+                    ->whereNotNull('response_due_at')
+                    ->where('response_due_at', '<', now()))
+                    ->orWhere(fn ($q) => $q->whereNull('resolved_at')
+                        ->whereNotNull('resolution_due_at')
+                        ->where('resolution_due_at', '<', now()));
+            })
+            ->count();
+
+        if ($breaching > 0) {
+            $items[] = [
+                'tone' => 'danger',
+                'title' => $breaching.' '.str('ticket')->plural($breaching).' past the time we promised',
+                'body' => 'The SLA on the contract is a promise, and it is being missed right now.',
+                'href' => '/admin/tickets',
+                'action' => 'Open the queue',
+            ];
+        }
+
+        $overdue = PaymentRequest::query()->overdue()->count();
+
+        if ($overdue > 0) {
+            $items[] = [
+                'tone' => 'warning',
+                'title' => $overdue.' '.str('invoice')->plural($overdue).' past the due date',
+                'body' => Money::display((int) PaymentRequest::query()->overdue()->sum('total')).' is outstanding beyond its terms.',
+                'href' => '/admin/billing',
+                'action' => 'Chase them',
+            ];
+        }
+
+        $awaiting = Proposal::query()
+            ->awaitingResponse()
+            ->where('sent_at', '<', now()->subDays(7))
+            ->count();
+
+        if ($awaiting > 0) {
+            $items[] = [
+                'tone' => 'warning',
+                'title' => $awaiting.' '.str('proposal')->plural($awaiting).' sent over a week ago with no answer',
+                'body' => 'A follow up call converts more than a second email.',
+                'href' => '/admin/proposals',
+                'action' => 'Review proposals',
+            ];
+        }
+
+        $expiring = MaintenanceContract::query()
+            ->active()
+            ->whereBetween('ends_on', [today(), today()->addDays(45)])
+            ->count();
+
+        if ($expiring > 0) {
+            $items[] = [
+                'tone' => 'warning',
+                'title' => $expiring.' maintenance '.str('contract')->plural($expiring).' expiring within 45 days',
+                'body' => 'Renew before it lapses rather than after.',
+                'href' => '/admin/contracts',
+                'action' => 'Review contracts',
             ];
         }
 

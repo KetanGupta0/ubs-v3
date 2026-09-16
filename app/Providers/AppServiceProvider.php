@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Services\Payments\ManualGateway;
+use App\Services\Payments\PaymentGateway;
+use App\Services\Payments\RazorpayGateway;
 use App\Services\Sms\LogSmsSender;
 use App\Services\Sms\Msg91SmsSender;
 use App\Services\Sms\SmsSender;
@@ -27,6 +30,27 @@ class AppServiceProvider extends ServiceProvider
                 default => new LogSmsSender,
             };
         });
+
+        /*
+         * The payment provider.
+         *
+         * Razorpay when it is configured, and otherwise the stand in, so the
+         * whole payment path can be walked in development without an account.
+         * The stand in refuses to settle anything in production, so a missing
+         * key is a payment that fails rather than a payment that is waved
+         * through.
+         */
+        $this->app->singleton(PaymentGateway::class, function () {
+            $config = config('services.razorpay');
+
+            $razorpay = new RazorpayGateway(
+                $config['key_id'] ?? null,
+                $config['key_secret'] ?? null,
+                $config['webhook_secret'] ?? null,
+            );
+
+            return $razorpay->isLive() ? $razorpay : new ManualGateway;
+        });
     }
 
     public function boot(): void
@@ -49,11 +73,13 @@ class AppServiceProvider extends ServiceProvider
         }
 
         /*
-         * Administrators pass every gate. Everything else is decided by the
-         * policy or permission the check names, which is why this returns null
-         * rather than false for non admins: null means "no opinion, carry on
-         * checking", false would short circuit every other rule.
+         * The owner passes every gate. Nobody else does, staff included, or the
+         * permission list would be decoration again: a gate is not much of a
+         * gate if holding the admin role opens it.
+         *
+         * null rather than false matters: null means "no opinion, carry on
+         * checking", where false would short circuit every other rule.
          */
-        Gate::before(fn (User $user) => $user->isAdmin() ? true : null);
+        Gate::before(fn (User $user) => $user->is_owner ? true : null);
     }
 }

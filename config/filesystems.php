@@ -38,6 +38,22 @@ return [
             'report' => false,
         ],
 
+        /*
+         * Client documents, invoices and receipts.
+         *
+         * Separate from 'local' so that nothing here is ever reachable by URL,
+         * and so the whole repository can be pointed at object storage later by
+         * changing one disk. Every read goes through a controller that scopes
+         * it to the signed in account first.
+         */
+        'private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/documents'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

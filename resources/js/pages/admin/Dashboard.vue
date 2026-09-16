@@ -105,6 +105,33 @@ const attentionTones = {
                 />
             </section>
 
+            <!-- ---------------------------------------------------- delivery -->
+            <section class="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <StatTile
+                    label="Projects in delivery"
+                    :value="metrics.activeProjects ?? 0"
+                    href="/admin/projects"
+                    :tone="metrics.activeProjects ? 'brand' : 'neutral'"
+                />
+                <StatTile
+                    label="Open tickets"
+                    :value="metrics.openTickets ?? 0"
+                    href="/admin/tickets"
+                    :tone="metrics.openTickets ? 'warning' : 'neutral'"
+                />
+                <StatTile
+                    label="Outstanding"
+                    :value="metrics.outstanding ?? '₹0.00'"
+                    href="/admin/billing"
+                />
+                <StatTile
+                    label="Collected this month"
+                    :value="metrics.collectedThisMonth ?? '₹0.00'"
+                    tone="success"
+                    href="/admin/invoices"
+                />
+            </section>
+
             <div class="grid gap-5 lg:grid-cols-3">
                 <!-- --------------------------------------------- recent leads -->
                 <UiCard class="lg:col-span-2">
