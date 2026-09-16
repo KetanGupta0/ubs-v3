@@ -134,7 +134,8 @@ const exportFormats = [
                 </UiButton>
 
                 <!-- Column picker, desktop only. -->
-                <UiDropdown class="hidden sm:block">
+                <span class="hidden sm:contents">
+                <UiDropdown>
                     <template #trigger>
                         <UiButton variant="secondary" size="sm" icon aria-label="Choose columns">
                             <Columns3 class="h-4 w-4" />
@@ -158,6 +159,7 @@ const exportFormats = [
                         </label>
                     </div>
                 </UiDropdown>
+                </span>
 
                 <UiDropdown v-if="table.exportable">
                     <template #trigger>

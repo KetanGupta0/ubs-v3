@@ -131,7 +131,7 @@ function isActive(item) {
                             <kbd class="hidden rounded px-1.5 py-0.5 font-mono text-[0.65rem] md:inline" style="background: var(--surface-sunken)">/</kbd>
                         </button>
 
-                        <ThemeToggle class="hidden sm:inline-flex" />
+                        <span class="hidden sm:contents"><ThemeToggle /></span>
 
                         <button
                             type="button"

@@ -68,11 +68,10 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                 </nav>
 
                 <div class="ml-auto flex items-center gap-2">
-                    <ThemeToggle class="hidden sm:inline-flex" />
-
-                    <UiButton variant="ghost" size="sm" class="hidden sm:inline-flex" href="/login">
-                        Sign in
-                    </UiButton>
+                    <span class="hidden sm:contents">
+                        <ThemeToggle />
+                        <UiButton variant="ghost" size="sm" href="/login">Sign in</UiButton>
+                    </span>
 
                     <UiButton size="sm" href="#contact" :inertia="false">
                         Start a project
