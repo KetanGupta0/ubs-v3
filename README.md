@@ -42,6 +42,7 @@ cp .env.example .env && php artisan key:generate
 php artisan migrate && php artisan db:seed --class=DemoTableSeeder
 npm run dev        # and, in another shell:
 php artisan serve
+php artisan reverb:start   # and in a third, for live chat
 ```
 
 Then open `/` for the site and `/design` for the live component gallery.
@@ -61,7 +62,7 @@ time code can be read straight out of the log.
 
 ## Status
 
-**Phases 0 to 5 are complete.**
+**Phases 0 to 6 are complete.**
 
 Phase 0 built the foundation: brand identity and logo set, design tokens with
 full light and dark themes, a component library, the shared server driven table
@@ -102,4 +103,11 @@ documents with a public verification page, an escalating private warning ladder,
 colleges with bulk enrolment and a coordinator's own view, and the mobile API for
 all of it.
 
-Phases 6 through 9 are described in the plan. Phase 6 is realtime chat.
+Phase 6 built realtime chat: one thread per client and per project, one group
+per batch, text, photos and voice notes and nothing else, waveforms recorded in
+the browser, delivered and read receipts, typing indicators, presence, unread
+counts, reply quoting and a shared media gallery — over Laravel Reverb, with a
+polling fallback so a bad network costs a few seconds rather than the feature.
+
+Phases 7 through 9 are described in the plan. Phase 7 is reporting, search and
+exports.

@@ -128,13 +128,36 @@ ledger, filtered by user. Both print and download from the same PDF renderer.
 
 | Table | Key columns |
 | --- | --- |
-| `conversations` | type (`client_direct`/`batch_group`), client_id, project_id, batch_id, title, last_message_at |
-| `conversation_participants` | conversation_id, user_id, role, joined_at, last_read_at, muted |
-| `messages` | conversation_id, sender_id, kind (`text`/`image`/`audio`), body, media_path, media_meta (json), reply_to_id, sent_at |
-| `message_receipts` | message_id, user_id, delivered_at, read_at |
+| `conversations` | type (`client_direct`/`batch_group`), client_id, project_id, batch_id, title, last_message_at, last_message_preview, is_archived |
+| `conversation_participants` | conversation_id, user_id, role (`member`/`staff`), joined_at, last_read_at, is_muted, left_at — unique per conversation and person |
+| `messages` | conversation_id, sender_id, kind (`text`/`image`/`audio`), body, media_path, media_mime, media_size, media_meta (json), reply_to_id, sent_at, edited_at, deleted_at |
+| `message_receipts` | message_id, user_id, delivered_at, read_at — unique per message and person |
 
-`kind` is constrained to text, image and audio at the database level, so the image and
-audio only rule cannot be bypassed by a future code path.
+`kind` is an enum, so the text, image and audio rule is enforced by the database and not
+only by whichever controller happens to be writing. A future code path that wants to
+attach a PDF fails loudly rather than quietly succeeding.
+
+`last_message_at` and `last_message_preview` are denormalised onto the conversation so a
+list of threads can be ordered and previewed without a query per row. They are written by
+the same service that writes the message.
+
+Unread is derived from `conversation_participants.last_read_at` rather than counted from
+receipts: one column beats one query per message, and "since I last looked" is what
+somebody means by unread. Receipts answer the other question — whether a particular
+person has seen a particular message — which is what the ticks are for.
+
+`left_at` rather than a deleted row: somebody who drops a batch stops receiving messages
+and keeps what they already read, so a conversation they were part of does not silently
+rewrite itself.
+
+A message is soft deleted and rendered as "this message was removed". A hole where a
+message used to be is worse than an honest gap, especially when a reply quotes it. The
+media file is deleted for real at the same moment.
+
+`media_meta` carries an image's dimensions, and for audio the duration and the waveform
+peaks. The peaks are computed once, in the browser that recorded it, because there is no
+ffmpeg on the server and every viewer redrawing them from the file would be the same work
+repeated.
 
 ## Platform (all phases)
 

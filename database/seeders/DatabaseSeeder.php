@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             MessageTemplateSeeder::class,
             DeliverySeeder::class,
             LmsSeeder::class,
+            ChatSeeder::class,
         ]);
     }
 }

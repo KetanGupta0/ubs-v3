@@ -4,6 +4,9 @@
  * One definition drives the desktop sidebar, the phone tab bar and the
  * "more" sheet. `primary: true` marks the items that earn a slot in the tab
  * bar, which holds four plus More, because a fifth is unreachable by thumb.
+ * Chat holds one of those four for a client and a student: it is checked more
+ * often than anything else on the platform, and a tab is cheaper than a trip
+ * through the More sheet twenty times a day.
  *
  * Routes referenced here land in later phases. `href: null` renders the item
  * disabled rather than linking nowhere.
@@ -39,7 +42,7 @@ export const navigation = {
         { label: 'Invoices', icon: Receipt, href: '/admin/invoices', permission: 'billing.view' },
         { label: 'Subscriptions', icon: RefreshCw, href: '/admin/subscriptions', permission: 'billing.view' },
         { label: 'API plans', icon: KeyRound, href: '/admin/api-plans', permission: 'api.manage' },
-        { label: 'Chat', icon: MessagesSquare, href: null },
+        { label: 'Chat', icon: MessagesSquare, href: '/chat', permission: 'chat.reply' },
         { label: 'Reports', icon: BarChart3, href: null },
         { label: 'Staff', icon: UserCog, href: '/admin/staff', permission: 'staff.manage' },
         { label: 'Settings', icon: Settings, href: '/admin/settings', permission: 'settings.view' },
@@ -51,14 +54,14 @@ export const navigation = {
         { label: 'Overview', icon: LayoutDashboard, href: '/client', primary: true },
         { label: 'Projects', icon: FolderKanban, href: '/client/projects', primary: true },
         { label: 'Proposals', icon: FileSignature, href: '/client/proposals' },
-        { label: 'Documents', icon: FileText, href: '/client/documents', primary: true },
+        { label: 'Documents', icon: FileText, href: '/client/documents' },
         { label: 'Payments', icon: Receipt, href: '/client/payments', primary: true },
         { label: 'Transactions', icon: Banknote, href: '/client/transactions' },
         { label: 'Support', icon: LifeBuoy, href: '/client/support' },
         { label: 'Subscriptions', icon: RefreshCw, href: '/client/subscriptions' },
         { label: 'API keys', icon: KeyRound, href: '/client/api-keys' },
         { label: 'Reports', icon: BarChart3, href: '/client/reports' },
-        { label: 'Chat', icon: MessagesSquare, href: null },
+        { label: 'Chat', icon: MessagesSquare, href: '/chat', primary: true },
         { label: 'Security', icon: ShieldCheck, href: '/settings/security' },
     ],
 
@@ -66,7 +69,7 @@ export const navigation = {
         { label: 'Dashboard', icon: LayoutDashboard, href: '/student', primary: true },
         { label: 'My courses', icon: BookOpen, href: '/student/courses', primary: true },
         { label: 'Live classes', icon: CalendarCheck, href: '/student/classes', primary: true },
-        { label: 'Assignments', icon: FileText, href: '/student/assignments', primary: true },
+        { label: 'Assignments', icon: FileText, href: '/student/assignments' },
         { label: 'Attendance', icon: CalendarCheck, href: '/student/attendance' },
         { label: 'Results', icon: ClipboardList, href: '/student/results' },
         { label: 'Leaderboard', icon: Trophy, href: '/student/leaderboard' },
@@ -75,7 +78,7 @@ export const navigation = {
         { label: 'Notices', icon: ShieldAlert, href: '/student/warnings' },
         { label: 'Join a course', icon: GraduationCap, href: '/student/catalogue' },
         { label: 'Fees', icon: Receipt, href: '/student/payments' },
-        { label: 'Chat', icon: MessagesSquare, href: null },
+        { label: 'Chat', icon: MessagesSquare, href: '/chat', primary: true },
         { label: 'Security', icon: ShieldCheck, href: '/settings/security' },
     ],
 };

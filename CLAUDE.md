@@ -21,6 +21,7 @@ cp .env.example .env && php artisan key:generate
 php artisan migrate
 npm run dev        # and, in another shell:
 php artisan serve
+php artisan reverb:start   # and in a third, for live chat
 ```
 
 MySQL is the target database for every environment. SQLite works for a quick
@@ -236,12 +237,45 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
 - `/verify` answers identically for a code that never existed and one that was
   mistyped, and shows nothing about the holder beyond what confirms the document.
 
+## Chat
+
+`routes/chat.php`, `routes/channels.php`, `App\Http\Controllers\Chat`,
+`App\Services\Chat`, `resources/js/pages/chat`, `resources/js/components/Chat`.
+
+- **One screen for all three roles.** Which rooms somebody sees is a question
+  about them, answered once in `Rooms::visibleTo()`. There is no client chat
+  controller and no student one.
+- **`Conversation::canBeReadBy()` is the only answer to "may they open this".**
+  The page, the poll, the media route, the API and the broadcast channel all
+  call it. A socket is another door into the same room, so it asks the same
+  question.
+- **Text, image and audio only.** `messages.kind` is an enum, so the rule holds
+  against a future code path, not just against today's controller. An upload's
+  type is read from its bytes, never from its name.
+- **Images are re-encoded on upload**, which is what strips EXIF. A phone photo
+  routinely carries the coordinates of somebody's house.
+- **Store first, broadcast second.** `Messenger::announce()` swallows and logs a
+  broadcast failure: Reverb being down should cost a message its liveness, never
+  its existence. The client polls every three seconds when the socket is down
+  and every thirty when it is up, and both paths render through
+  `MessagePayload`, so there is one shape for a message.
+- **Events are `ShouldBroadcastNow`.** Everywhere else a queued job is right; a
+  chat message that waits for a worker is not a chat message.
+- **Staff reach a room by permission and join it by replying.** Reading is not
+  joining, or an administrator glancing at a thread would collect an unread
+  badge for every client on the platform.
+- **A removed message keeps its bubble** and says it was removed. The file is
+  deleted for real.
+- Run the socket server with `php artisan reverb:start`. Without it the chat
+  still works, and the header says it is not live.
+
 ## Not yet built
 
-Phases 6 through 9 in the plan. Navigation entries that render as "Soon" are
-deliberate placeholders, wired but not yet routed. Coupons, instalments and
-calendar invitations are named in the plan and are not built; see the "what
-landed differently" note under Phase 5 in `docs/PROJECT_PLAN.md`.
+Phases 7 through 9 in the plan. Navigation entries that render as "Soon" are
+deliberate placeholders, wired but not yet routed. Coupons, instalments,
+calendar invitations, message search and push notifications to a phone are named
+in the plan and are not built; see the "what landed differently" notes under
+Phases 5 and 6 in `docs/PROJECT_PLAN.md`.
 
 There are no JavaScript tests yet. Client only logic is currently verified by
 driving a real browser. Bugs in every phase so far have been visible only that
@@ -253,4 +287,12 @@ why both now have tests. Phase 5's was quieter and worth remembering: every
 "Edit" link in the admin catalogue had been 404ing since Phase 3, because those
 models bind routes by slug and the screens linked by id. Admin routes now say
 `{course:id}` explicitly. A link nobody clicked in a test is a link nobody
-tested.
+tested. Phase 6's was in `config/app.php`: `.env.example` had carried
+`APP_TIMEZONE=Asia/Kolkata` since Phase 0 while the config hardcoded UTC, so
+every class time and invoice date on an Indian platform was five and a half
+hours out.
+
+Chat in particular cannot be called done from PHP tests. Two browser contexts
+talking to each other over a real Reverb connection is the test: a message
+crossed in 98 ms, the typing indicator and read receipts arrived, and with the
+socket server stopped the same message still landed in 2.3 seconds by polling.

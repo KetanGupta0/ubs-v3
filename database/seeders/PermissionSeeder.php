@@ -41,6 +41,9 @@ class PermissionSeeder extends Seeder
                 'support.manage' => 'Answer support tickets',
                 'api.manage' => 'Issue and revoke API keys',
             ],
+            'Chat' => [
+                'chat.reply' => 'Read and reply in client and batch conversations',
+            ],
             'Catalogue' => [
                 'catalogue.view' => 'View the catalogue',
                 'catalogue.manage' => 'Edit solutions, services and courses',

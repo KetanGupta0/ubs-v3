@@ -60,12 +60,17 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may specify the default timezone for your application, which
-    | will be used by the PHP date and date-time functions. The timezone
-    | is set to "UTC" by default as it is suitable for most use cases.
+    | will be used by the PHP date and date-time functions.
+    |
+    | This one is India, not UTC, and deliberately so: every class, every
+    | invoice date and every "yesterday" on this platform is read by somebody
+    | in that timezone, and storing 7:30 pm as 7:30 pm is what makes a batch
+    | schedule mean what it says. `.env.example` has carried APP_TIMEZONE
+    | since Phase 0; until Phase 6 this line ignored it.
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'Asia/Kolkata'),
 
     /*
     |--------------------------------------------------------------------------

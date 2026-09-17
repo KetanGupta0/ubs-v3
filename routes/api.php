@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\Chat\ChatApiController;
 use App\Http\Controllers\Api\V1\Client\ClientApiController;
 use App\Http\Controllers\Api\V1\Student\StudentApiController;
 use Illuminate\Support\Facades\Route;
@@ -66,6 +67,26 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('payments', [ClientApiController::class, 'payments'])->name('payments.index');
             Route::get('transactions', [ClientApiController::class, 'transactions'])->name('transactions.index');
             Route::get('invoices', [ClientApiController::class, 'invoices'])->name('invoices.index');
+        });
+
+        /*
+         * Chat, for every role.
+         *
+         * Not inside a role group: which rooms somebody can open is a question
+         * about them, and the answer lives on the conversation itself.
+         */
+        Route::prefix('chat')->name('chat.')->group(function () {
+            Route::get('/', [ChatApiController::class, 'index'])->name('index');
+            Route::get('{conversation}/messages', [ChatApiController::class, 'messages'])
+                ->whereNumber('conversation')
+                ->name('messages');
+            Route::post('{conversation}/messages', [ChatApiController::class, 'send'])
+                ->whereNumber('conversation')
+                ->middleware('throttle:120,1')
+                ->name('send');
+            Route::post('{conversation}/read', [ChatApiController::class, 'read'])
+                ->whereNumber('conversation')
+                ->name('read');
         });
 
         /* ------------------------------------------------ the student app */

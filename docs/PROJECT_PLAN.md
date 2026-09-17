@@ -377,19 +377,47 @@ emailing us.
 - **The college's own evaluation form is not generated.** The four documents we define are,
   and a department that insists on its own format still has to be handled by hand.
 
-### Phase 6 — Realtime chat
+### Phase 6 — Realtime chat — delivered
 
 - WhatsApp style threads. **Text, image and audio only**, by explicit requirement, so no
-  arbitrary file uploads and a smaller attack surface.
+  arbitrary file uploads and a smaller attack surface. The column is an enum, so the rule
+  holds against a future code path as well as against today's controller.
 - In browser audio recording with waveform preview.
 - Client threads: per client, optionally scoped per project, talking to admin.
 - Student threads: one group per batch, so each course or programme has its own room.
 - Delivered and read receipts, typing indicators, presence, unread counts, reply quoting,
   media gallery per thread.
-- Powered by Laravel Reverb, with a queued fallback to polling on hostile networks.
+- Powered by Laravel Reverb, with a fallback to polling on hostile networks.
 - Media stored privately with signed, expiring URLs.
 
-**Exit:** live conversation between admin, clients and batches.
+**Exit met:** live conversation between admin, clients and batches, verified with two
+browsers talking to each other over a real socket.
+
+**What landed differently, and what did not land:**
+
+- One screen and one controller for all three panels. Which rooms somebody can see is a
+  question about them, not about the URL they arrived on, and three copies of that answer
+  would have disagreed within a quarter.
+- Rooms are never created by hand. They follow from a client, a project or a batch, so two
+  people cannot start three threads about the same thing and leave the answer in the one
+  nobody opened.
+- **Staff reach a room by permission, not by membership.** Putting every administrator in
+  every thread would mean a participant row per staff member per client, and an unread
+  badge nobody asked for. Replying joins them, which is what makes receipts and presence
+  work for the people actually holding the conversation. Their badge is "waiting for an
+  answer" rather than a count.
+- Messages broadcast **immediately rather than through the queue**. Everywhere else in
+  this codebase a queued job is right; a chat message that waits for a worker is not a
+  chat message. The send path stores first and broadcasts second, and a socket layer that
+  is down costs a message its liveness, never its existence.
+- Waveform peaks are computed **in the browser at record time** and validated on arrival.
+  There is no ffmpeg on the server, and decoding Opus in PHP to draw thirty bars would be
+  a strange way to spend a request.
+- Images are **re-encoded on upload**, which drops the EXIF block. A photo from a phone
+  routinely carries the coordinates of where it was taken.
+- **Not built:** message search, forwarding, editing a sent message, pinned messages, and
+  push notifications to a phone. Notification fan out to devices is Phase 8 work, where the
+  device tokens live.
 
 ### Phase 7 — Reporting, search and exports
 
@@ -459,7 +487,8 @@ If the business wants value early rather than everything at once, ship in this o
 2. Phase 3 and Phase 5. Training runs on the platform and starts collecting fees.
    *Done.*
 3. Phase 4. Client delivery moves onto the platform. *Done.*
-4. Phases 6, 7, 8, 9.
+4. Phase 6. Conversation moves off email and WhatsApp. *Done.*
+5. Phases 7, 8, 9.
 
 ## 7. Open decisions
 
