@@ -14,6 +14,7 @@ import {
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
     UserPlus, Package, ShieldCheck, Building2, Wrench, HelpCircle, UserCog,
     ScrollText, FileSignature, Files, LifeBuoy as LifeBuoyIcon, Banknote,
+    ShieldAlert,
 } from 'lucide-vue-next';
 
 export const navigation = {
@@ -32,6 +33,7 @@ export const navigation = {
         { label: 'Services', icon: Wrench, href: '/admin/services', permission: 'catalogue.view' },
         { label: 'Courses', icon: GraduationCap, href: '/admin/courses', permission: 'catalogue.view' },
         { label: 'Batches', icon: CalendarCheck, href: '/admin/batches', permission: 'catalogue.view' },
+        { label: 'Marking', icon: ClipboardList, href: '/admin/marking', permission: 'students.view' },
         { label: 'Site content', icon: HelpCircle, href: '/admin/content', permission: 'catalogue.view' },
         { label: 'Billing', icon: Banknote, href: '/admin/billing', permission: 'billing.view' },
         { label: 'Invoices', icon: Receipt, href: '/admin/invoices', permission: 'billing.view' },
@@ -62,16 +64,18 @@ export const navigation = {
 
     student: [
         { label: 'Dashboard', icon: LayoutDashboard, href: '/student', primary: true },
-        { label: 'My courses', icon: BookOpen, href: null, primary: true },
-        { label: 'Live classes', icon: CalendarCheck, href: null, primary: true },
-        { label: 'Quizzes', icon: ClipboardList, href: null },
-        { label: 'Assignments', icon: FileText, href: null },
-        { label: 'Attendance', icon: CalendarCheck, href: null },
-        { label: 'Leaderboard', icon: Trophy, href: null },
-        { label: 'Certificates', icon: Award, href: null },
-        { label: 'Chat', icon: MessagesSquare, href: null, primary: true },
-        { label: 'Announcements', icon: Megaphone, href: null },
-        { label: 'Payments', icon: Receipt, href: null },
+        { label: 'My courses', icon: BookOpen, href: '/student/courses', primary: true },
+        { label: 'Live classes', icon: CalendarCheck, href: '/student/classes', primary: true },
+        { label: 'Assignments', icon: FileText, href: '/student/assignments', primary: true },
+        { label: 'Attendance', icon: CalendarCheck, href: '/student/attendance' },
+        { label: 'Results', icon: ClipboardList, href: '/student/results' },
+        { label: 'Leaderboard', icon: Trophy, href: '/student/leaderboard' },
+        { label: 'Certificates', icon: Award, href: '/student/certificates' },
+        { label: 'Announcements', icon: Megaphone, href: '/student/announcements' },
+        { label: 'Notices', icon: ShieldAlert, href: '/student/warnings' },
+        { label: 'Join a course', icon: GraduationCap, href: '/student/catalogue' },
+        { label: 'Fees', icon: Receipt, href: '/student/payments' },
+        { label: 'Chat', icon: MessagesSquare, href: null },
         { label: 'Security', icon: ShieldCheck, href: '/settings/security' },
     ],
 };

@@ -129,6 +129,64 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ApiKey::class, 'client_id');
     }
 
+    /* ---------------------------------------------- learning (Phase 5) */
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function quizAttempts(): HasMany
+    {
+        return $this->hasMany(QuizAttempt::class);
+    }
+
+    public function submissions(): HasMany
+    {
+        return $this->hasMany(Submission::class);
+    }
+
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    public function internshipDocuments(): HasMany
+    {
+        return $this->hasMany(InternshipDocument::class);
+    }
+
+    public function mentorReviews(): HasMany
+    {
+        return $this->hasMany(MentorReview::class);
+    }
+
+    public function warnings(): HasMany
+    {
+        return $this->hasMany(StudentWarning::class);
+    }
+
+    public function activity(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
+    }
+
+    public function points(): HasMany
+    {
+        return $this->hasMany(LeaderboardPoint::class);
+    }
+
+    /** Batches this account teaches, for a trainer's own screens. */
+    public function batchesTaught(): HasMany
+    {
+        return $this->hasMany(Batch::class, 'trainer_id');
+    }
+
     /* ------------------------------------- money, shared with the LMS */
 
     public function paymentRequests(): HasMany

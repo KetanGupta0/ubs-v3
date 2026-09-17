@@ -99,6 +99,42 @@ final class Money
         return (int) round($paise * $rate / 100);
     }
 
+    /**
+     * The taxable amount hidden inside a tax inclusive figure.
+     *
+     * A course fee is advertised as one number, so the tax is worked back out
+     * of it rather than added on top of a figure somebody has already read as
+     * the total.
+     *
+     * Not every total is reachable: with tax rounded to the paisa, a subtotal
+     * one paisa larger can move the total by two, so ₹15,000 at eighteen
+     * percent lands on either ₹14,999.99 or ₹15,000.01. The nearest is taken,
+     * and a tie goes to the lower one, because being asked for a paisa more
+     * than the page said is the version somebody complains about.
+     */
+    public static function taxableWithin(int $inclusive, float $rate): int
+    {
+        if ($rate <= 0) {
+            return $inclusive;
+        }
+
+        $start = (int) round($inclusive / (1 + $rate / 100));
+        $best = $start;
+        $bestGap = null;
+
+        foreach ([0, -1, 1, -2, 2] as $nudge) {
+            $candidate = $start + $nudge;
+            $gap = abs($candidate + self::taxOn($candidate, $rate) - $inclusive);
+
+            if ($bestGap === null || $gap < $bestGap) {
+                $best = $candidate;
+                $bestGap = $gap;
+            }
+        }
+
+        return $best;
+    }
+
     /** In words, for the line every Indian invoice carries. */
     public static function words(int $paise): string
     {

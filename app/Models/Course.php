@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -29,6 +31,46 @@ class Course extends Model
             'is_featured' => 'boolean',
             'is_published' => 'boolean',
         ];
+    }
+
+    public function modules(): HasMany
+    {
+        return $this->hasMany(CourseModule::class)->orderBy('sort_order');
+    }
+
+    public function lessons(): HasMany
+    {
+        return $this->hasMany(Lesson::class);
+    }
+
+    public function materials(): HasMany
+    {
+        return $this->hasMany(Material::class);
+    }
+
+    public function enrollments(): HasMany
+    {
+        return $this->hasMany(Enrollment::class);
+    }
+
+    public function quizzes(): HasMany
+    {
+        return $this->hasMany(Quiz::class);
+    }
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(Assignment::class);
+    }
+
+    public function certificates(): HasMany
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
+    public function leadTrainer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'lead_trainer_id');
     }
 
     public function batches(): HasMany
@@ -86,6 +128,20 @@ class Course extends Model
         return $this->sale_price ?? $this->price;
     }
 
+    public function isFree(): bool
+    {
+        return $this->effectivePrice() === 0;
+    }
+
+    /** Total published lessons, for a progress denominator. */
+    public function lessonCount(): int
+    {
+        return $this->lessons()
+            ->where('is_published', true)
+            ->whereIn('course_module_id', $this->modules()->where('is_published', true)->select('id'))
+            ->count();
+    }
+
     public function isDiscounted(): bool
     {
         return $this->sale_price !== null && $this->sale_price < $this->price;
@@ -121,7 +177,12 @@ class Course extends Model
             'projectFocus' => $this->project_focus,
             'documentCount' => count($this->documents_provided ?? []),
             'price' => $this->effectivePrice(),
+            'priceLabel' => $this->isFree() ? null : Money::display($this->effectivePrice()),
             'originalPrice' => $this->isDiscounted() ? $this->price : null,
+            'originalPriceLabel' => $this->isDiscounted() ? Money::display($this->price) : null,
+            'savingLabel' => $this->isDiscounted()
+                ? Money::display($this->price - $this->effectivePrice())
+                : null,
             'accent' => $this->accent,
             'featured' => $this->is_featured,
             'tools' => array_slice($this->tools ?? [], 0, 4),

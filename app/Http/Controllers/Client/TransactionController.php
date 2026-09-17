@@ -6,9 +6,8 @@ use App\Models\Invoice;
 use App\Models\Transaction;
 use App\Services\Billing\BillingDocuments;
 use App\Services\Billing\Invoicer;
+use App\Services\Billing\LedgerTable;
 use App\Support\Money;
-use App\Support\Table\Column;
-use App\Support\Table\Filter;
 use App\Support\Table\Table;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -40,7 +39,7 @@ class TransactionController extends ClientController
 
         return Inertia::render('client/transactions/Index', [
             'table' => $table->toArray($request),
-            'summary' => $invoicer->summaryFor($this->client($request)),
+            'summary' => LedgerTable::summaryFor($this->client($request)),
             'invoices' => Invoice::query()
                 ->forUser($this->client($request))
                 ->latest('id')
@@ -131,43 +130,7 @@ class TransactionController extends ClientController
 
     protected function table(Request $request): Table
     {
-        return Table::for(Transaction::query()
-            ->forUser($this->client($request))
-            ->with('invoice:id,number'))
-            ->searchable(['reference', 'gateway_payment_id', 'method'])
-            ->sortable(['created_at', 'amount'])
-            ->defaultSort('-created_at')
-            ->exportName('transactions')
-            ->columns([
-                Column::make('created_at', 'Date')->sortable(),
-                Column::make('reference', 'Reference'),
-                Column::make('description', 'For'),
-                Column::make('method', 'Method'),
-                Column::make('amount', 'Amount')->numeric()
-                    ->exportUsing(fn (array $row) => $row['amountValue']),
-                Column::make('status', 'Status'),
-                Column::make('invoice', 'Invoice'),
-            ])
-            ->filters([
-                Filter::multi('status', collect(Transaction::STATUSES)
-                    ->map(fn (string $status) => ['value' => $status, 'label' => ucfirst($status)])
-                    ->all(), 'Status'),
-                Filter::dateRange('created_at', 'Between'),
-            ])
-            ->transform(fn (Transaction $transaction) => [
-                'id' => $transaction->id,
-                'created_at' => $transaction->created_at->format('j M Y'),
-                'reference' => $transaction->reference,
-                'description' => $transaction->paymentRequest?->title
-                    ?? $transaction->invoice?->number
-                    ?? 'Payment',
-                'method' => $transaction->method ? ucfirst($transaction->method) : '—',
-                'amount' => $transaction->amountLabel(),
-                'amountValue' => $transaction->amount / 100,
-                'status' => $transaction->status,
-                'invoice' => $transaction->invoice?->number ?? '—',
-                'invoiceId' => $transaction->invoice_id,
-                'receiptable' => $transaction->isSuccessful(),
-            ]);
+        // Shared with the student ledger, so the two screens cannot drift.
+        return LedgerTable::for($this->client($request));
     }
 }

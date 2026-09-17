@@ -98,14 +98,14 @@ function scheduleLine(batch) {
 
                             <p class="mt-2 flex items-baseline gap-2">
                                 <span class="text-3xl font-semibold tnum" style="color: var(--text-strong)">
-                                    ₹{{ internship.price.toLocaleString('en-IN') }}
+                                    {{ internship.priceLabel }}
                                 </span>
                                 <span
                                     v-if="internship.originalPrice"
                                     class="text-base line-through tnum"
                                     style="color: var(--text-muted)"
                                 >
-                                    ₹{{ internship.originalPrice.toLocaleString('en-IN') }}
+                                    {{ internship.originalPriceLabel }}
                                 </span>
                             </p>
 

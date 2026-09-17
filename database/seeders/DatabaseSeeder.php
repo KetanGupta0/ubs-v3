@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             CatalogueSeeder::class,
             MessageTemplateSeeder::class,
             DeliverySeeder::class,
+            LmsSeeder::class,
         ]);
     }
 }

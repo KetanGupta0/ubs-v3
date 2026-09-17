@@ -192,13 +192,13 @@ const promises = [
                             <dt class="text-xs" style="color: var(--text-muted)">Fee</dt>
                             <dd class="mt-0.5 font-medium tnum" style="color: var(--text-strong)">
                                 <template v-if="course.price">
-                                    ₹{{ course.price.toLocaleString('en-IN') }}
+                                    {{ course.priceLabel }}
                                     <span
                                         v-if="course.originalPrice"
                                         class="ml-1 text-xs font-normal line-through"
                                         style="color: var(--text-muted)"
                                     >
-                                        ₹{{ course.originalPrice.toLocaleString('en-IN') }}
+                                        {{ course.originalPriceLabel }}
                                     </span>
                                 </template>
                                 <template v-else>On request</template>

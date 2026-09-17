@@ -1,11 +1,16 @@
 <?php
 
+use App\Http\Controllers\Admin\AssessmentController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BatchController;
+use App\Http\Controllers\Admin\BatchRunController;
 use App\Http\Controllers\Admin\BillingController;
 use App\Http\Controllers\Admin\CollegeController;
+use App\Http\Controllers\Admin\CollegeDeskController;
 use App\Http\Controllers\Admin\ContentController;
+use App\Http\Controllers\Admin\CourseBuilderController;
 use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\CredentialsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\LeadController;
@@ -89,17 +94,17 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
         Route::middleware('permission:catalogue.manage')->group(function () {
             Route::get('solutions/new', [SolutionController::class, 'create'])->name('solutions.create');
             Route::post('solutions', [SolutionController::class, 'store'])->name('solutions.store');
-            Route::get('solutions/{solution}/edit', [SolutionController::class, 'edit'])->name('solutions.edit');
-            Route::put('solutions/{solution}', [SolutionController::class, 'update'])->name('solutions.update');
-            Route::post('solutions/{solution}/publish', [SolutionController::class, 'togglePublished'])->name('solutions.publish');
-            Route::delete('solutions/{solution}', [SolutionController::class, 'destroy'])->name('solutions.destroy');
+            Route::get('solutions/{solution:id}/edit', [SolutionController::class, 'edit'])->name('solutions.edit');
+            Route::put('solutions/{solution:id}', [SolutionController::class, 'update'])->name('solutions.update');
+            Route::post('solutions/{solution:id}/publish', [SolutionController::class, 'togglePublished'])->name('solutions.publish');
+            Route::delete('solutions/{solution:id}', [SolutionController::class, 'destroy'])->name('solutions.destroy');
 
             Route::get('courses/new', [CourseController::class, 'create'])->name('courses.create');
             Route::post('courses', [CourseController::class, 'store'])->name('courses.store');
-            Route::get('courses/{course}/edit', [CourseController::class, 'edit'])->name('courses.edit');
-            Route::put('courses/{course}', [CourseController::class, 'update'])->name('courses.update');
-            Route::post('courses/{course}/publish', [CourseController::class, 'togglePublished'])->name('courses.publish');
-            Route::delete('courses/{course}', [CourseController::class, 'destroy'])->name('courses.destroy');
+            Route::get('courses/{course:id}/edit', [CourseController::class, 'edit'])->name('courses.edit');
+            Route::put('courses/{course:id}', [CourseController::class, 'update'])->name('courses.update');
+            Route::post('courses/{course:id}/publish', [CourseController::class, 'togglePublished'])->name('courses.publish');
+            Route::delete('courses/{course:id}', [CourseController::class, 'destroy'])->name('courses.destroy');
 
             Route::get('batches/new', [BatchController::class, 'create'])->name('batches.create');
             Route::post('batches', [BatchController::class, 'store'])->name('batches.store');
@@ -109,9 +114,9 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
 
             Route::get('services/new', [ServiceController::class, 'create'])->name('services.create');
             Route::post('services', [ServiceController::class, 'store'])->name('services.store');
-            Route::get('services/{service}/edit', [ServiceController::class, 'edit'])->name('services.edit');
-            Route::put('services/{service}', [ServiceController::class, 'update'])->name('services.update');
-            Route::delete('services/{service}', [ServiceController::class, 'destroy'])->name('services.destroy');
+            Route::get('services/{service:id}/edit', [ServiceController::class, 'edit'])->name('services.edit');
+            Route::put('services/{service:id}', [ServiceController::class, 'update'])->name('services.update');
+            Route::delete('services/{service:id}', [ServiceController::class, 'destroy'])->name('services.destroy');
 
             Route::post('content/faqs', [ContentController::class, 'storeFaq'])->name('content.faqs.store');
             Route::put('content/faqs/{faq}', [ContentController::class, 'updateFaq'])->name('content.faqs.update');
@@ -228,8 +233,93 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
         Route::middleware('permission:api.manage')->group(function () {
             Route::get('api-plans', [SubscriptionController::class, 'plans'])->name('api-plans.index');
             Route::post('api-plans', [SubscriptionController::class, 'storePlan'])->name('api-plans.store');
-            Route::put('api-plans/{plan}', [SubscriptionController::class, 'updatePlan'])->name('api-plans.update');
+            Route::put('api-plans/{plan:id}', [SubscriptionController::class, 'updatePlan'])->name('api-plans.update');
             Route::post('api-keys/{apiKey}/revoke', [SubscriptionController::class, 'revokeKey'])->name('api-keys.revoke');
+        });
+
+        /* -------------------------------------- learning management (P5) */
+        Route::middleware('permission:catalogue.manage')->group(function () {
+            // Building a course.
+            Route::get('courses/{course:id}/builder', [CourseBuilderController::class, 'show'])->name('courses.builder');
+            Route::post('courses/{course:id}/modules', [CourseBuilderController::class, 'storeModule'])->name('modules.store');
+            Route::put('courses/{course:id}/modules/{module}', [CourseBuilderController::class, 'updateModule'])->name('modules.update');
+            Route::delete('courses/{course:id}/modules/{module}', [CourseBuilderController::class, 'destroyModule'])->name('modules.destroy');
+            Route::post('courses/{course:id}/modules/reorder', [CourseBuilderController::class, 'reorderModules'])->name('modules.reorder');
+
+            Route::post('courses/{course:id}/modules/{module}/lessons', [CourseBuilderController::class, 'storeLesson'])->name('lessons.store');
+            Route::post('courses/{course:id}/modules/{module}/lessons/reorder', [CourseBuilderController::class, 'reorderLessons'])->name('lessons.reorder');
+            Route::put('courses/{course:id}/lessons/{lesson}', [CourseBuilderController::class, 'updateLesson'])->name('lessons.update');
+            Route::delete('courses/{course:id}/lessons/{lesson}', [CourseBuilderController::class, 'destroyLesson'])->name('lessons.destroy');
+
+            Route::post('courses/{course:id}/materials', [CourseBuilderController::class, 'storeMaterial'])->name('materials.store');
+            Route::get('courses/{course:id}/materials/{material}', [CourseBuilderController::class, 'downloadMaterial'])->name('materials.download');
+            Route::delete('courses/{course:id}/materials/{material}', [CourseBuilderController::class, 'destroyMaterial'])->name('materials.destroy');
+
+            // Quizzes and assignments.
+            Route::get('courses/{course:id}/quizzes', [AssessmentController::class, 'quizzes'])->name('quizzes.index');
+            Route::post('courses/{course:id}/quizzes', [AssessmentController::class, 'storeQuiz'])->name('quizzes.store');
+            Route::get('courses/{course:id}/quizzes/{quiz}', [AssessmentController::class, 'editQuiz'])->name('quizzes.edit');
+            Route::put('courses/{course:id}/quizzes/{quiz}', [AssessmentController::class, 'updateQuiz'])->name('quizzes.update');
+            Route::delete('courses/{course:id}/quizzes/{quiz}', [AssessmentController::class, 'destroyQuiz'])->name('quizzes.destroy');
+            Route::post('courses/{course:id}/quizzes/{quiz}/questions', [AssessmentController::class, 'storeQuestion'])->name('questions.store');
+            Route::put('courses/{course:id}/quizzes/{quiz}/questions/{question}', [AssessmentController::class, 'updateQuestion'])->name('questions.update');
+            Route::delete('courses/{course:id}/quizzes/{quiz}/questions/{question}', [AssessmentController::class, 'destroyQuestion'])->name('questions.destroy');
+
+            Route::get('courses/{course:id}/assignments', [AssessmentController::class, 'assignments'])->name('assignments.index');
+            Route::post('courses/{course:id}/assignments', [AssessmentController::class, 'storeAssignment'])->name('assignments.store');
+            Route::put('courses/{course:id}/assignments/{assignment}', [AssessmentController::class, 'updateAssignment'])->name('assignments.update');
+            Route::delete('courses/{course:id}/assignments/{assignment}', [AssessmentController::class, 'destroyAssignment'])->name('assignments.destroy');
+        });
+
+        /*
+         * Running a batch. Gated on students.view rather than catalogue.manage:
+         * a trainer marks a register and answers a student, and has no business
+         * editing the price of the course while doing it.
+         */
+        Route::middleware('permission:students.view')->group(function () {
+            Route::get('batches/{batch}/run', [BatchRunController::class, 'show'])->name('batches.run');
+            Route::post('batches/{batch}/sessions', [BatchRunController::class, 'storeSession'])->name('sessions.store');
+            Route::put('batches/{batch}/sessions/{session}', [BatchRunController::class, 'updateSession'])->name('sessions.update');
+            Route::delete('batches/{batch}/sessions/{session}', [BatchRunController::class, 'destroySession'])->name('sessions.destroy');
+
+            Route::get('batches/{batch}/sessions/{session}/register', [BatchRunController::class, 'register'])->name('sessions.register');
+            Route::post('batches/{batch}/sessions/{session}/register', [BatchRunController::class, 'mark'])->name('sessions.mark');
+
+            Route::post('batches/{batch}/enrol', [BatchRunController::class, 'enrol'])->name('batches.enrol');
+            Route::put('batches/{batch}/enrolments/{enrolment}', [BatchRunController::class, 'updateEnrolment'])->name('batches.enrolments.update');
+
+            Route::post('batches/{batch}/announcements', [BatchRunController::class, 'announce'])->name('batches.announce');
+            Route::delete('batches/{batch}/announcements/{announcement}', [BatchRunController::class, 'destroyAnnouncement'])->name('batches.announcements.destroy');
+
+            Route::get('batches/{batch}/warnings', [BatchRunController::class, 'warnings'])->name('batches.warnings');
+            Route::post('batches/{batch}/warn', [BatchRunController::class, 'warn'])->name('batches.warn');
+            Route::post('batches/{batch}/warnings/{warning}/resolve', [BatchRunController::class, 'resolveWarning'])->name('batches.warnings.resolve');
+
+            Route::get('batches/{batch}/reviews', [CredentialsController::class, 'reviews'])->name('batches.reviews');
+            Route::post('batches/{batch}/reviews', [CredentialsController::class, 'storeReview'])->name('batches.reviews.store');
+            Route::delete('batches/{batch}/reviews/{review}', [CredentialsController::class, 'destroyReview'])->name('batches.reviews.destroy');
+
+            Route::get('batches/{batch}/credentials', [CredentialsController::class, 'index'])->name('batches.credentials');
+
+            // Marking is its own queue, across every course.
+            Route::get('marking', [AssessmentController::class, 'marking'])->name('marking');
+            Route::get('marking/submissions/{submission}', [AssessmentController::class, 'submission'])->name('marking.submission');
+            Route::post('marking/submissions/{submission}', [AssessmentController::class, 'evaluate'])->name('marking.evaluate');
+            Route::get('marking/submissions/{submission}/files/{index}', [AssessmentController::class, 'downloadSubmissionFile'])->name('marking.submission.file');
+            Route::get('marking/attempts/{attempt}', [AssessmentController::class, 'attempt'])->name('marking.attempt');
+            Route::post('marking/attempts/{attempt}/answers/{answer}', [AssessmentController::class, 'markAnswer'])->name('marking.answer');
+        });
+
+        /* ------------------------------------------- issuing credentials */
+        Route::middleware('permission:students.update')->group(function () {
+            Route::post('enrolments/{enrolment}/certificate', [CredentialsController::class, 'issueCertificate'])->name('certificates.issue');
+            Route::post('enrolments/{enrolment}/documents', [CredentialsController::class, 'issueDocument'])->name('internship-documents.issue');
+            Route::post('certificates/{certificate}/revoke', [CredentialsController::class, 'revokeCertificate'])->name('certificates.revoke');
+        });
+
+        Route::middleware('permission:students.view')->group(function () {
+            Route::get('certificates/{certificate}/download', [CredentialsController::class, 'downloadCertificate'])->name('certificates.download');
+            Route::get('internship-documents/{document}/download', [CredentialsController::class, 'downloadDocument'])->name('internship-documents.download');
         });
 
         /* --------------------------------------------------------- colleges */
@@ -240,6 +330,11 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::get('colleges/{college}/edit', [CollegeController::class, 'edit'])->name('colleges.edit');
             Route::put('colleges/{college}', [CollegeController::class, 'update'])->name('colleges.update');
             Route::delete('colleges/{college}', [CollegeController::class, 'destroy'])->name('colleges.destroy');
+
+            // The coordinator's view: that college's students and nobody else's.
+            Route::get('colleges/{college}/desk', [CollegeDeskController::class, 'show'])->name('colleges.desk');
+            Route::post('colleges/{college}/enrol', [CollegeDeskController::class, 'bulkEnrol'])->name('colleges.enrol');
+            Route::get('colleges/{college}/report', [CollegeDeskController::class, 'report'])->name('colleges.report');
         });
 
         /* ------------------------------------------------- staff and system */

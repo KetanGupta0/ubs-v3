@@ -361,14 +361,14 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
                         <div class="mt-auto flex items-end justify-between border-t pt-4" style="border-color: var(--border-subtle); margin-top: 1.25rem">
                             <span>
                                 <span class="text-lg font-semibold tnum" style="color: var(--text-strong)">
-                                    ₹{{ item.price.toLocaleString('en-IN') }}
+                                    {{ item.priceLabel }}
                                 </span>
                                 <span
                                     v-if="item.originalPrice"
                                     class="ml-1.5 text-sm line-through tnum"
                                     style="color: var(--text-muted)"
                                 >
-                                    ₹{{ item.originalPrice.toLocaleString('en-IN') }}
+                                    {{ item.originalPriceLabel }}
                                 </span>
                             </span>
 
@@ -433,7 +433,7 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
                     <div class="mt-5 flex items-end justify-between border-t pt-4" style="border-color: var(--border-subtle)">
                         <span>
                             <span v-if="course.price" class="text-lg font-semibold tnum" style="color: var(--text-strong)">
-                                ₹{{ course.price.toLocaleString('en-IN') }}
+                                {{ course.priceLabel }}
                             </span>
                             <span v-else class="text-sm font-semibold" style="color: var(--text-strong)">On request</span>
                             <span

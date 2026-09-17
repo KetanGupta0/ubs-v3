@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\Client\ClientApiController;
+use App\Http\Controllers\Api\V1\Student\StudentApiController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -65,6 +66,29 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('payments', [ClientApiController::class, 'payments'])->name('payments.index');
             Route::get('transactions', [ClientApiController::class, 'transactions'])->name('transactions.index');
             Route::get('invoices', [ClientApiController::class, 'invoices'])->name('invoices.index');
+        });
+
+        /* ------------------------------------------------ the student app */
+        Route::middleware('role:student')->prefix('student')->name('student.')->group(function () {
+            Route::get('overview', [StudentApiController::class, 'overview'])->name('overview');
+            Route::get('courses', [StudentApiController::class, 'courses'])->name('courses.index');
+            Route::get('courses/{course}', [StudentApiController::class, 'course'])
+                ->whereNumber('course')
+                ->name('courses.show');
+            Route::get('courses/{course}/lessons/{lesson}', [StudentApiController::class, 'lesson'])
+                ->whereNumber('course')
+                ->whereNumber('lesson')
+                ->name('lessons.show');
+            Route::post('courses/{course}/lessons/{lesson}/complete', [StudentApiController::class, 'completeLesson'])
+                ->whereNumber('course')
+                ->whereNumber('lesson')
+                ->name('lessons.complete');
+            Route::get('classes', [StudentApiController::class, 'classes'])->name('classes.index');
+            Route::get('assignments', [StudentApiController::class, 'assignments'])->name('assignments.index');
+            Route::get('results', [StudentApiController::class, 'results'])->name('results');
+            Route::get('announcements', [StudentApiController::class, 'announcements'])->name('announcements');
+            Route::get('certificates', [StudentApiController::class, 'certificates'])->name('certificates');
+            Route::get('payments', [StudentApiController::class, 'payments'])->name('payments.index');
         });
     });
 });

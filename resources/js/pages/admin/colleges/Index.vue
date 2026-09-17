@@ -67,6 +67,9 @@ defineProps({
                 </template>
 
                 <template #rowActions="{ row }">
+                    <UiButton :href="`/admin/colleges/${row.slug}/desk`" variant="secondary" size="xs">
+                        Students
+                    </UiButton>
                     <UiButton :href="`/admin/colleges/${row.slug}/edit`" variant="ghost" size="xs">
                         Open
                         <template #trailing><ArrowRight class="h-3 w-3" /></template>

@@ -60,31 +60,50 @@ assembled from floats drifts onto an invoice somebody then has to defend.
 | --- | --- |
 | `courses` | title, slug, type (`course`/`programme`/`internship`), summary, description, level, duration_weeks, duration_months, hours_per_week, price, sale_price, visibility (`public`/`lms_only`), mode, project_focus, documents_provided (json), syllabus (json), is_published |
 | `colleges` | name, slug, city, state, university, coordinator name/email/mobile, mou_signed_on, mou_expires_on, is_active |
-| `internship_documents` | user_id, course_id, batch_id, kind (`offer_letter`/`certificate`/`project_report`/`mentor_evaluation`), number, issued_at, verification_code, pdf_path, issued_by |
-| `mentor_reviews` | user_id, batch_id, week_number, reviewer_id, summary, marks, reviewed_at |
-| `course_modules` | course_id, title, order, unlock_rule (json) |
-| `lessons` | module_id, title, order, content, video_url, duration_minutes, unlock_at, prerequisite_lesson_id, requires_payment, min_quiz_score |
-| `materials` | lesson_id, course_id, title, path, mime, size, is_downloadable |
-| `batches` | course_id, name, code, trainer_id, starts_on, ends_on, capacity, schedule (json), status |
-| `enrollments` | user_id, course_id, batch_id, status, enrolled_at, completed_at, progress_percent, source |
-| `live_sessions` | batch_id, lesson_id, title, scheduled_at, duration_minutes, meet_link, calendar_event_id, status |
-| `attendances` | live_session_id, user_id, status (`present`/`absent`/`late`), marked_by, marked_at, note |
-| `quizzes` | course_id, module_id, title, time_limit_minutes, attempts_allowed, pass_percent, shuffle |
-| `questions` | quiz_id, type (`mcq`/`multi`/`truefalse`/`short`), body, options (json), correct (json), marks, explanation |
-| `quiz_attempts` | quiz_id, user_id, started_at, submitted_at, score, percent, passed |
-| `quiz_answers` | attempt_id, question_id, response (json), is_correct, marks_awarded |
-| `assignments` | course_id, module_id, title, brief, due_at, max_marks |
-| `submissions` | assignment_id, user_id, files (json), notes, submitted_at, marks, feedback, evaluated_by |
-| `certificates` | user_id, course_id, batch_id, number, issued_at, verification_code, pdf_path |
-| `announcements` | course_id, batch_id, title, body, published_at, audience |
-| `leaderboard_points` | user_id, course_id, batch_id, source, points, awarded_at |
-| `activity_logs` | user_id, subject, action, meta (json), occurred_at |
-| `student_warnings` | user_id, batch_id, live_session_id, level (`notice`/`warning`/`escalation`), reason, issued_by, acknowledged_at, guardian_notified_at |
+| `internship_documents` | user_id, course_id, batch_id, kind (`offer_letter`/`certificate`/`project_report`/`mentor_evaluation`), number, issued_at, payload (json), verification_code, pdf_path, issued_by — one of each kind per student and course |
+| `mentor_reviews` | user_id, batch_id, week_number, reviewer_id, reviewed_on, summary, what_went_well, to_improve, marks (json) — one per student and week |
+| `course_modules` | course_id, title, summary, sort_order, unlock_after_days, is_published |
+| `lessons` | course_id, course_module_id, title, slug, summary, content, video_url, duration_minutes, sort_order, unlock_after_days, unlock_at, prerequisite_lesson_id, requires_payment, required_quiz_id, min_quiz_score, is_preview, is_published |
+| `lesson_completions` | lesson_id, user_id, completed_at, seconds_spent — unique per lesson and student |
+| `materials` | course_id, lesson_id, title, description, path, external_url, mime, size, is_downloadable, uploaded_by |
+| `batches` | course_id, name, code, trainer_id, college_id, starts_on, ends_on, capacity, seats_taken, schedule (json), meet_link, status |
+| `enrollments` | user_id, course_id, batch_id, status, source (`self`/`admin`/`college`), enrolled_at, completed_at, progress_percent, has_paid, payment_request_id — unique per student, course and batch |
+| `live_sessions` | batch_id, lesson_id, title, agenda, scheduled_at, duration_minutes, meet_link, recording_url, calendar_event_id, status, trainer_id |
+| `attendances` | live_session_id, user_id, status (`present`/`late`/`absent`/`excused`), marked_by, marked_at, note — unique per session and student |
+| `quizzes` | course_id, course_module_id, title, instructions, time_limit_minutes, attempts_allowed, pass_percent, shuffle_questions, show_answers, opens_at, closes_at, is_published |
+| `questions` | quiz_id, type (`mcq`/`multi`/`truefalse`/`short`), body, options (json), correct (json), explanation, marks, sort_order |
+| `quiz_attempts` | quiz_id, user_id, batch_id, attempt_number, started_at, **expires_at**, submitted_at, score, total_marks, percent, passed, needs_review |
+| `quiz_answers` | quiz_attempt_id, question_id, response (json), is_correct, marks_awarded, feedback |
+| `assignments` | course_id, course_module_id, batch_id, title, brief, checklist (json), due_at, max_marks, allow_late, is_project, is_published |
+| `submissions` | assignment_id, user_id, files (json), repository_url, demo_url, notes, submitted_at, is_late, status, marks, feedback, evaluated_by, evaluated_at |
+| `certificates` | user_id, course_id, batch_id, number, title, issued_at, final_percent, grade, verification_code, pdf_path, issued_by, revoked_at, revoked_reason |
+| `announcements` | course_id, batch_id, author_id, title, body, audience (`batch`/`course`), is_pinned, published_at |
+| `leaderboard_points` | user_id, course_id, batch_id, source, reason (morph), points, awarded_at — unique per student, source and reason |
+| `activity_logs` | user_id, course_id, batch_id, action, subject (morph), meta (json), occurred_at |
+| `student_warnings` | user_id, batch_id, live_session_id, level (`notice`/`warning`/`escalation`), reason, private_note, issued_by, acknowledged_at, guardian_notified_at, guardian_contact, resolved_at |
 
 An internship shares the `courses` table rather than getting its own, because
 structurally it is the same object: a cohort with a schedule, a syllabus, a mentor and an
 assessment. What differs is the paperwork it produces, which is why `documents_provided`
 and the `internship_documents` table exist.
+
+`courses.price` and `courses.sale_price` are **paise**, like every other money column.
+They were rupees until Phase 5, and were converted in a migration, because a course fee
+that reaches the same invoice machinery as everything else cannot be the one figure held
+in a different unit.
+
+Four columns carry the whole locking scheme, and a lesson passes only if all of them
+allow it: `unlock_after_days` or `unlock_at` (counted from the batch start, or the
+enrolment when there is no batch), `prerequisite_lesson_id`, `requires_payment` against
+`enrollments.has_paid`, and `required_quiz_id` with `min_quiz_score`. `is_preview`
+overrides the fee, because a sample nobody can open sells nothing.
+
+`quiz_attempts.expires_at` is written when the attempt starts and is what decides whether
+a submission is marked. The countdown on the page is a courtesy; a timer the browser owns
+is a timer the browser can stop.
+
+`leaderboard_points` is unique on student, source and reason, so the same lesson cannot
+be paid for twice. A leaderboard that can be farmed is not measuring anything.
 
 The warning table is deliberately auditable. Escalating a student is a serious act, so who
 issued it, why, and whether the student acknowledged it are all recorded.

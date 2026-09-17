@@ -91,14 +91,14 @@ function scheduleLine(batch) {
                             <p class="mt-2 flex items-baseline gap-2">
                                 <template v-if="course.price">
                                     <span class="text-3xl font-semibold tnum" style="color: var(--text-strong)">
-                                        ₹{{ course.price.toLocaleString('en-IN') }}
+                                        {{ course.priceLabel }}
                                     </span>
                                     <span
                                         v-if="course.originalPrice"
                                         class="text-base line-through tnum"
                                         style="color: var(--text-muted)"
                                     >
-                                        ₹{{ course.originalPrice.toLocaleString('en-IN') }}
+                                        {{ course.originalPriceLabel }}
                                     </span>
                                 </template>
                                 <span v-else class="text-2xl font-semibold" style="color: var(--text-strong)">
@@ -107,7 +107,7 @@ function scheduleLine(batch) {
                             </p>
 
                             <p v-if="course.originalPrice" class="mt-1 text-xs font-medium text-signal-600">
-                                Save ₹{{ (course.originalPrice - course.price).toLocaleString('en-IN') }} on this batch
+                                Save {{ course.savingLabel }} on this batch
                             </p>
 
                             <div v-if="batches.length" class="mt-5 space-y-2.5">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Services\Admin\Auditor;
+use App\Support\Money;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
 use App\Support\Table\Table;
@@ -86,8 +87,8 @@ class CourseController extends Controller
                 'duration_weeks' => $course->duration_weeks,
                 'duration_months' => $course->duration_months,
                 'hours_per_week' => $course->hours_per_week,
-                'price' => $course->price,
-                'sale_price' => $course->sale_price,
+                'price' => $course->price / 100,
+                'sale_price' => $course->sale_price === null ? null : $course->sale_price / 100,
                 'visibility' => $course->visibility,
                 'mode' => $course->mode,
                 'project_focus' => $course->project_focus,
@@ -162,8 +163,8 @@ class CourseController extends Controller
             'duration_weeks' => ['nullable', 'integer', 'min:1', 'max:520'],
             'duration_months' => ['nullable', 'integer', 'min:1', 'max:120'],
             'hours_per_week' => ['nullable', 'integer', 'min:1', 'max:80'],
-            'price' => ['required', 'integer', 'min:0', 'max:100000000'],
-            'sale_price' => ['nullable', 'integer', 'min:0', 'lt:price'],
+            'price' => ['required', 'numeric', 'min:0', 'max:100000000'],
+            'sale_price' => ['nullable', 'numeric', 'min:0', 'lt:price'],
 
             'visibility' => ['required', Rule::in(['public', 'lms_only'])],
             'mode' => ['required', Rule::in(['remote', 'hybrid', 'onsite'])],
@@ -199,6 +200,12 @@ class CourseController extends Controller
 
         $validated['slug'] = ($validated['slug'] ?? null) ?: Str::slug($validated['title']);
         $validated['sort_order'] ??= 0;
+
+        // Typed in rupees, stored in paise, like every other amount.
+        $validated['price'] = Money::toPaise($validated['price']);
+        $validated['sale_price'] = ($validated['sale_price'] ?? null) === null
+            ? null
+            : Money::toPaise($validated['sale_price']);
 
         $validated['seo'] = [
             'title' => $validated['title'].' — Unboundbyte Solutions',
@@ -240,7 +247,7 @@ class CourseController extends Controller
                 'type' => $course->type,
                 'level' => $course->level,
                 'duration' => $course->durationLabel() ?? '—',
-                'fee' => $course->price ? '₹'.number_format($course->effectivePrice()) : 'On request',
+                'fee' => $course->isFree() ? 'On request' : Money::display($course->effectivePrice()),
                 'state' => match (true) {
                     ! $course->is_published => 'Draft',
                     $course->visibility === 'lms_only' => 'LMS only',

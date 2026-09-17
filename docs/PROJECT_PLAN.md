@@ -297,7 +297,7 @@ Everything a paying client sees. Nothing more.
 
 **Exit met:** a client can be onboarded, quoted, tracked, billed, and supported end to end.
 
-### Phase 5 — Learning management system
+### Phase 5 — Learning management system — delivered
 
 The training business, in full.
 
@@ -316,7 +316,10 @@ The training business, in full.
 - **Projects and assignments:** brief, submission, deadline, trainer evaluation, feedback.
 - **Results** consolidating quizzes, assignments and attendance into a report card.
 - **Leaderboard and activity tracking**, points for attendance, submissions and scores.
-- **Certificates** auto issued on completion, PDF, with a public verification URL.
+- **Certificates** on completion, PDF, with a public verification URL. Issued by a
+  decision rather than automatically: a college relies on these, and an automatic
+  certificate for somebody who scraped through on a technicality is a document we would
+  have to withdraw. Issuing over a fail is possible, and is recorded as an override.
 - **Announcements and notifications**, course wide or batch wide.
 - **Targeted warning system.** A trainer flags a student who is inattentive in class. The
   student receives a private, escalating warning: notice, then warning, then a parent or
@@ -350,8 +353,29 @@ for a student facing a submission deadline:
 - Early warning to the coordinator when a student stops attending, while it can still be
   fixed rather than after the internship has failed.
 
-**Exit:** a batch can be run from enrolment to certificate without leaving the platform,
-and a college coordinator can answer their department's questions without emailing us.
+**Exit met:** a batch can be run from enrolment to certificate without leaving the
+platform, and a college coordinator can answer their department's questions without
+emailing us.
+
+**What landed differently, and what has not landed yet:**
+
+- Content locking is four independent rules on one lesson — drip by day or by fixed date,
+  a prerequisite lesson, the fee, and a score on a named quiz — and a sealed lesson shows
+  the reason it is sealed. The reason is the point: "locked" on its own is the most
+  annoying word in any learning system.
+- A quiz clock lives on the server. The page counts down, but the deadline that decides is
+  written onto the attempt when it starts, with a minute of grace for latency. Written
+  answers wait for a person and are not marked zero in the meantime.
+- Course fees are treated as **inclusive** of tax, because that is the number the page
+  showed. The taxable amount is worked back out of it rather than tax being added on top.
+- **Coupons and instalments are not built.** A fee is raised whole, and a discount is a
+  different figure on the request.
+- **Calendar invites are not sent.** Sessions carry the Meet link and a column for an
+  event id; wiring it to a calendar provider is Phase 7 work.
+- Announcements are in the portal, not pushed by email or SMS. Warnings are pushed,
+  because an unread warning is worse than useless.
+- **The college's own evaluation form is not generated.** The four documents we define are,
+  and a department that insists on its own format still has to be handled by hand.
 
 ### Phase 6 — Realtime chat
 
@@ -433,7 +457,7 @@ If the business wants value early rather than everything at once, ship in this o
 1. Phases 0, 1, 2 and the leads inbox from Phase 3. This puts a selling website online.
    *Done.*
 2. Phase 3 and Phase 5. Training runs on the platform and starts collecting fees.
-   *Phase 3 done.*
+   *Done.*
 3. Phase 4. Client delivery moves onto the platform. *Done.*
 4. Phases 6, 7, 8, 9.
 

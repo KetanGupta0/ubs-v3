@@ -46,6 +46,12 @@ a list with its own search box. The shared one already handles search, sorting,
 filtering, paging, column visibility, mobile cards and CSV, Excel and PDF export,
 and its state lives in the URL so views can be shared.
 
+**A field declared `boolean` comes back false, not null.** `validatedInput()` on
+the base controller fills every declared key, and an unticked checkbox is not
+sent at all. Where absent should mean true — a document's visibility, whether to
+notify — say so with `boolInput($request, 'notify', true)` rather than leaning
+on a null.
+
 **Nothing from a request reaches SQL directly.** Sort columns are matched against
 a whitelist and filters resolve through their own declared column. Search terms
 have their LIKE wildcards escaped. Keep it that way when adding tables.
@@ -193,15 +199,58 @@ plus `App\Services\Billing` and `App\Services\Payments`.
 - **A constrained eager load returns null for anything left out of the select.**
   `with('user:id,name')` then reading `$user->role->value` is a 500, not a blank.
 
+## Learning management
+
+`routes/student.php`, `App\Http\Controllers\Student\*`, `resources/js/pages/student`,
+the LMS half of `routes/admin.php`, and `App\Services\Lms`.
+
+- **A lesson opens only if every rule allows it.** `App\Services\Lms\ContentGate`
+  holds all four — drip, prerequisite, fee, quiz score — and returns a `LockState`
+  carrying the reason. A sealed lesson renders as its reason, never as a 403 and
+  never hidden: "locked" on its own is the most annoying word in any learning
+  system. Marking a sealed lesson complete is refused, or the gate is decoration.
+- **The quiz clock is the server's.** `expires_at` is written when the attempt
+  starts; a submission arriving more than `QuizGrader::GRACE_SECONDS` past it is
+  marked on what was already stored. The page's countdown is a courtesy.
+- **A written answer waits for a person.** It is not scored zero in the meantime,
+  and the attempt carries `needs_review` until somebody marks it, because showing
+  a student a fail they have not earned is worse than showing nothing.
+- **The answer key never reaches an open attempt.** `Question::forAttempt()` is
+  what the page gets; `correct` is `$hidden` and is only sent in a review, and only
+  if the quiz was set to show answers.
+- **Points are awarded once per reason.** `leaderboard_points` is unique on
+  student, source and reason, and `Activity::did()` writes the log and the points
+  together so the register, the leaderboard and the student's own history cannot
+  disagree.
+- **Attendance is marked, never inferred.** Marking a register awards the points
+  in the same action. A class somebody was marked for is cancelled rather than
+  deleted.
+- **A certificate is a decision, not a job.** `Credentials::issueCertificate()`
+  refuses below the pass mark or the attendance floor unless forced, and a force
+  is recorded in the audit log. Revoking keeps the row so the public check still
+  answers, and says it was withdrawn.
+- **Course fees are inclusive of tax**, because that is the figure the page
+  showed. `Money::taxableWithin()` works the taxable amount back out of it.
+- **Warnings climb one rung at a time** — notice, warning, escalation — and the
+  student is told every time. The private note is for us and never reaches them.
+- `/verify` answers identically for a code that never existed and one that was
+  mistyped, and shows nothing about the holder beyond what confirms the document.
+
 ## Not yet built
 
-Phases 5 through 9 in the plan. Navigation entries that render as "Soon" are
-deliberate placeholders, wired but not yet routed.
+Phases 6 through 9 in the plan. Navigation entries that render as "Soon" are
+deliberate placeholders, wired but not yet routed. Coupons, instalments and
+calendar invitations are named in the plan and are not built; see the "what
+landed differently" note under Phase 5 in `docs/PROJECT_PLAN.md`.
 
 There are no JavaScript tests yet. Client only logic is currently verified by
 driving a real browser. Bugs in every phase so far have been visible only that
 way, so check behaviour in a browser before calling a front end change done.
-The most recent: an API key was issued and its one readable copy never reached
-the screen, because the flash payload was not listed in
+Phase 4's: an API key was issued and its one readable copy never reached the
+screen, because the flash payload was not listed in
 `HandleInertiaRequests::share`. That is the same mistake as Phase 1's, which is
-why both now have tests.
+why both now have tests. Phase 5's was quieter and worth remembering: every
+"Edit" link in the admin catalogue had been 404ing since Phase 3, because those
+models bind routes by slug and the screens linked by id. Admin routes now say
+`{course:id}` explicitly. A link nobody clicked in a test is a link nobody
+tested.

@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, Eye, EyeOff, Pencil, ExternalLink, CalendarPlus } from 'lucide-vue-next';
+import { Plus, Eye, EyeOff, Pencil, ExternalLink, CalendarPlus, ListTree, ClipboardList, FileText } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -92,6 +92,15 @@ function publicPath(row) {
 
                         <UiDropdownItem :href="`/admin/courses/${row.id}/edit`">
                             <Pencil class="h-4 w-4" /> Edit
+                        </UiDropdownItem>
+                        <UiDropdownItem :href="`/admin/courses/${row.id}/builder`">
+                            <ListTree class="h-4 w-4" /> Modules and lessons
+                        </UiDropdownItem>
+                        <UiDropdownItem :href="`/admin/courses/${row.id}/quizzes`">
+                            <ClipboardList class="h-4 w-4" /> Quizzes
+                        </UiDropdownItem>
+                        <UiDropdownItem :href="`/admin/courses/${row.id}/assignments`">
+                            <FileText class="h-4 w-4" /> Assignments
                         </UiDropdownItem>
                         <UiDropdownItem :href="`/admin/batches/new?course=${row.id}`">
                             <CalendarPlus class="h-4 w-4" /> Add a batch

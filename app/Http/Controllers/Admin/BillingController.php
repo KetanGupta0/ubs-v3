@@ -126,7 +126,7 @@ class BillingController extends Controller
 
         $invoice = $invoicer->issueFor($payment);
 
-        if ($validated['notify'] ?? true) {
+        if ($this->boolInput($request, 'notify', true)) {
             $payment->user->notify(new PaymentRequested($payment, $invoice->number));
         }
 

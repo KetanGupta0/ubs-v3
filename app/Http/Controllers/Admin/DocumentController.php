@@ -131,7 +131,7 @@ class DocumentController extends Controller
             'version' => ($superseded?->version ?? 0) + 1,
             'supersedes_id' => $superseded?->id,
             'category' => $validated['category'] ?? $superseded?->category,
-            'visible_to_client' => $validated['visible_to_client'] ?? true,
+            'visible_to_client' => $this->boolInput($request, 'visible_to_client', true),
             'uploaded_by' => $request->user()->id,
         ]);
 

@@ -227,7 +227,7 @@ class ProjectController extends Controller
             'author_id' => $request->user()->id,
             'title' => $validated['title'] ?? null,
             'body' => $validated['body'],
-            'visible_to_client' => $validated['visible_to_client'] ?? true,
+            'visible_to_client' => $this->boolInput($request, 'visible_to_client', true),
         ]);
 
         // Only a client visible update can be emailed to the client, whatever

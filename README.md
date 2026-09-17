@@ -61,7 +61,7 @@ time code can be read straight out of the log.
 
 ## Status
 
-**Phases 0 to 4 are complete.**
+**Phases 0 to 5 are complete.**
 
 Phase 0 built the foundation: brand identity and logo set, design tokens with
 full light and dark themes, a component library, the shared server driven table
@@ -91,5 +91,15 @@ Razorpay with GST compliant invoices and receipts, a full transactions ledger,
 subscriptions with renewal reminders, API keys with quotas, and the mobile API
 for all of it.
 
-Phases 5 through 9 are described in the plan. Phase 5 is the learning management
-system.
+Phase 5 built the learning management system: courses broken into modules and
+lessons with four independent locks on each lesson, live classes on Google Meet
+with a join window and a register that awards its points as it is marked,
+quizzes timed on the server clock with written answers marked by a person,
+assignments and projects with a single marking queue across every course, a
+result card that weighs quizzes, assignments and attendance into one figure and
+shows the weights, a batch leaderboard, certificates and the four internship
+documents with a public verification page, an escalating private warning ladder,
+colleges with bulk enrolment and a coordinator's own view, and the mobile API for
+all of it.
+
+Phases 6 through 9 are described in the plan. Phase 6 is realtime chat.

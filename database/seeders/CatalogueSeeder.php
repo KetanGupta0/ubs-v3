@@ -8,6 +8,7 @@ use App\Models\Faq;
 use App\Models\Service;
 use App\Models\Solution;
 use App\Models\SolutionCategory;
+use App\Support\Money;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -98,6 +99,10 @@ class CatalogueSeeder extends Seeder
         foreach ($courses as $course) {
             $record = Course::query()->updateOrCreate(['slug' => $course['slug']], [
                 ...$course,
+                // The content files quote fees in rupees, which is how a human
+                // writes them. Everything past this line is paise.
+                'price' => Money::toPaise($course['price'] ?? 0),
+                'sale_price' => isset($course['sale_price']) ? Money::toPaise($course['sale_price']) : null,
                 'description' => $this->paragraphs($course['description'] ?? null),
                 'visibility' => 'public',
                 'is_published' => true,
@@ -143,6 +148,8 @@ class CatalogueSeeder extends Seeder
             $record = Course::query()->updateOrCreate(['slug' => $internship['slug']], [
                 ...$internship,
                 'type' => 'internship',
+                'price' => Money::toPaise($internship['price'] ?? 0),
+                'sale_price' => isset($internship['sale_price']) ? Money::toPaise($internship['sale_price']) : null,
                 'description' => $this->paragraphs($internship['description'] ?? null),
                 'visibility' => 'public',
                 'is_published' => true,

@@ -225,13 +225,13 @@ const documents = [
                         <div>
                             <dt class="text-xs" style="color: var(--text-muted)">Fee</dt>
                             <dd class="mt-0.5 font-medium tnum" style="color: var(--text-strong)">
-                                ₹{{ item.price.toLocaleString('en-IN') }}
+                                {{ item.priceLabel }}
                                 <span
                                     v-if="item.originalPrice"
                                     class="ml-1 text-xs font-normal line-through"
                                     style="color: var(--text-muted)"
                                 >
-                                    ₹{{ item.originalPrice.toLocaleString('en-IN') }}
+                                    {{ item.originalPriceLabel }}
                                 </span>
                             </dd>
                         </div>

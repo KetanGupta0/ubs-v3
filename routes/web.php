@@ -1,30 +1,23 @@
 <?php
 
-use App\Http\Controllers\Dashboard\DashboardController;
 use App\Http\Controllers\DesignController;
+use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/marketing.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
 require __DIR__.'/client.php';
+require __DIR__.'/student.php';
 
 /*
- * Role dashboards.
+ * Checking a certificate.
  *
- * Each is gated by role, and by the forced password change, so a client who
- * still holds an administrator generated password cannot reach anything until
- * they have replaced it.
- *
- * Email verification is offered but not required to get in. Locking a paying
- * client out of their own project because they have not clicked a link costs
- * more than it protects.
+ * Public and unauthenticated on purpose: the person checking is an employer or
+ * a college office, and asking them to make an account to verify a document we
+ * issued would defeat the point of issuing it.
  */
-Route::middleware(['auth', 'password.owned'])->group(function () {
-    Route::get('/student', [DashboardController::class, 'student'])
-        ->middleware('role:student')
-        ->name('student.dashboard');
-});
+Route::get('/verify/{code?}', VerificationController::class)->name('verify');
 
 /*
  * The design system gallery.

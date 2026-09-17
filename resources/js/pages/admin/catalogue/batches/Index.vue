@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import { Plus, Pencil } from 'lucide-vue-next';
+import { Plus, Pencil, Play } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -64,6 +64,10 @@ const statusTones = { upcoming: 'brand', running: 'success', completed: 'neutral
                 </template>
 
                 <template #rowActions="{ row }">
+                    <UiButton :href="`/admin/batches/${row.id}/run`" variant="secondary" size="xs">
+                        <template #leading><Play class="h-3 w-3" /></template>
+                        Run
+                    </UiButton>
                     <UiButton :href="`/admin/batches/${row.id}/edit`" variant="ghost" size="xs" icon aria-label="Edit">
                         <Pencil class="h-3.5 w-3.5" />
                     </UiButton>
