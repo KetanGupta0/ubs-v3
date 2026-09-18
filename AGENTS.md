@@ -269,13 +269,47 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
 - Run the socket server with `php artisan reverb:start`. Without it the chat
   still works, and the header says it is not live.
 
+## Reporting, search and saved views
+
+`app/Services/Reports`, `app/Services/Search`, `routes/admin.php` (the reports
+group), `resources/js/pages/admin/reports`, `resources/js/components/Charts`.
+
+- **A report is a class, not a page.** It answers with headline figures, chart
+  data and the rows behind them, and `ReportController` renders whatever comes
+  back without knowing what any of it is about. Adding a report means writing
+  one and listing it in `ReportLibrary::REPORTS`.
+- **Reports follow permissions**, and one somebody cannot run is not listed —
+  and 404s if they type the URL.
+- **The rows are the export.** `ReportExport` goes through the same
+  `TableExport` every list uses, so a spreadsheet cannot disagree with the
+  screen, and the download carries the window the screen is showing.
+- **Chart colours are computed, not chosen.** Six hues in a fixed order in
+  `resources/css/app.css`, checked for lightness, chroma, colour blind
+  separation and contrast in both themes. Status colours — green, amber, red —
+  are never series colours: they mean good, warning and bad here. Ordered
+  things (age bands, funnel stages) use the one hue ramp, `--chart-step-*`.
+- **A report names a slot, never a colour.** `resources/js/support/charts.js`
+  maps slots to tokens, so the fixed order lives in one place.
+- **Every chart sits in `UiChartFrame`**, which carries the legend and the
+  "show the numbers" switch. A chart nobody can read the figures out of is not
+  finished.
+- **An SVG only reports pointer events over painted pixels**, so a line chart
+  needs a transparent rectangle over the plot or the crosshair only appears
+  when the cursor happens to be on a two pixel line.
+- **Search is scoped by who is asking**, in `GlobalSearch`, which is what lets
+  one box serve all three panels. Every href it can produce is opened by a test,
+  because a 404 from the search box is worse than no search.
+- **A saved view stores the query, not the rows**, and `screen` is checked to be
+  a path on this platform before it is stored.
+
 ## Not yet built
 
-Phases 7 through 9 in the plan. Navigation entries that render as "Soon" are
+Phases 8 and 9 in the plan. Navigation entries that render as "Soon" are
 deliberate placeholders, wired but not yet routed. Coupons, instalments,
-calendar invitations, message search and push notifications to a phone are named
-in the plan and are not built; see the "what landed differently" notes under
-Phases 5 and 6 in `docs/PROJECT_PLAN.md`.
+calendar invitations, message search, push notifications to a phone, a visual
+filter builder and a report designer are named in the plan and are not built;
+see the "what landed differently" notes under Phases 5, 6 and 7 in
+`docs/PROJECT_PLAN.md`.
 
 There are no JavaScript tests yet. Client only logic is currently verified by
 driving a real browser. Bugs in every phase so far have been visible only that
@@ -290,7 +324,9 @@ models bind routes by slug and the screens linked by id. Admin routes now say
 tested. Phase 6's was in `config/app.php`: `.env.example` had carried
 `APP_TIMEZONE=Asia/Kolkata` since Phase 0 while the config hardcoded UTC, so
 every class time and invoice date on an Indian platform was five and a half
-hours out.
+hours out. Phase 7's was in a report rather than in code: with no enquiries
+recorded, the funnel cheerfully reported "500% of enquiries", because a share of
+a base that is zero was still being printed.
 
 Chat in particular cannot be called done from PHP tests. Two browser contexts
 talking to each other over a real Reverb connection is the test: a message

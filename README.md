@@ -62,7 +62,7 @@ time code can be read straight out of the log.
 
 ## Status
 
-**Phases 0 to 6 are complete.**
+**Phases 0 to 7 are complete.**
 
 Phase 0 built the foundation: brand identity and logo set, design tokens with
 full light and dark themes, a component library, the shared server driven table
@@ -109,5 +109,13 @@ the browser, delivered and read receipts, typing indicators, presence, unread
 counts, reply quoting and a shared media gallery — over Laravel Reverb, with a
 polling fallback so a bad network costs a few seconds rather than the feature.
 
-Phases 7 through 9 are described in the plan. Phase 7 is reporting, search and
-exports.
+Phase 7 built reporting, search and exports: one search box that answers with
+whatever the person in front of it is allowed to find, saved views that keep a
+filter set and can be shared with the team, and a library of seven reports —
+revenue, receivables, project health, batch performance, attendance, the
+enrolment funnel and certificates issued — each with headline figures, charts
+whose palette was checked rather than chosen, the rows behind them, downloads in
+three formats, a print stylesheet, and the option to have it arrive by email on
+a cadence.
+
+Phases 8 and 9 are described in the plan. Phase 8 is the mobile API.

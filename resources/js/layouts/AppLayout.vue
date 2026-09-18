@@ -10,13 +10,14 @@
 import { ref, computed } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
 import {
-    Bell, Search, LogOut, Settings, ShieldCheck, PanelLeftClose, PanelLeft,
+    Bell, LogOut, Settings, ShieldCheck, PanelLeftClose, PanelLeft,
     MoreHorizontal, ChevronRight,
 } from 'lucide-vue-next';
 
 import BrandLogo from '@/components/Brand/BrandLogo.vue';
 import BrandMark from '@/components/Brand/BrandMark.vue';
 import NavItem from '@/components/Nav/NavItem.vue';
+import SearchPalette from '@/components/Search/SearchPalette.vue';
 import ThemeToggle from '@/components/Nav/ThemeToggle.vue';
 import UiAvatar from '@/components/UI/UiAvatar.vue';
 import UiDrawer from '@/components/UI/UiDrawer.vue';
@@ -146,16 +147,7 @@ function isActive(item) {
                     </div>
 
                     <div class="flex items-center gap-1.5">
-                        <button
-                            type="button"
-                            class="hidden h-9 items-center gap-2 rounded-full border px-3 text-sm transition hover:bg-[var(--surface-sunken)] sm:inline-flex"
-                            style="border-color: var(--border-subtle); color: var(--text-muted)"
-                            aria-label="Search"
-                        >
-                            <Search class="h-4 w-4" />
-                            <span class="hidden md:inline">Search</span>
-                            <kbd class="hidden rounded px-1.5 py-0.5 font-mono text-[0.65rem] md:inline" style="background: var(--surface-sunken)">/</kbd>
-                        </button>
+                        <span class="hidden sm:inline-flex"><SearchPalette /></span>
 
                         <span class="hidden sm:contents"><ThemeToggle /></span>
 

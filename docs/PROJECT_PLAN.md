@@ -419,17 +419,43 @@ browsers talking to each other over a real socket.
   push notifications to a phone. Notification fan out to devices is Phase 8 work, where the
   device tokens live.
 
-### Phase 7 — Reporting, search and exports
+### Phase 7 — Reporting, search and exports — delivered
 
-- Global search across projects, clients, students, invoices and courses.
-- Advanced filter builder with saved and shared views.
-- Report library per role: revenue, receivables, project health, batch performance,
-  attendance, enrolment funnel, certificate issuance.
+- Global search across clients, students, leads, projects, invoices, tickets, courses
+  and batches, scoped by who is asking rather than by which panel they are in.
+- Saved views: the filter set a person uses often, kept, and shareable with the team.
+- Report library: revenue, receivables, project health, batch performance, attendance,
+  enrolment funnel, certificate issuance.
 - Charts with accessible colours in both themes.
 - Every report and list exports to CSV, XLSX and PDF, and has a clean print stylesheet.
 - Scheduled reports emailed on a cadence.
 
-**Exit:** the numbers needed to run the business are one click away.
+**Exit met:** the numbers needed to run the business are one click away.
+
+**What landed differently, and what did not land:**
+
+- **The chart palette was computed, not chosen.** Six hues in a fixed order, checked for
+  lightness, chroma, separation under protanopia and deuteranopia, separation under
+  ordinary vision, and contrast against the surface — in both themes, which take
+  different steps of the same hues. Green, amber and red are deliberately absent: they
+  mean good, warning and bad here, and spending one on "series four" would make every
+  chart that used it lie.
+- **Ordered things get one hue getting darker**, not six identities. Age bands and funnel
+  stages have an order, and the reader should see it in the colour rather than have to
+  read the labels to recover it.
+- **Every chart carries a "show the numbers" switch.** A chart is a picture of data, and
+  anybody who cannot see it, cannot hover it, or simply wants to copy a figure out needs
+  the figures. It lives in the frame component, so no chart here can ship without one.
+- A report declares which **slot** each series takes and never a colour, so the fixed
+  order that makes the palette safe lives in one file rather than in seven reports.
+- **Reports follow permissions**, and a report somebody cannot run is not listed. A door
+  with a lock and no explanation is worse than no door.
+- A saved view stores **the query, not the rows**, which is the same thing the URL
+  already carries — so a saved view and a link pasted to a colleague are the same object.
+- **Not built:** a visual filter builder with and/or grouping (the shared table's filters
+  cover the cases that have come up), cross-report drill through, and a report designer
+  for people to define their own. Charts are drawn in hand written SVG rather than a
+  plotting library, which is why there are four chart forms rather than twenty.
 
 ### Phase 8 — Mobile API
 
@@ -488,7 +514,8 @@ If the business wants value early rather than everything at once, ship in this o
    *Done.*
 3. Phase 4. Client delivery moves onto the platform. *Done.*
 4. Phase 6. Conversation moves off email and WhatsApp. *Done.*
-5. Phases 7, 8, 9.
+5. Phase 7. The numbers to run the business. *Done.*
+6. Phases 8, 9.
 
 ## 7. Open decisions
 

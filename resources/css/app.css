@@ -99,6 +99,43 @@
     --text-muted: var(--color-ink-500);
     --text-inverse: #FFFFFF;
     --ring: var(--color-brand-600);
+
+    /* -------------------------------------------------------------------
+       Chart colours.
+
+       A separate, fixed order rather than a reach into the palette per
+       chart. The order is the colour blindness safety mechanism, so it
+       never changes and a series is never given a generated hue: slots are
+       assigned 1, 2, 3 and a seventh series folds into "other" or becomes
+       small multiples.
+
+       These exact steps were checked, not chosen by eye — lightness band,
+       chroma floor, adjacent separation under protanopia and deuteranopia,
+       separation under ordinary vision, and contrast against the surface
+       they sit on. Dark is its own set of steps for the same hues, because
+       flipping a light palette onto a dark surface fails contrast.
+
+       Status colours are deliberately absent: green, amber and red mean
+       good, warning and bad on this platform, and spending one on "series
+       four" would make every chart that uses it lie.
+       ------------------------------------------------------------------- */
+    --chart-1: #4F46E5;
+    --chart-2: #0D9488;
+    --chart-3: #C2410C;
+    --chart-4: #0891B2;
+    --chart-5: #DB2777;
+    --chart-6: #7C3AED;
+
+    /* One hue, light to dark, for magnitude and for ordered stages. */
+    --chart-step-1: #818CF8;
+    --chart-step-2: #6366F1;
+    --chart-step-3: #4338CA;
+    --chart-step-4: #312E81;
+
+    /* Gridlines and axes: one step off the surface, and no louder. */
+    --chart-grid: #E6E9F2;
+    --chart-axis: var(--color-ink-500);
+
     color-scheme: light;
   }
 
@@ -114,6 +151,24 @@
     --text-muted: #8792B8;
     --text-inverse: var(--color-ink-950);
     --ring: var(--color-brand-400);
+
+    /* The same six hues, re-stepped for a dark surface and re-checked. */
+    --chart-1: #6366F1;
+    --chart-2: #0D9488;
+    --chart-3: #EA580C;
+    --chart-4: #0891B2;
+    --chart-5: #EC4899;
+    --chart-6: #8B5CF6;
+
+    /* The magnitude ramp anchors the other way round in the dark. */
+    --chart-step-1: #4F46E5;
+    --chart-step-2: #6366F1;
+    --chart-step-3: #818CF8;
+    --chart-step-4: #C7D2FE;
+
+    --chart-grid: #242C4D;
+    --chart-axis: #8792B8;
+
     color-scheme: dark;
   }
 
@@ -212,4 +267,71 @@
 
 @utility animate-fade-up {
   animation: ub-fade-up var(--duration-slow) var(--ease-out-expo) both;
+}
+
+/* ---------------------------------------------------------------------------
+   Print
+   Every list and every report is printed by somebody: an accountant wants the
+   receivables on paper, a college wants the attendance sheet in a file. What
+   they should get is the content, once, without the furniture — navigation
+   that cannot be clicked, buttons that cannot be pressed and a dark theme that
+   empties a toner cartridge are all worse than nothing on paper.
+   --------------------------------------------------------------------------- */
+@media print {
+  :root,
+  .dark {
+    /* Paper is white whatever the screen was. */
+    --surface: #FFFFFF;
+    --surface-sunken: #FFFFFF;
+    --surface-raised: #FFFFFF;
+    --border-subtle: #D4D4D8;
+    --border-strong: #A1A1AA;
+    --text-strong: #000000;
+    --text-base: #18181B;
+    --text-muted: #52525B;
+    --chart-grid: #D4D4D8;
+    color-scheme: light;
+  }
+
+  /* The furniture. */
+  header nav,
+  aside,
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #FFFFFF !important;
+  }
+
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Cards become plain blocks that do not get split down the middle. */
+  [class*='shadow-'] {
+    box-shadow: none !important;
+  }
+
+  .print-block,
+  table,
+  figure {
+    break-inside: avoid;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  /* A link's destination is useful on paper, where it cannot be followed. */
+  a[href^='http']::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.7em;
+    color: #52525B;
+  }
+
+  @page {
+    margin: 14mm;
+  }
 }

@@ -13,3 +13,9 @@ Artisan::command('inspire', function () {
  * their desk and can do something about it.
  */
 Schedule::command('renewals:remind')->dailyAt('09:00');
+
+/*
+ * Hourly, so a report set for seven in the morning arrives at seven. Each
+ * schedule decides for itself whether it is due.
+ */
+Schedule::command('reports:send')->hourly();

@@ -168,4 +168,18 @@ repeated.
 | `settings` | key, value (json), group |
 | `message_templates` | key, channel, subject, body, variables (json) |
 | `audit_logs` | actor_id, action, subject_type, subject_id, changes (json), ip |
-| `saved_views` | user_id, screen, name, filters (json), is_shared |
+| `saved_views` | user_id, screen, name, state (json), is_shared, times_used, last_used_at |
+| `report_schedules` | user_id, report, cadence, day, hour, filters (json), recipients (json), format, is_active, last_sent_at, last_error |
+
+A saved view stores the **query, not the rows** — the same query the URL already
+carries — so applying one and following a link a colleague sent are the same operation,
+and the answer is always current. `screen` is a path on this platform and is checked to
+be one, because a stored URL is a URL somebody will later click.
+
+A schedule's recipients are **addresses rather than accounts**: the person who needs the
+monthly numbers is often an accountant or a college coordinator with no login here. Each
+one decides for itself whether it is due, checked against `last_sent_at` rather than the
+clock alone, so an hourly worker that runs twice does not send twice and one that was
+down all morning still sends once when it comes back. A failure is written to
+`last_error` rather than swallowed: nobody notices a report that quietly stopped
+arriving until they need it.

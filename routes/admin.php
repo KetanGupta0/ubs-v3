@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\PeopleController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProposalController;
+use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SolutionController;
@@ -353,6 +354,16 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::put('settings/company', [SettingsController::class, 'updateCompany'])->name('settings.company');
             Route::put('settings/invoicing', [SettingsController::class, 'updateInvoicing'])->name('settings.invoicing');
             Route::put('settings/templates/{template}', [SettingsController::class, 'updateTemplate'])->name('settings.templates.update');
+        });
+
+        /* ------------------------------------------------- reports (P7) */
+        Route::prefix('reports')->name('reports.')->group(function () {
+            Route::get('/', [ReportController::class, 'index'])->name('index');
+            Route::get('{report}', [ReportController::class, 'show'])->name('show');
+            Route::post('{report}/schedule', [ReportController::class, 'schedule'])->name('schedule');
+            Route::delete('schedules/{schedule}', [ReportController::class, 'unschedule'])
+                ->whereNumber('schedule')
+                ->name('unschedule');
         });
 
         Route::get('audit-log', [AuditLogController::class, 'index'])

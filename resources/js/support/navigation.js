@@ -43,7 +43,7 @@ export const navigation = {
         { label: 'Subscriptions', icon: RefreshCw, href: '/admin/subscriptions', permission: 'billing.view' },
         { label: 'API plans', icon: KeyRound, href: '/admin/api-plans', permission: 'api.manage' },
         { label: 'Chat', icon: MessagesSquare, href: '/chat', permission: 'chat.reply' },
-        { label: 'Reports', icon: BarChart3, href: null },
+        { label: 'Reports', icon: BarChart3, href: '/admin/reports' },
         { label: 'Staff', icon: UserCog, href: '/admin/staff', permission: 'staff.manage' },
         { label: 'Settings', icon: Settings, href: '/admin/settings', permission: 'settings.view' },
         { label: 'Audit log', icon: ScrollText, href: '/admin/audit-log', permission: 'audit.view' },

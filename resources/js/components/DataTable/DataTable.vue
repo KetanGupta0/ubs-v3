@@ -20,6 +20,7 @@ import UiBadge from '@/components/UI/UiBadge.vue';
 import UiDropdown from '@/components/UI/UiDropdown.vue';
 import UiDropdownItem from '@/components/UI/UiDropdownItem.vue';
 import UiCheckbox from '@/components/UI/UiCheckbox.vue';
+import SavedViews from '@/components/DataTable/SavedViews.vue';
 import UiDrawer from '@/components/UI/UiDrawer.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
 import UiSkeleton from '@/components/UI/UiSkeleton.vue';
@@ -39,6 +40,8 @@ const props = defineProps({
     rowKey: { type: String, default: 'id' },
     /** Inertia partial reload key, so only the table prop is refetched. */
     only: { type: Array, default: null },
+    /** Offer saved views. Off for a list nobody filters the same way twice. */
+    savedViews: { type: Boolean, default: true },
 });
 
 const emit = defineEmits(['update:selected']);
@@ -183,6 +186,8 @@ const exportFormats = [
                         {{ option.label }}
                     </UiDropdownItem>
                 </UiDropdown>
+
+                <SavedViews v-if="savedViews" />
 
                 <slot name="actions" />
             </div>
