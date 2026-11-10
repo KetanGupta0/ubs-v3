@@ -1,7 +1,7 @@
 # Migrating the live site (ubs-v2) into this platform (ubs-v3)
 
-Status: **plan only**. Nothing here is built yet. Read with `docs/PROJECT_PLAN.md`
-and `CLAUDE.md`; every rule in `CLAUDE.md` still applies to imported data.
+Status: **plan only**. Nothing here is built yet. Read with `docs/PROJECT_PLAN.md`,
+`docs/EXPANSION_PLAN.md` (new modules and the order of work) and `CLAUDE.md`; every rule in `CLAUDE.md` still applies to imported data.
 
 Goal: bring every real record from the live ubs-v2 site into v3 without losing,
 duplicating or silently changing anything, and close the gaps so the v3 admin panel
@@ -30,9 +30,11 @@ Actions, in this order, none of which need code:
    cloned or forked it already has a copy; treat the data as exposed.
 4. Decide with whoever handles compliance whether this needs notice under the DPDP Act,
    2023. Not a technical call, but it should be made deliberately and written down.
-5. Because the hashes were public, **every migrated legacy account changes its password on
-   first sign in** (`users.must_change_password = true`, see §5). bcrypt slows cracking,
-   but weak student passwords will fall.
+5. Because the hashes were public, **every generation 1 (v1) account gets a new random
+   password on import** that nobody sees, plus `must_change_password = true`. Access comes
+   back when an admin sends credentials (single or bulk) or the student uses forgot
+   password. Generation 2 accounts keep their hashes. Decided 2026-11-10; details in
+   `docs/EXPANSION_PLAN.md` §1.
 
 From here on, real data never enters a repository again: not in seeders, migrations,
 fixtures or zip files. The importer in this plan reads a database dump that lives only on
@@ -134,7 +136,7 @@ production v2 storage/ ──rsync──▶ v3 disks, sha256 verified per file
 | v2 | v3 | Notes |
 |---|---|---|
 | `users` (role student) | `users` role `student` + `user_profiles` | Email lowercased; `phone` → `mobile` in E.164 through `Identifier::normaliseMobile`. A mobile number that is duplicated or malformed is imported as null and listed for follow-up, because `mobile` is unique. `qualification`, `date_of_birth`, `city`, `state`, `pincode` → profile `postal_code`, `country`. `address`/`address_line2`/`bio` have no v3 column → see §5. |
-| `users.password` | `users.password` | bcrypt hashes are copied as they are, written with the query builder so the `hashed` cast cannot re-hash them. `must_change_password = true` for every legacy account (see §0). `has_password = false` (Google only) → `password = null`. |
+| `users.password` | `users.password` | **Generation 1 (v1):** replaced by a random password, hashed at once and never stored or shown, `must_change_password = true`; nothing is mailed during the import. **Generation 2:** bcrypt hash copied as it is, written with the query builder so the `hashed` cast cannot re-hash it. `has_password = false` (Google only) → `password = null`. |
 | `users.google_id` | `social_accounts` (provider `google`) | Only where v2 holds the id; v3's verified email rule still applies at the next sign in. |
 | `users.is_blocked`, `block_reason` | `users.status = suspended` + audit entry carrying the reason | |
 | `users` 2FA columns, `passkeys` | not migrated | Encrypted with v2's key and a different scheme. Affected users are told to set 2FA up again. |
@@ -330,7 +332,7 @@ which is why the window should be short and announced.
 
 | # | Question | Recommendation |
 |---|---|---|
-| D1 | Legacy passwords: keep hashes and force a change, or no password and a reset link for everyone? | Keep and force a change. Less friction, and the forced change addresses the leak. |
+| D1 | Legacy passwords | **Decided 2026-11-10:** random password for generation 1, credentials sent from the admin panel or forgot password; generation 2 keeps its hashes (see `EXPANSION_PLAN.md` X1). |
 | D2 | Student support tickets: extend v3 tickets to students, or move them into chat? | Extend tickets; chat has no status or priority, and staff already work tickets. |
 | D3 | v2 reviews: may approved ones appear on the public site? | Import all; show on course pages only with the student's consent, recorded. |
 | D4 | Leaderboard: award points for historic attendance and results? | No. Start everyone at zero on cutover day; history stays visible. |
