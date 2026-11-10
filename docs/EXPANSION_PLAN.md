@@ -121,7 +121,39 @@ digitally signed, printable and downloadable as PDF.
 - everything is scoped `forClient($user)`, so another client's record is not found
   rather than refused
 
-**Gaps.**
+**How the client panel works, end to end.** The stages a client goes through, and
+where each one lives:
+
+| Stage | What happens | Where it lives |
+|---|---|---|
+| 1. Discover | The visitor tries a live demo, asks for a custom build, buys from the cart, or talks to the assistant | Public site, §4, §9.2 → a lead |
+| 2. Agree | The proposal and quotation are sent; the client reviews, comments and signs. The agreement (MSA, SOW, NDA) is signed by both sides. The advance becomes a payment request | Proposals, CL1, CL2 |
+| 3. Onboard | The account is created through `AccountCreator`. A kick-off checklist ("what we need from you") and a kick-off meeting with minutes | CL6, CL10, CL11 |
+| 4. Build | Milestones, weekly updates, a staging preview, feedback, change requests, documents, chat and meetings | Projects, CL12–CL13 |
+| 5. Accept and pay | The client accepts a milestone, which raises its invoice. They pay by Razorpay, UPI or NEFT, with TDS handled | CL9, CL14 |
+| 6. Hand over | Source code, deployment notes, licence keys, credentials and training material. The warranty starts | CL4, CL7, CL15 |
+| 7. Look after | Maintenance contract, tickets on SLA, renewals, monthly reports, upgrade proposals | Contracts, CL16–CL17 |
+
+A client who only **buys a product** goes from stage 1 to stage 6 in a single checkout:
+order, licence, downloads, updates and support window.
+
+**The dashboard leads with what needs the client.** "Waiting on you" comes first:
+- sign this proposal
+- pay this invoice
+- accept this milestone
+- answer these kick-off questions
+- a renewal due in 14 days
+
+After that come:
+- project progress
+- upcoming payments
+- open tickets
+- recent documents and updates
+
+A client who opens the panel once a week should see in five seconds whether anything is
+blocked on them.
+
+**Gaps in the brief.**
 
 | # | Gap | Notes |
 |---|---|---|
@@ -132,6 +164,36 @@ digitally signed, printable and downloadable as PDF.
 | CL5 | **Order history** in the client dashboard: cart orders, what each contained, licence keys, downloads, invoices | Comes with §4. |
 | CL6 | **Client onboarding from a purchase**: buying from the cart creates the client account through `AccountCreator`, the same as an admin would | Today only an admin creates clients; the cart becomes a second route in, through the same service. |
 | CL7 | **A credentials vault for project handover** (hosting, domain, repository access) | Encrypted at rest, revealed per field with re-authentication, every reveal audited. Optional; decision X6. |
+
+**Beyond the brief.** The owner's brief covers what a client should *see*. A
+mature client portal also covers what the client and the team *do together*, and that
+is where most project disputes start. Each item below is recommended. The ones in
+**bold** have the most effect for the work involved.
+
+| # | Improvement | Why it matters |
+|---|---|---|
+| CL8 | **Client organisations with several people.** A company account has members with roles: owner, authorised signatory, finance, technical. Invoices go to finance, tickets come from technical people, and only a signatory can sign. | Today a client is one user. Real clients are companies, and "who is allowed to sign" has to be answerable before e-signatures exist, so **this comes before CL2**. |
+| CL9 | **Milestone acceptance.** At a milestone the client opens a sign-off with the deliverables listed. They accept it, or reject it with comments. Accepting raises that milestone's invoice (`project_milestones.payment_amount` already exists). | It turns "is it done?" into a recorded answer, and billing follows from it instead of from a reminder. |
+| CL10 | **"Waiting on you" items** with due dates: brand assets, content, server access, decisions. They are shown on the dashboard, and the project timeline marks time spent blocked on the client. | The most common cause of delay is waiting on the client. Recording it keeps the timeline honest in both directions. |
+| CL11 | **Meetings and minutes.** Schedule a call, then record the minutes as a document the client acknowledges. Action items become "waiting on you" items or tasks for the team. | Settles "we never agreed to that". |
+| CL12 | **Change requests.** The client asks for something outside the scope. We estimate it and send it as a quotation addendum. The client approves (signs), and the scope, timeline and value update with the history kept. | It stops scope creep becoming free work or an argument, and it is a natural extension of the immutable proposal rule. |
+| CL13 | Feedback on the staging preview: the client reports a bug or a change against the build, with a screenshot, and tracks its status. | Feedback sent over WhatsApp gets lost. Here it is linked to the milestone it blocks. |
+| CL14 | **Indian B2B billing.** The client's GSTIN and PO number appear on invoices. **TDS:** the client pays the net amount, uploads their Form 16A, and the invoice settles. Also credit notes and a downloadable statement of account. | Most companies deduct TDS on services. Without handling it, every paid invoice shows a short payment and finance reconciles by hand. |
+| CL15 | **Handover pack.** One page for each delivered project: repository access, a deployment guide, environment notes, licences, training videos, the warranty end date, and acknowledgement by the client. | It makes "done" final and is what a client comes back to a year later. |
+| CL16 | Renewals and expiry: maintenance contracts, hosting, domain, SSL certificates and update windows, with reminders at 30, 14 and 3 days, plus auto-renew where it is a subscription. | Lapsed domains and SSL certificates are emergencies nobody needed. |
+| CL17 | Monthly service report for maintenance clients: tickets against the SLA, uptime for hosted products, work done and hours used against the contract. | It shows the value of a contract at the moment the client decides whether to renew. |
+| CL18 | Satisfaction: a one-question rating when a ticket closes, and a short survey at handover. With the client's written consent, a quote can become a public testimonial. | It feeds the testimonials section honestly, under the no-fabricated-proof rule. |
+| CL19 | WhatsApp notifications through the WhatsApp Business API for key events (proposal sent, invoice due, milestone ready, ticket answered), alongside email, per person with opt-out. | Indian clients read WhatsApp first. |
+| CL20 | Client-side security: 2FA required for signatories and finance, a list of their own sessions and devices, and an activity log of who in their organisation did what. | A signature or a payment is only as trustworthy as the account that made it. |
+
+Nothing here changes the existing rules:
+- every client read still starts from `forClient()`
+- money is still paise
+- a sent document is still immutable
+- every change still goes through `Auditor`
+
+CL8 widens `forClient()` from one user to the organisation that user belongs to, in that
+one place, so the rule still has one answer.
 
 ### 3.1 Digital signatures
 
@@ -685,7 +747,7 @@ it on v3**, rather than all of it holding v2 alive.
 | **B** | §1 credential bulk send · §6 v2 parity (L1–L11) · CMS (MIGRATION_PLAN §6, C1–C10) | Cutover |
 | **C** | Migration M3–M5: importer, rehearsals, cutover | v2 switched off |
 | **D** | §5 registration forms · §6 improvements, performance, activity · §7 chat admin controls | — |
-| **E** | §3 client management (agreements, e-sign, PDFs, licences) | §4 |
+| **E** | §3 client management: CL8 organisations first, then CL1–CL3 agreements, e-sign, PDFs, then CL9–CL20 in the order of the table | §4 |
 | **F** | §4 products, demos, cart, coupons, licences, downloads | — |
 | **G** | §8 email occasions and broadcasts | — |
 | **H** | §9.1 quiz integrity · §9.1a proctored quizzes · §9.2 visitor assistant | — |
@@ -699,6 +761,10 @@ it on v3**, rather than all of it holding v2 alive.
 ---
 
 ## 11. Decisions needed
+
+**The owner accepted every recommendation below as the default on 2026-11-10.** Any
+new question that comes up within a phase is asked before that phase starts, not in
+the middle of it.
 
 | # | Question | Recommendation |
 |---|---|---|

@@ -330,6 +330,9 @@ which is why the window should be short and announced.
 
 ## 10. Decisions needed
 
+**The owner accepted every recommendation below as the default on 2026-11-10.** New
+questions are asked before the phase they belong to starts.
+
 | # | Question | Recommendation |
 |---|---|---|
 | D1 | Legacy passwords | **Decided 2026-11-10:** random password for generation 1, credentials sent from the admin panel or forgot password; generation 2 keeps its hashes (see `EXPANSION_PLAN.md` X1). |
