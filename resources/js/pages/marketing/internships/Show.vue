@@ -146,7 +146,14 @@ function scheduleLine(batch) {
                                 </div>
                             </div>
 
-                            <UiButton class="mt-5" size="lg" block href="#apply" :inertia="false">Apply for this</UiButton>
+                            <p
+                                v-if="internship.enrolmentOpen === false"
+                                class="mt-5 rounded-xl px-3.5 py-2.5 text-sm"
+                                style="background: var(--surface-sunken); color: var(--text-base)"
+                            >
+                                Enrolment is closed for now and opens again with the next batch. Leave your details and we will tell you when it does.
+                            </p>
+                            <UiButton class="mt-5" size="lg" block href="#apply" :inertia="false">{{ internship.enrolmentOpen === false ? 'Tell me when it opens' : 'Apply for this' }}</UiButton>
                         </div>
                     </div>
                 </div>

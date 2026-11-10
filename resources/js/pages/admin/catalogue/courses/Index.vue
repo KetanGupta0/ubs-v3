@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, Eye, EyeOff, Pencil, ExternalLink, CalendarPlus, ListTree, ClipboardList, FileText } from 'lucide-vue-next';
+import { Plus, Eye, EyeOff, Pencil, ExternalLink, CalendarPlus, ListTree, ClipboardList, FileText, DoorOpen, DoorClosed } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -20,6 +20,10 @@ const typeTones = { internship: 'brand', programme: 'accent', course: 'neutral' 
 
 function togglePublished(id) {
     router.post(`/admin/courses/${id}/publish`, {}, { preserveScroll: true, preserveState: true });
+}
+
+function toggleEnrolment(id) {
+    router.post(`/admin/courses/${id}/enrolment`, {}, { preserveScroll: true, preserveState: true });
 }
 
 function publicPath(row) {
@@ -77,9 +81,12 @@ function publicPath(row) {
                 </template>
 
                 <template #cell:state="{ row }">
-                    <UiBadge :tone="row.state === 'Live' ? 'success' : row.state === 'LMS only' ? 'warning' : 'neutral'" size="sm" dot>
-                        {{ row.state }}
-                    </UiBadge>
+                    <span class="inline-flex flex-wrap items-center gap-1.5">
+                        <UiBadge :tone="row.state === 'Live' ? 'success' : row.state === 'LMS only' ? 'warning' : 'neutral'" size="sm" dot>
+                            {{ row.state }}
+                        </UiBadge>
+                        <UiBadge v-if="!row.enrolmentOpen" tone="neutral" size="sm">enrolment closed</UiBadge>
+                    </span>
                 </template>
 
                 <template #rowActions="{ row }">
@@ -107,6 +114,10 @@ function publicPath(row) {
                         </UiDropdownItem>
                         <UiDropdownItem v-if="row.state === 'Live'" :href="publicPath(row)" :inertia="false">
                             <ExternalLink class="h-4 w-4" /> View on the site
+                        </UiDropdownItem>
+                        <UiDropdownItem @click="toggleEnrolment(row.id)">
+                            <component :is="row.enrolmentOpen ? DoorClosed : DoorOpen" class="h-4 w-4" />
+                            {{ row.enrolmentOpen ? 'Close enrolment' : 'Open enrolment' }}
                         </UiDropdownItem>
                         <UiDropdownItem @click="togglePublished(row.id)">
                             <component :is="row.published ? EyeOff : Eye" class="h-4 w-4" />

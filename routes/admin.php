@@ -110,6 +110,7 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::get('courses/{course:id}/edit', [CourseController::class, 'edit'])->name('courses.edit');
             Route::put('courses/{course:id}', [CourseController::class, 'update'])->name('courses.update');
             Route::post('courses/{course:id}/publish', [CourseController::class, 'togglePublished'])->name('courses.publish');
+            Route::post('courses/{course:id}/enrolment', [CourseController::class, 'toggleEnrolment'])->name('courses.enrolment');
             Route::delete('courses/{course:id}', [CourseController::class, 'destroy'])->name('courses.destroy');
 
             Route::get('batches/new', [BatchController::class, 'create'])->name('batches.create');

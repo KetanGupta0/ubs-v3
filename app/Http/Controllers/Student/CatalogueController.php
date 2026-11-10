@@ -46,6 +46,7 @@ class CatalogueController extends StudentController
                 'free' => $course->isFree(),
                 'lmsOnly' => $course->visibility === 'lms_only',
                 'enrolled' => in_array($course->id, $enrolled, true),
+                'enrolmentOpen' => $course->is_enrollment_open,
                 'batches' => $course->batches->map(fn (Batch $batch) => [
                     'id' => $batch->id,
                     'name' => $batch->name,
@@ -91,6 +92,12 @@ class CatalogueController extends StudentController
 
         if ($existing && $existing->status !== 'dropped') {
             return redirect()->route('student.courses.show', $course->id);
+        }
+
+        // Closed between batches. The course stays visible; signing up waits
+        // until it opens, and staff can still enrol somebody by hand.
+        if (! $course->is_enrollment_open) {
+            return back()->withErrors(['course_id' => 'Enrolment on this course is closed for now. It will open again with the next batch.']);
         }
 
         $enrolment = $enroller->enrol($this->student($request), $course, $batch, source: 'self');
