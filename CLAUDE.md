@@ -157,6 +157,12 @@ Rules for the marketing pages:
   `credential_deliveries` row per channel. A delivery failure marks the row failed
   and never rolls back the account: a provider being down is not a reason to lose
   a record somebody just typed in.
+- **A bulk credential send never touches a password somebody chose.** Only accounts
+  on a temporary password, or with none (Google only), are sent to, whether or not
+  they have signed in here: accounts brought across from the old site keep their
+  own password and the old site never recorded sign ins. Each send is recorded as
+  queued the moment it is planned, so a second click finds it, and the job checks
+  again before it goes. `App\Services\Admin\CredentialBulkSender` holds the rule.
 - **Every change goes through `App\Services\Admin\Auditor`.** It stores only what
   actually moved, as before and after, with passwords, secrets and tokens replaced
   by dots. There is no route to edit or delete an entry.

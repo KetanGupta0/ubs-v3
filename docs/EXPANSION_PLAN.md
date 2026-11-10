@@ -49,7 +49,7 @@ credentials screen.
   - payments in paise
   
   Anything that cannot be placed is listed in the import report rather than dropped.
-- **Credential sending, the gap.**
+- **Credential sending, the gap.** *Built 2026-11-10 (Step B, first slice): bulk send from the Students and Clients lists, by selection or for everyone matching the current filters, and a "Credentials sent" column and filter (never, queued, sent, failed). One rule changed while building it: an account is skipped whenever its password is not a temporary one, signed in or not, because generation 2 accounts keep their own passwords and v2 never recorded sign ins.*
   - A **bulk send** on the Students list: select rows, or filter to "legacy, never
     sent", then Send credentials.
   - It is queued and throttled, so a mail provider limit does not fail half the list.

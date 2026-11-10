@@ -78,6 +78,10 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
                 ->whereIn('role', ['client', 'student'])
                 ->middleware('throttle:10,1')
                 ->name('people.resend');
+            Route::post('{role}s/send-credentials', [PeopleController::class, 'sendCredentialsInBulk'])
+                ->whereIn('role', ['client', 'student'])
+                ->middleware(['permission:clients.update,students.update', 'throttle:6,1'])
+                ->name('people.bulk-credentials');
             Route::put('{role}s/{user}/status', [PeopleController::class, 'setStatus'])
                 ->whereIn('role', ['client', 'student'])
                 ->name('people.status');

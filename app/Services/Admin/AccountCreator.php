@@ -83,10 +83,18 @@ class AccountCreator
     /**
      * Issue a fresh temporary password and send it again.
      *
-     * Used when the first message did not arrive. The old password stops
-     * working immediately, so a resend is not a second live credential.
+     * Used when the first message did not arrive, and for accounts brought
+     * across from the old platform. The old password stops working
+     * immediately, so a resend is not a second live credential.
+     *
+     * Pass the actor when there is no signed in request, as in a queued job,
+     * so the audit entry and the delivery record say who sent it. A bulk send
+     * records its deliveries as queued up front (see planDeliveries()) and
+     * passes them in, so they are completed rather than recorded twice.
+     *
+     * @param  array<int, CredentialDelivery>|null  $plannedDeliveries
      */
-    public function resendCredentials(User $user, ?string $personalNote = null): array
+    public function resendCredentials(User $user, ?string $personalNote = null, ?User $actor = null, ?array $plannedDeliveries = null): array
     {
         $password = TemporaryPassword::generate();
 
@@ -98,18 +106,21 @@ class AccountCreator
         // Anything signed in on the old password is cut off.
         $user->tokens()->delete();
 
-        $this->auditor->action('account.credentials_resent', $user);
+        $this->auditor->actingAs($actor)->action('account.credentials_resent', $user);
 
         return [
             'password' => $password,
-            'deliveries' => $this->sendCredentials($user, $password, $personalNote),
+            'deliveries' => $this->sendCredentials($user, $password, $personalNote, $actor, $plannedDeliveries),
         ];
     }
 
     /**
+     * Record that credentials are about to go to this account, one row per
+     * channel, before anything is generated or sent.
+     *
      * @return array<int, CredentialDelivery>
      */
-    protected function sendCredentials(User $user, string $password, ?string $personalNote): array
+    public function planDeliveries(User $user, ?User $actor = null): array
     {
         $deliveries = [];
 
@@ -120,12 +131,23 @@ class AccountCreator
 
             $deliveries[] = CredentialDelivery::query()->create([
                 'user_id' => $user->id,
-                'created_by' => request()->user()?->id,
+                'created_by' => $actor?->id ?? request()->user()?->id,
                 'channel' => $channel,
                 'destination' => $destination,
                 'status' => 'queued',
             ]);
         }
+
+        return $deliveries;
+    }
+
+    /**
+     * @param  array<int, CredentialDelivery>|null  $deliveries  Rows already planned, if any.
+     * @return array<int, CredentialDelivery>
+     */
+    protected function sendCredentials(User $user, string $password, ?string $personalNote, ?User $actor = null, ?array $deliveries = null): array
+    {
+        $deliveries ??= $this->planDeliveries($user, $actor);
 
         try {
             $user->notify(new WelcomeCredentials($user, $password, $personalNote));
