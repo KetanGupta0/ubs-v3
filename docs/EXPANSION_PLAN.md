@@ -347,7 +347,10 @@ These are required before v2 is switched off.
 - a group per batch over WebSockets
 - the main admin is the default group admin in every group
 - only images as media, plus voice notes
-- AI moderation
+
+**No AI moderation in chat** (owner, 2026-11-10): not for text, images or voice notes.
+Moderation in groups is done by people, with the admin controls below. AI is used on
+quizzes instead (§9.1).
 
 **Already in v3:**
 
@@ -376,8 +379,7 @@ So the allowed media types are already exactly what was asked for.
   - mute a student for a period
   - pin a message
   - announcement mode, where only admins and the trainer can post
-  - report a message (any member)
-- **AI moderation:** see §9.1.
+  - report a message (any member), which goes to a queue for the group admins
 
 ---
 
@@ -432,35 +434,98 @@ Both features use the Claude API through the official PHP SDK
 
 - **Model:** `claude-opus-5-5` by default. A cheaper model per route is the owner's call
   (decision X3).
-- **Volume note for that call:** moderation runs on every chat message. Opus 5.5 is
-  $4 / $20 per million input/output tokens; Haiku 5.5 is $0.10 / $0.50.
+- **Chat moderation is not part of this plan** (owner, 2026-11-10); see §7.
 
-### 9.1 Chat moderation
+### 9.1 Quiz integrity: catching cheating
 
-- **Text:** the message is stored and broadcast as now (store first, broadcast second).
-  - A queued job then classifies it.
-  - It uses structured output (`verdict`: allow, hide or review; `categories`; a short
-    `reason`) and low effort.
-  - The system prompt is cached, so each message costs only its own tokens.
-  - A `hide` verdict replaces the bubble with "removed by moderation" (the existing
-    removed-message behaviour) and notifies the group admins.
-  - A `review` verdict leaves it visible and puts it in a moderation queue.
-- **Images:** held as "sending…" until the classifier answers, then broadcast. An image
-  that 40 students have already seen cannot be taken back.
-  - The image is re-encoded first, as today, so the model sees the EXIF-stripped copy.
-- **Voice notes:** the Claude API does not take audio, so there are three options
-  (decision X4):
-  1. speech-to-text through a separate provider, then moderate the transcript
-  2. no automatic moderation for voice: report button plus the admin queue
-  3. voice notes limited to trainers and admins
-- **Fail open, safely:** if the API is down, text and voice are delivered and queued for
-  checking later; images wait up to a timeout, then go to the review queue.
-- **People decide in the end:**
-  - every automatic hide can be restored by an admin, and the student is told why
-  - a student who gets repeated hides moves up the warnings ladder only by a person's
-    decision
-  - the model never issues warnings on its own
-- Moderation decisions are logged with the model, the verdict and the reason.
+**Requirement.** AI moderation on quizzes, so that cheating does not pass unnoticed.
+
+**Already in v3.**
+- The clock is the server's: `expires_at` is set when the attempt starts, and a late
+  submission is marked on what was already stored.
+- The answer key never reaches an open attempt.
+- Questions are shuffled with a seed per attempt.
+- Written answers wait for a person (`needs_review`), and are never scored zero in the
+  meantime.
+
+**Principle.** The AI **flags; a person decides.**
+- It never fails an attempt, changes a score or issues a warning by itself.
+- A student is never shown "suspected of cheating". They see their result once a person
+  has looked, which is the same reasoning `CLAUDE.md` gives for written answers.
+- Every signal below can be innocent: a notification steals focus, a family shares a
+  router, two good students write the same correct answer. The AI's job is to put the
+  evidence in front of a trainer, ranked, with reasons.
+
+**Layer 1: make cheating harder (no AI).** Most of the value is here.
+- **Question pools:** the quiz draws N questions from a larger pool, so neighbours get
+  different papers.
+- **Option shuffling** per attempt, alongside the existing question shuffling.
+- **One question at a time**, optionally with no going back, set per quiz.
+- **Answers and the review open only after the quiz closes for everyone**, so the first
+  student to finish cannot pass the answers on while others are still sitting it.
+- **One open attempt per student.** The attempt is tied to the browser session that
+  started it; a second device sees "attempt in progress elsewhere", and the switch is
+  logged.
+- **The rules are shown before starting:** what is recorded during the attempt and what
+  happens to it. A recorded rule nobody was told about is a trap, not a deterrent.
+
+**Layer 2: record what happened during the attempt (no AI).**
+- A new `quiz_attempt_events` table records, with server timestamps:
+  - start, resume and submit
+  - each answer saved, with time spent on that question
+  - the tab hidden or the window losing focus, and for how long
+  - leaving and returning to full screen, where the quiz asks for it
+  - paste into an answer box, and copy from the question text
+  - a new IP address or device mid-attempt
+- These come from the browser, so they can be faked or missed. They are evidence, not
+  proof, and the review screen says so.
+- Deterministic checks run when the quiz closes, before any AI:
+  - **Speed:** many questions answered implausibly fast, or a hard question answered in
+    seconds after a long focus loss.
+  - **Overlap:** two students in the same batch with near-identical written answers
+    (normalised-text similarity), or the same unusual wrong choices in the same order.
+  - **Network:** several students submitting from one IP within minutes with matching
+    answers.
+
+**Layer 3: AI review of flagged attempts.**
+- **When:** after the quiz closes for the whole batch, so answers can be compared across
+  students. Nothing during the attempt depends on the API being up.
+- **What it gets:** a summary of the events, the deterministic flags, the student's
+  written answers, and the closest matching answers from other students in the batch.
+  Student identities are replaced by labels in what is sent.
+- **What it returns:** structured output with a risk level (none, low, medium or high),
+  a list of evidence items each pointing at a specific event or answer, and the
+  innocent explanations it considered.
+- **Written answers:** it compares meaning, not just wording. It can see that two answers
+  are the same paraphrased, which plain text similarity misses.
+  - It **does not** label anything as "written by AI". Detectors for that are unreliable
+    and would accuse honest students. A pasted block of text and its timing are evidence
+    a person can weigh; a guess about authorship is not.
+- **Cost:** it runs through the Message Batches API at half price, since nothing waits on
+  it. Only attempts the deterministic checks flagged, or that a trainer asks about, are
+  sent; at most every attempt of a quiz.
+  - Rough size: an attempt of 20 questions with its events is a few thousand tokens.
+  - At Opus 5.5 rates that is a few US cents per attempt reviewed.
+
+**Layer 4: the trainer's review.**
+- A **Quiz integrity** tab on the quiz shows flagged attempts, highest risk first.
+- Each attempt has:
+  - its timeline
+  - side-by-side answers with matching ones highlighted
+  - the AI's evidence list
+- The reviewer can:
+  - clear it
+  - discuss it with the student
+  - void the attempt and allow a resit
+  - or open a warning on the existing ladder, which the student is told about, as today
+- Every decision goes through `Auditor`, with the reviewer and their reason.
+- The student can see the final decision and the reason, and can reply once before it is
+  final.
+
+**Webcam or screen proctoring** is deliberately **not** in this plan. It needs camera
+images of students' homes, a consent process and a retention policy. It would also send
+images to the AI, which the owner has ruled out for chat. If a high-stakes exam ever
+needs it, it should be a separate decision (X4).
 
 ### 9.2 Visitor assistant on the public site
 
@@ -521,7 +586,7 @@ it on v3**, rather than all of it holding v2 alive.
 | **E** | §3 client management (agreements, e-sign, PDFs, licences) | §4 |
 | **F** | §4 products, demos, cart, coupons, licences, downloads | — |
 | **G** | §8 email occasions and broadcasts | — |
-| **H** | §9.1 chat moderation · §9.2 visitor assistant | — |
+| **H** | §9.1 quiz integrity · §9.2 visitor assistant | — |
 | **I** | Phases 8 and 9 of `PROJECT_PLAN.md` (mobile API, hardening) | — |
 
 **Other rules for this order:**
@@ -537,8 +602,8 @@ it on v3**, rather than all of it holding v2 alive.
 |---|---|---|
 | X1 | Generation 2 accounts: keep their passwords, or force a change too? | Keep. Their hashes were never published. |
 | X2 | Digital signatures: built-in OTP e-sign, Aadhaar eSign through a provider, or both? | Both: OTP for quotations and proposals, a provider for agreements. Check with a lawyer which agreements need which. |
-| X3 | AI model per feature (Opus 5.5 default; a cheaper model for high-volume moderation is your choice) | Your call on cost; measure on real messages first. |
-| X4 | Voice-note moderation: speech-to-text provider, report-only, or staff-only voice? | Report-only to start, add speech-to-text if abuse shows up. |
+| X3 | AI model per feature (Opus 5.5 default; a cheaper model is your choice) | Your call on cost. Quiz review is low volume and batched, so the default costs little there. |
+| X4 | Webcam or screen proctoring for high-stakes exams? | No, unless a specific exam needs it; then decide separately, with consent and retention rules. |
 | X5 | Registration form with an existing email: confirm first, or add directly? | Confirm first. Otherwise anyone can enrol anyone. |
 | X6 | Credentials vault for client handover: build it? | Only if the team hands over credentials through the platform today; it is a security surface. |
 | X7 | Festival list: which occasions, and do enquiry senders receive greetings? | National days to everyone who has not opted out; festivals switchable by the admin; enquiry senders included, with unsubscribe. |
