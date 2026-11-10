@@ -61,14 +61,21 @@ const moreOpen = ref(false);
  * every admin path begins with /admin. Two highlighted items tell you nothing
  * about where you are.
  */
+/*
+ * Compared on the path alone. A list keeps its search and filters in the query
+ * string, so a filtered list (or a link that opens one pre-filtered) would
+ * otherwise light up nothing at all.
+ */
+const pathOf = (href) => href.split(/[?#]/)[0].replace(/\/$/, '');
+
 const activeHref = computed(() => {
-    const url = page.url;
+    const url = pathOf(page.url);
 
     return items.value
         .map((item) => item.href)
         .filter(Boolean)
-        .filter((href) => url === href || url.startsWith(`${href.replace(/\/$/, '')}/`))
-        .sort((a, b) => b.length - a.length)[0] ?? null;
+        .filter((href) => url === pathOf(href) || url.startsWith(`${pathOf(href)}/`))
+        .sort((a, b) => pathOf(b).length - pathOf(a).length)[0] ?? null;
 });
 
 function isActive(item) {

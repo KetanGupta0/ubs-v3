@@ -13,7 +13,7 @@
  */
 import {
     LayoutDashboard, FolderKanban, FileText, Receipt, LifeBuoy, MessagesSquare,
-    KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy, UserCheck,
+    KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy, UserCheck, Video,
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
     UserPlus, Package, ShieldCheck, Building2, Wrench, HelpCircle, UserCog,
     ScrollText, FileSignature, Files, LifeBuoy as LifeBuoyIcon, Banknote,
@@ -37,6 +37,7 @@ export const navigation = {
         { label: 'Courses', icon: GraduationCap, href: '/admin/courses', permission: 'catalogue.view' },
         { label: 'Batches', icon: CalendarCheck, href: '/admin/batches', permission: 'catalogue.view' },
         { label: 'Enrolments', icon: UserCheck, href: '/admin/enrolments', permission: 'students.view' },
+        { label: 'Classes', icon: Video, href: '/admin/classes?filter[when]=upcoming', permission: 'students.view' },
         { label: 'Marking', icon: ClipboardList, href: '/admin/marking', permission: 'students.view' },
         { label: 'Site content', icon: HelpCircle, href: '/admin/content', permission: 'catalogue.view' },
         { label: 'Billing', icon: Banknote, href: '/admin/billing', permission: 'billing.view' },

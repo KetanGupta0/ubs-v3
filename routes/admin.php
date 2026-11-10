@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\BatchRunController;
 use App\Http\Controllers\Admin\BillingController;
+use App\Http\Controllers\Admin\ClassScheduleController;
 use App\Http\Controllers\Admin\CollegeController;
 use App\Http\Controllers\Admin\CollegeDeskController;
 use App\Http\Controllers\Admin\ContentController;
@@ -320,6 +321,7 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
         /* ------------------------------------------------------ enrolments */
         Route::middleware('permission:students.view')->group(function () {
             Route::get('enrolments', [EnrolmentController::class, 'index'])->name('enrolments.index');
+            Route::get('classes', [ClassScheduleController::class, 'index'])->name('classes.index');
         });
 
         Route::middleware('permission:students.update')->group(function () {
