@@ -1,0 +1,1080 @@
+[
+  {
+    "role": "1-public",
+    "path": "/",
+    "status": 200,
+    "title": "Unboundbyte Solutions \u2014 custom software and live technical training \u2014 Unboundbyte Solutions",
+    "file": "1-public/001_home.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions",
+    "status": 200,
+    "title": "Software we build \u2014 solutions catalogue \u2014 Unboundbyte Solutions",
+    "file": "1-public/002_solutions.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/services",
+    "status": 200,
+    "title": "Services \u2014 development, modernisation and maintenance \u2014 Unboundbyte Solutions",
+    "file": "1-public/003_services.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/internships",
+    "status": 200,
+    "title": "Internships for college students \u2014 Unboundbyte Solutions",
+    "file": "1-public/004_internships.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/training",
+    "status": 200,
+    "title": "Live training \u2014 programmes taught by working developers \u2014 Unboundbyte Solutions",
+    "file": "1-public/005_training.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/about",
+    "status": 200,
+    "title": "About Unboundbyte Solutions \u2014 Unboundbyte Solutions",
+    "file": "1-public/006_about.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/login",
+    "status": 200,
+    "title": "Sign in \u2014 Unboundbyte Solutions",
+    "file": "1-public/007_login.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/contact",
+    "status": 200,
+    "title": "Contact Unboundbyte Solutions \u2014 Unboundbyte Solutions",
+    "file": "1-public/008_contact.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/services/custom-software-development",
+    "status": 200,
+    "title": "Custom software development \u2014 Unboundbyte Solutions \u2014 Unboundbyte Solutions",
+    "file": "1-public/009_services_custom_software_development.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/services/upgrade-and-modernisation",
+    "status": 200,
+    "title": "Upgrade and modernisation \u2014 Unboundbyte Solutions \u2014 Unboundbyte Solutions",
+    "file": "1-public/010_services_upgrade_and_modernisation.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/services/maintenance-and-support",
+    "status": 200,
+    "title": "Maintenance and support \u2014 Unboundbyte Solutions \u2014 Unboundbyte Solutions",
+    "file": "1-public/011_services_maintenance_and_support.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/unified-erp-suite",
+    "status": 200,
+    "title": "Unified ERP suite \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/012_solutions_unified_erp_suite.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/customer-relationship-manager",
+    "status": 200,
+    "title": "Customer relationship manager \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/013_solutions_customer_relationship_manager.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/multi-vendor-marketplace",
+    "status": 200,
+    "title": "Multi vendor marketplace \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/014_solutions_multi_vendor_marketplace.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/clinic-and-hospital-management",
+    "status": 200,
+    "title": "Clinic and hospital management \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/015_solutions_clinic_and_hospital_management.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/process",
+    "status": 200,
+    "title": "How we work \u2014 Unboundbyte Solutions",
+    "file": "1-public/016_process.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/internships/web-development-internship",
+    "status": 200,
+    "title": "Web development internship \u2014 for college students, by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/017_internships_web_development_internship.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/internships/full-stack-internship",
+    "status": 200,
+    "title": "Full stack internship \u2014 for college students, by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/018_internships_full_stack_internship.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/internships/six-month-industry-internship",
+    "status": 200,
+    "title": "Six month industry internship \u2014 for college students, by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/019_internships_six_month_industry_internship.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/for-colleges",
+    "status": 200,
+    "title": "For colleges \u2014 internship and training tie-ups \u2014 Unboundbyte Solutions",
+    "file": "1-public/020_for_colleges.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/training/full-stack-web-development",
+    "status": 200,
+    "title": "Full stack web development \u2014 live training by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/021_training_full_stack_web_development.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/training/laravel-for-working-developers",
+    "status": 200,
+    "title": "Laravel for working developers \u2014 live training by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/022_training_laravel_for_working_developers.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/training/python-and-data-foundations",
+    "status": 200,
+    "title": "Python and data foundations \u2014 live training by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/023_training_python_and_data_foundations.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/register",
+    "status": 200,
+    "title": "Create your account \u2014 Unboundbyte Solutions",
+    "file": "1-public/024_register.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/faq",
+    "status": 200,
+    "title": "Frequently asked questions \u2014 Unboundbyte Solutions",
+    "file": "1-public/025_faq.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/legal/privacy",
+    "status": 200,
+    "title": "Privacy policy \u2014 Unboundbyte Solutions \u2014 Unboundbyte Solutions",
+    "file": "1-public/026_legal_privacy.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/legal/terms",
+    "status": 200,
+    "title": "Terms of service \u2014 Unboundbyte Solutions \u2014 Unboundbyte Solutions",
+    "file": "1-public/027_legal_terms.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/learning-management-platform",
+    "status": 200,
+    "title": "Learning management platform \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/028_solutions_learning_management_platform.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/hr-and-payroll-system",
+    "status": 200,
+    "title": "HR and payroll system \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/029_solutions_hr_and_payroll_system.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/inventory-and-warehouse-manager",
+    "status": 200,
+    "title": "Inventory and warehouse manager \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/030_solutions_inventory_and_warehouse_manager.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/retail-point-of-sale",
+    "status": 200,
+    "title": "Retail point of sale \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/031_solutions_retail_point_of_sale.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/direct-to-consumer-storefront",
+    "status": 200,
+    "title": "Direct to consumer storefront \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/032_solutions_direct_to_consumer_storefront.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/school-management-system",
+    "status": 200,
+    "title": "School management system \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/033_solutions_school_management_system.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/fleet-and-transport-manager",
+    "status": 200,
+    "title": "Fleet and transport manager \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/034_solutions_fleet_and_transport_manager.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/field-service-and-task-force",
+    "status": 200,
+    "title": "Field service and task force \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/035_solutions_field_service_and_task_force.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/last-mile-delivery-platform",
+    "status": 200,
+    "title": "Last mile delivery platform \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/036_solutions_last_mile_delivery_platform.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/gst-billing-and-accounting",
+    "status": 200,
+    "title": "GST billing and accounting \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/037_solutions_gst_billing_and_accounting.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/solutions/loan-origination-and-collection",
+    "status": 200,
+    "title": "Loan origination and collection \u2014 custom software by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/038_solutions_loan_origination_and_collection.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/internships/frontend-internship",
+    "status": 200,
+    "title": "Frontend internship \u2014 for college students, by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/039_internships_frontend_internship.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/internships/backend-and-api-internship",
+    "status": 200,
+    "title": "Backend and API internship \u2014 for college students, by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/040_internships_backend_and_api_internship.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/internships/python-and-data-internship",
+    "status": 200,
+    "title": "Python and data internship \u2014 for college students, by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/041_internships_python_and_data_internship.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/training/vuejs-in-depth",
+    "status": 200,
+    "title": "Vue.js in depth \u2014 live training by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/042_training_vuejs_in_depth.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/training/database-design-and-sql-mastery",
+    "status": 200,
+    "title": "Database design and SQL mastery \u2014 live training by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/043_training_database_design_and_sql_mastery.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/training/corporate-team-upskilling",
+    "status": 200,
+    "title": "Corporate team upskilling \u2014 live training by Unboundbyte \u2014 Unboundbyte Solutions",
+    "file": "1-public/044_training_corporate_team_upskilling.jpg"
+  },
+  {
+    "role": "1-public",
+    "path": "/forgot-password",
+    "status": 200,
+    "title": "Forgot password \u2014 Unboundbyte Solutions",
+    "file": "1-public/045_forgot_password.jpg"
+  },
+  {
+    "role": "2-auth",
+    "path": "/login",
+    "status": 200,
+    "title": "Sign in \u2014 Unboundbyte Solutions",
+    "file": "2-auth/001_login.jpg"
+  },
+  {
+    "role": "2-auth",
+    "path": "/register",
+    "status": 200,
+    "title": "Create your account \u2014 Unboundbyte Solutions",
+    "file": "2-auth/002_register.jpg"
+  },
+  {
+    "role": "2-auth",
+    "path": "/forgot-password",
+    "status": 200,
+    "title": "Forgot password \u2014 Unboundbyte Solutions",
+    "file": "2-auth/003_forgot_password.jpg"
+  },
+  {
+    "role": "2-auth",
+    "path": "/verify",
+    "status": 200,
+    "title": "Verify a certificate \u2014 Unboundbyte Solutions",
+    "file": "2-auth/004_verify.jpg"
+  },
+  {
+    "role": "2-auth",
+    "path": "/design",
+    "status": 200,
+    "title": "Design system \u2014 Unboundbyte Solutions",
+    "file": "2-auth/005_design.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin",
+    "status": 200,
+    "title": "Admin \u2014 Unboundbyte Solutions",
+    "file": "3-admin/001_admin.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/chat",
+    "status": 200,
+    "title": "Chat \u2014 Unboundbyte Solutions",
+    "file": "3-admin/002_chat.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/leads",
+    "status": 200,
+    "title": "Enquiries \u2014 Unboundbyte Solutions",
+    "file": "3-admin/004_admin_leads.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/clients",
+    "status": 200,
+    "title": "Clients \u2014 Unboundbyte Solutions",
+    "file": "3-admin/005_admin_clients.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/students",
+    "status": 200,
+    "title": "Students \u2014 Unboundbyte Solutions",
+    "file": "3-admin/006_admin_students.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/colleges",
+    "status": 200,
+    "title": "Colleges \u2014 Unboundbyte Solutions",
+    "file": "3-admin/007_admin_colleges.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/projects",
+    "status": 200,
+    "title": "Projects \u2014 Unboundbyte Solutions",
+    "file": "3-admin/008_admin_projects.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/proposals",
+    "status": 200,
+    "title": "Proposals \u2014 Unboundbyte Solutions",
+    "file": "3-admin/009_admin_proposals.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/documents",
+    "status": 200,
+    "title": "Documents \u2014 Unboundbyte Solutions",
+    "file": "3-admin/010_admin_documents.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/tickets",
+    "status": 200,
+    "title": "Tickets \u2014 Unboundbyte Solutions",
+    "file": "3-admin/011_admin_tickets.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/contracts",
+    "status": 200,
+    "title": "Maintenance contracts \u2014 Unboundbyte Solutions",
+    "file": "3-admin/012_admin_contracts.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/solutions",
+    "status": 200,
+    "title": "Solutions \u2014 Unboundbyte Solutions",
+    "file": "3-admin/013_admin_solutions.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/services",
+    "status": 200,
+    "title": "Services \u2014 Unboundbyte Solutions",
+    "file": "3-admin/014_admin_services.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/courses",
+    "status": 200,
+    "title": "Courses and internships \u2014 Unboundbyte Solutions",
+    "file": "3-admin/015_admin_courses.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/batches",
+    "status": 200,
+    "title": "Batches \u2014 Unboundbyte Solutions",
+    "file": "3-admin/016_admin_batches.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/marking",
+    "status": 200,
+    "title": "Marking \u2014 Unboundbyte Solutions",
+    "file": "3-admin/017_admin_marking.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/content",
+    "status": 200,
+    "title": "Site content \u2014 Unboundbyte Solutions",
+    "file": "3-admin/018_admin_content.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/billing",
+    "status": 200,
+    "title": "Billing \u2014 Unboundbyte Solutions",
+    "file": "3-admin/019_admin_billing.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/invoices",
+    "status": 200,
+    "title": "Invoices \u2014 Unboundbyte Solutions",
+    "file": "3-admin/020_admin_invoices.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/subscriptions",
+    "status": 200,
+    "title": "Subscriptions \u2014 Unboundbyte Solutions",
+    "file": "3-admin/021_admin_subscriptions.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/api-plans",
+    "status": 200,
+    "title": "API plans \u2014 Unboundbyte Solutions",
+    "file": "3-admin/022_admin_api_plans.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/reports",
+    "status": 200,
+    "title": "Reports \u2014 Unboundbyte Solutions",
+    "file": "3-admin/023_admin_reports.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/staff",
+    "status": 200,
+    "title": "Staff \u2014 Unboundbyte Solutions",
+    "file": "3-admin/024_admin_staff.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/settings",
+    "status": 200,
+    "title": "Settings \u2014 Unboundbyte Solutions",
+    "file": "3-admin/025_admin_settings.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/audit-log",
+    "status": 200,
+    "title": "Audit log \u2014 Unboundbyte Solutions",
+    "file": "3-admin/026_admin_audit_log.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/settings/security",
+    "status": 200,
+    "title": "Security \u2014 Unboundbyte Solutions",
+    "file": "3-admin/027_settings_security.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/clients/new",
+    "status": 200,
+    "title": "Add a client \u2014 Unboundbyte Solutions",
+    "file": "3-admin/028_admin_clients_new.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/chat/1",
+    "status": 200,
+    "title": "Warehouse management system \u2014 Unboundbyte Solutions",
+    "file": "3-admin/029_chat_1.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/clients/2",
+    "status": 200,
+    "title": "Meridian Logistics \u2014 Unboundbyte Solutions",
+    "file": "3-admin/054_admin_clients_2.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/students/new",
+    "status": 200,
+    "title": "Add a student \u2014 Unboundbyte Solutions",
+    "file": "3-admin/055_admin_students_new.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/students/7",
+    "status": 200,
+    "title": "Rohit Das \u2014 Unboundbyte Solutions",
+    "file": "3-admin/056_admin_students_7.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/colleges/new",
+    "status": 200,
+    "title": "New college \u2014 Unboundbyte Solutions",
+    "file": "3-admin/057_admin_colleges_new.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/colleges/example-institute-of-technology/edit",
+    "status": 200,
+    "title": "Example Institute of Technology \u2014 Unboundbyte Solutions",
+    "file": "3-admin/058_admin_colleges_example_institute_of_technology_edit.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/colleges/example-institute-of-technology/desk",
+    "status": 200,
+    "title": "Example Institute of Technology \u2014 Unboundbyte Solutions",
+    "file": "3-admin/059_admin_colleges_example_institute_of_technology_desk.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/projects/new",
+    "status": 200,
+    "title": "New project \u2014 Unboundbyte Solutions",
+    "file": "3-admin/060_admin_projects_new.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/projects/1",
+    "status": 200,
+    "title": "Warehouse management system \u2014 Unboundbyte Solutions",
+    "file": "3-admin/061_admin_projects_1.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/proposals/new",
+    "status": 200,
+    "title": "New proposal \u2014 Unboundbyte Solutions",
+    "file": "3-admin/062_admin_proposals_new.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/proposals/1",
+    "status": 200,
+    "title": "Driver application, phase two \u2014 Unboundbyte Solutions",
+    "file": "3-admin/063_admin_proposals_1.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/tickets/1",
+    "status": 200,
+    "title": "Despatch note prints without the batch number \u2014 Unboundbyte Solutions",
+    "file": "3-admin/064_admin_tickets_1.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/contracts/new",
+    "status": 200,
+    "title": "New contract \u2014 Unboundbyte Solutions",
+    "file": "3-admin/065_admin_contracts_new.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/contracts/1/edit",
+    "status": 200,
+    "title": "UBS-AMC-0001 \u2014 Unboundbyte Solutions",
+    "file": "3-admin/066_admin_contracts_1_edit.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/solutions/new",
+    "status": 200,
+    "title": "New solution \u2014 Unboundbyte Solutions",
+    "file": "3-admin/067_admin_solutions_new.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/solutions/1/edit",
+    "status": 200,
+    "title": "Unified ERP suite \u2014 Unboundbyte Solutions",
+    "file": "3-admin/068_admin_solutions_1_edit.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/services/new",
+    "status": 200,
+    "title": "New service \u2014 Unboundbyte Solutions",
+    "file": "3-admin/069_admin_services_new.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/services/1/edit",
+    "status": 200,
+    "title": "Custom software development \u2014 Unboundbyte Solutions",
+    "file": "3-admin/070_admin_services_1_edit.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/courses/new",
+    "status": 200,
+    "title": "New offering \u2014 Unboundbyte Solutions",
+    "file": "3-admin/071_admin_courses_new.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/courses/1/edit",
+    "status": 200,
+    "title": "Full stack web development \u2014 Unboundbyte Solutions",
+    "file": "3-admin/072_admin_courses_1_edit.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/batches/new",
+    "status": 200,
+    "title": "New batch \u2014 Unboundbyte Solutions",
+    "file": "3-admin/073_admin_batches_new.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/batches/13/edit",
+    "status": 200,
+    "title": "November 2026 batch \u2014 Unboundbyte Solutions",
+    "file": "3-admin/074_admin_batches_13_edit.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/batches/13/run",
+    "status": 200,
+    "title": "November 2026 batch \u2014 Unboundbyte Solutions",
+    "file": "3-admin/075_admin_batches_13_run.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/marking/submissions/1",
+    "status": 200,
+    "title": "Marking \u2014 Asha Verma \u2014 Unboundbyte Solutions",
+    "file": "3-admin/076_admin_marking_submissions_1.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/marking/attempts/1",
+    "status": 200,
+    "title": "Asha Verma \u2014 Week one check \u2014 Unboundbyte Solutions",
+    "file": "3-admin/077_admin_marking_attempts_1.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/billing/new",
+    "status": 200,
+    "title": "Raise a payment request \u2014 Unboundbyte Solutions",
+    "file": "3-admin/078_admin_billing_new.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/billing/1",
+    "status": 200,
+    "title": "PR-00001 \u2014 Unboundbyte Solutions",
+    "file": "3-admin/079_admin_billing_1.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/reports/revenue",
+    "status": 200,
+    "title": "Revenue \u2014 Unboundbyte Solutions",
+    "file": "3-admin/080_admin_reports_revenue.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/reports/receivables",
+    "status": 200,
+    "title": "Receivables \u2014 Unboundbyte Solutions",
+    "file": "3-admin/081_admin_reports_receivables.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/reports/project-health",
+    "status": 200,
+    "title": "Project health \u2014 Unboundbyte Solutions",
+    "file": "3-admin/082_admin_reports_project_health.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/reports/batch-performance",
+    "status": 200,
+    "title": "Batch performance \u2014 Unboundbyte Solutions",
+    "file": "3-admin/083_admin_reports_batch_performance.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/reports/attendance",
+    "status": 200,
+    "title": "Attendance \u2014 Unboundbyte Solutions",
+    "file": "3-admin/084_admin_reports_attendance.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/reports/enrolment-funnel",
+    "status": 200,
+    "title": "Enrolment funnel \u2014 Unboundbyte Solutions",
+    "file": "3-admin/085_admin_reports_enrolment_funnel.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/reports/certificates",
+    "status": 200,
+    "title": "Certificates issued \u2014 Unboundbyte Solutions",
+    "file": "3-admin/086_admin_reports_certificates.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/projects/1/edit",
+    "status": 200,
+    "title": "Warehouse management system \u2014 Unboundbyte Solutions",
+    "file": "3-admin/104_admin_projects_1_edit.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/batches/13/warnings",
+    "status": 200,
+    "title": "Notices \u2014 November 2026 batch \u2014 Unboundbyte Solutions",
+    "file": "3-admin/105_admin_batches_13_warnings.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/batches/13/reviews",
+    "status": 200,
+    "title": "Mentor reviews \u2014 November 2026 batch \u2014 Unboundbyte Solutions",
+    "file": "3-admin/106_admin_batches_13_reviews.jpg"
+  },
+  {
+    "role": "3-admin",
+    "path": "/admin/batches/13/credentials",
+    "status": 200,
+    "title": "Credentials \u2014 November 2026 batch \u2014 Unboundbyte Solutions",
+    "file": "3-admin/107_admin_batches_13_credentials.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client",
+    "status": 200,
+    "title": "Your dashboard \u2014 Unboundbyte Solutions",
+    "file": "4-client/001_client.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/chat",
+    "status": 200,
+    "title": "Chat \u2014 Unboundbyte Solutions",
+    "file": "4-client/002_chat.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/projects",
+    "status": 200,
+    "title": "Your projects \u2014 Unboundbyte Solutions",
+    "file": "4-client/004_client_projects.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/proposals",
+    "status": 200,
+    "title": "Proposals \u2014 Unboundbyte Solutions",
+    "file": "4-client/005_client_proposals.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/documents",
+    "status": 200,
+    "title": "Documents \u2014 Unboundbyte Solutions",
+    "file": "4-client/006_client_documents.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/payments",
+    "status": 200,
+    "title": "Payments \u2014 Unboundbyte Solutions",
+    "file": "4-client/007_client_payments.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/transactions",
+    "status": 200,
+    "title": "Transactions \u2014 Unboundbyte Solutions",
+    "file": "4-client/008_client_transactions.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/support",
+    "status": 200,
+    "title": "Support \u2014 Unboundbyte Solutions",
+    "file": "4-client/009_client_support.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/subscriptions",
+    "status": 200,
+    "title": "Subscriptions \u2014 Unboundbyte Solutions",
+    "file": "4-client/010_client_subscriptions.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/api-keys",
+    "status": 200,
+    "title": "API keys \u2014 Unboundbyte Solutions",
+    "file": "4-client/011_client_api_keys.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/reports",
+    "status": 200,
+    "title": "Reports \u2014 Unboundbyte Solutions",
+    "file": "4-client/012_client_reports.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/settings/security",
+    "status": 200,
+    "title": "Security \u2014 Unboundbyte Solutions",
+    "file": "4-client/013_settings_security.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/proposals/1",
+    "status": 200,
+    "title": "Driver application, phase two \u2014 Unboundbyte Solutions",
+    "file": "4-client/014_client_proposals_1.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/payments/2",
+    "status": 200,
+    "title": "Delivery for February 2026 \u2014 Unboundbyte Solutions",
+    "file": "4-client/015_client_payments_2.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/invoices/2",
+    "status": 200,
+    "title": "Invoice UBS/2026-27/0002 \u2014 Unboundbyte Solutions",
+    "file": "4-client/016_client_invoices_2.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/projects/1",
+    "status": 200,
+    "title": "Warehouse management system \u2014 Unboundbyte Solutions",
+    "file": "4-client/017_client_projects_1.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/chat/1",
+    "status": 200,
+    "title": "Warehouse management system \u2014 Unboundbyte Solutions",
+    "file": "4-client/018_chat_1.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/tickets/new",
+    "status": 200,
+    "title": "Raise a ticket \u2014 Unboundbyte Solutions",
+    "file": "4-client/043_client_tickets_new.jpg"
+  },
+  {
+    "role": "4-client",
+    "path": "/client/tickets/1",
+    "status": 200,
+    "title": "Despatch note prints without the batch number \u2014 Unboundbyte Solutions",
+    "file": "4-client/044_client_tickets_1.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student",
+    "status": 200,
+    "title": "Your learning \u2014 Unboundbyte Solutions",
+    "file": "5-student/001_student.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/chat",
+    "status": 200,
+    "title": "Chat \u2014 Unboundbyte Solutions",
+    "file": "5-student/002_chat.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/courses",
+    "status": 200,
+    "title": "Your courses \u2014 Unboundbyte Solutions",
+    "file": "5-student/004_student_courses.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/classes",
+    "status": 200,
+    "title": "Live classes \u2014 Unboundbyte Solutions",
+    "file": "5-student/005_student_classes.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/assignments",
+    "status": 200,
+    "title": "Assignments \u2014 Unboundbyte Solutions",
+    "file": "5-student/006_student_assignments.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/attendance",
+    "status": 200,
+    "title": "Attendance \u2014 Unboundbyte Solutions",
+    "file": "5-student/007_student_attendance.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/results",
+    "status": 200,
+    "title": "Results \u2014 Unboundbyte Solutions",
+    "file": "5-student/008_student_results.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/leaderboard",
+    "status": 200,
+    "title": "Leaderboard \u2014 Unboundbyte Solutions",
+    "file": "5-student/009_student_leaderboard.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/certificates",
+    "status": 200,
+    "title": "Certificates \u2014 Unboundbyte Solutions",
+    "file": "5-student/010_student_certificates.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/announcements",
+    "status": 200,
+    "title": "Announcements \u2014 Unboundbyte Solutions",
+    "file": "5-student/011_student_announcements.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/warnings",
+    "status": 200,
+    "title": "Notices \u2014 Unboundbyte Solutions",
+    "file": "5-student/012_student_warnings.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/catalogue",
+    "status": 200,
+    "title": "Course catalogue \u2014 Unboundbyte Solutions",
+    "file": "5-student/013_student_catalogue.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/payments",
+    "status": 200,
+    "title": "Fees \u2014 Unboundbyte Solutions",
+    "file": "5-student/014_student_payments.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/settings/security",
+    "status": 200,
+    "title": "Security \u2014 Unboundbyte Solutions",
+    "file": "5-student/015_settings_security.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/assignments/1",
+    "status": 200,
+    "title": "Project \u2014 the first working screen \u2014 Unboundbyte Solutions",
+    "file": "5-student/016_student_assignments_1.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/courses/8",
+    "status": 200,
+    "title": "Web development internship \u2014 Unboundbyte Solutions",
+    "file": "5-student/017_student_courses_8.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/chat/2",
+    "status": 200,
+    "title": "November 2026 batch \u2014 Unboundbyte Solutions",
+    "file": "5-student/018_chat_2.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/quizzes/1",
+    "status": 200,
+    "title": "Week one check \u2014 Unboundbyte Solutions",
+    "file": "5-student/043_student_quizzes_1.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/courses/8/materials",
+    "status": 200,
+    "title": "Web development internship \u2014 materials \u2014 Unboundbyte Solutions",
+    "file": "5-student/044_student_courses_8_materials.jpg"
+  },
+  {
+    "role": "5-student",
+    "path": "/student/courses/8/lessons/1",
+    "status": 200,
+    "title": "Request to response \u2014 Unboundbyte Solutions",
+    "file": "5-student/045_student_courses_8_lessons_1.jpg"
+  }
+]
