@@ -71,7 +71,7 @@ class DashboardController extends StudentController
             'dueSoon' => $this->dueSoon($request),
 
             'announcements' => Announcement::query()
-                ->for($batchIds, $courseIds)
+                ->for($batchIds, $courseIds, $request->user()->id)
                 ->with('batch:id,name')
                 ->orderByDesc('is_pinned')
                 ->orderByDesc('published_at')

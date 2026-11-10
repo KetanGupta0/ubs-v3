@@ -2,6 +2,7 @@
 
 namespace App\Services\Lms;
 
+use App\Models\Announcement;
 use App\Models\Certificate;
 use App\Models\Enrollment;
 use App\Models\PaymentRequest;
@@ -39,6 +40,7 @@ class StudentRecord
             'payments' => $withPayments ? $this->payments($student) : [],
             'certificates' => $this->certificates($student),
             'warnings' => $this->warnings($student),
+            'notices' => $this->notices($student),
             'counts' => [
                 'enrolments' => $enrolments->count(),
                 'active' => $enrolments->where('status', 'active')->count(),
@@ -123,6 +125,27 @@ class StudentRecord
                 'grade' => $certificate->grade,
                 'revoked' => $certificate->revoked_at !== null,
                 'revokedReason' => $certificate->revoked_reason,
+            ])
+            ->all();
+    }
+
+    /** Notices sent to this student alone. @return array<int, array<string, mixed>> */
+    protected function notices(User $student): array
+    {
+        return Announcement::query()
+            ->where('audience', 'student')
+            ->where('user_id', $student->id)
+            ->with('author:id,name')
+            ->latest('published_at')
+            ->limit(50)
+            ->get()
+            ->map(fn (Announcement $notice) => [
+                'id' => $notice->id,
+                'title' => $notice->title,
+                'body' => $notice->body,
+                'pinned' => $notice->is_pinned,
+                'by' => $notice->author?->name,
+                'sentOn' => $notice->published_at?->format('j M Y, g:i a'),
             ])
             ->all();
     }

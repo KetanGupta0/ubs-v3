@@ -148,7 +148,7 @@ class ProgressController extends StudentController
     {
         return Inertia::render('student/Announcements', [
             'announcements' => Announcement::query()
-                ->for($this->enrolledBatchIds($request), $this->enrolledCourseIds($request))
+                ->for($this->enrolledBatchIds($request), $this->enrolledCourseIds($request), $request->user()->id)
                 ->with(['batch:id,name', 'course:id,title', 'author:id,name'])
                 ->orderByDesc('is_pinned')
                 ->orderByDesc('published_at')
@@ -158,7 +158,9 @@ class ProgressController extends StudentController
                     'id' => $announcement->id,
                     'title' => $announcement->title,
                     'body' => $announcement->body,
-                    'scope' => $announcement->batch?->name ?? $announcement->course?->title ?? 'Everyone',
+                    'scope' => $announcement->audience === 'student'
+                    ? 'Just for you'
+                    : ($announcement->batch?->name ?? $announcement->course?->title ?? 'Everyone'),
                     'author' => $announcement->author?->name ?? 'Unboundbyte',
                     'pinned' => $announcement->is_pinned,
                     'at' => $announcement->published_at->format('j M Y'),

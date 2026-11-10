@@ -161,6 +161,7 @@ class PeopleController extends Controller
                 ? $record->for($user, withPayments: $request->user()->hasPermission('billing.view'))
                 : null,
             'canSeeBilling' => $request->user()->hasPermission('billing.view'),
+            'canManageStudent' => $roleEnum === Role::Student && $request->user()->hasPermission('students.update'),
             'deliveries' => CredentialDelivery::query()
                 ->where('user_id', $user->id)
                 ->with('creator:id,name')

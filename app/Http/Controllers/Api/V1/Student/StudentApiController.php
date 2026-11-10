@@ -248,7 +248,7 @@ class StudentApiController extends Controller
 
         return response()->json([
             'data' => Announcement::query()
-                ->for($enrolments->pluck('batch_id')->filter()->all(), $enrolments->pluck('course_id')->all())
+                ->for($enrolments->pluck('batch_id')->filter()->all(), $enrolments->pluck('course_id')->all(), $request->user()->id)
                 ->with(['author:id,name'])
                 ->orderByDesc('is_pinned')
                 ->orderByDesc('published_at')

@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue';
-import { Link } from '@inertiajs/vue3';
-import { ArrowRight, Award, Download } from 'lucide-vue-next';
+import { Link, router, useForm } from '@inertiajs/vue3';
+import { ArrowRight, Award, Download, Megaphone, Pin, Trash2 } from 'lucide-vue-next';
 
 import UiCard from '@/components/UI/UiCard.vue';
 import UiTabs from '@/components/UI/UiTabs.vue';
@@ -9,6 +9,11 @@ import UiBadge from '@/components/UI/UiBadge.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import UiProgress from '@/components/UI/UiProgress.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
+import UiModal from '@/components/UI/UiModal.vue';
+import UiFormField from '@/components/UI/UiFormField.vue';
+import UiInput from '@/components/UI/UiInput.vue';
+import UiTextarea from '@/components/UI/UiTextarea.vue';
+import UiCheckbox from '@/components/UI/UiCheckbox.vue';
 
 /**
  * One student's learning, on their admin profile: what they are on and how it
@@ -17,7 +22,9 @@ import UiEmptyState from '@/components/UI/UiEmptyState.vue';
  */
 const props = defineProps({
     record: { type: Object, required: true },
+    studentId: { type: Number, required: true },
     canSeeBilling: { type: Boolean, default: false },
+    canManage: { type: Boolean, default: false },
 });
 
 const tab = ref('enrolments');
@@ -27,7 +34,35 @@ const tabs = computed(() => [
     ...(props.canSeeBilling ? [{ value: 'payments', label: 'Payments', count: props.record.payments.length }] : []),
     { value: 'certificates', label: 'Certificates', count: props.record.certificates.length },
     { value: 'warnings', label: 'Warnings', count: props.record.warnings.length },
+    { value: 'notices', label: 'Notices', count: props.record.notices.length },
 ]);
+
+/* ------------------------------------------------------ notices to them */
+
+const noticeOpen = ref(false);
+const noticeForm = useForm({ title: '', body: '', is_pinned: false });
+
+function openNotice() {
+    noticeForm.reset();
+    noticeForm.clearErrors();
+    noticeOpen.value = true;
+}
+
+function sendNotice() {
+    noticeForm.post(`/admin/students/${props.studentId}/notices`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            noticeOpen.value = false;
+            tab.value = 'notices';
+        },
+    });
+}
+
+function withdraw(notice) {
+    if (window.confirm(`Withdraw "${notice.title}"? It disappears from their dashboard.`)) {
+        router.delete(`/admin/students/${props.studentId}/notices/${notice.id}`, { preserveScroll: true });
+    }
+}
 
 const statusTones = { active: 'success', on_hold: 'warning', completed: 'brand', dropped: 'neutral' };
 const paymentTones = { paid: 'success', pending: 'warning', cancelled: 'neutral', refunded: 'neutral' };
@@ -168,8 +203,34 @@ const percent = (value) => (value === null || value === undefined ? '—' : `${M
                 </ul>
             </template>
 
+            <!-- Notices sent to this student alone -->
+            <template v-if="tab === 'notices'">
+                <div v-if="canManage" class="mb-3 flex justify-end">
+                    <UiButton size="xs" @click="openNotice">
+                        <template #leading><Megaphone class="h-3 w-3" /></template>
+                        Send a notice
+                    </UiButton>
+                </div>
+                <UiEmptyState v-if="!record.notices.length" title="No notices" description="Anything sent to this student alone shows here and on their dashboard." />
+                <ul v-else class="space-y-3">
+                    <li v-for="notice in record.notices" :key="notice.id" class="rounded-xl border p-3.5" style="border-color: var(--border-subtle)">
+                        <div class="flex items-start justify-between gap-2">
+                            <p class="flex items-center gap-1.5 text-sm font-medium" style="color: var(--text-strong)">
+                                <Pin v-if="notice.pinned" class="h-3.5 w-3.5" aria-label="Pinned" />
+                                {{ notice.title }}
+                            </p>
+                            <UiButton v-if="canManage" variant="ghost" size="xs" icon aria-label="Withdraw notice" @click="withdraw(notice)">
+                                <Trash2 class="h-3.5 w-3.5" />
+                            </UiButton>
+                        </div>
+                        <p class="mt-1.5 whitespace-pre-line text-sm">{{ notice.body }}</p>
+                        <p class="mt-1.5 text-xs" style="color: var(--text-muted)">{{ notice.sentOn }}<template v-if="notice.by"> · {{ notice.by }}</template></p>
+                    </li>
+                </ul>
+            </template>
+
             <!-- Warnings -->
-            <template v-else-if="tab === 'warnings'">
+            <template v-if="tab === 'warnings'">
                 <UiEmptyState v-if="!record.warnings.length" title="No warnings" description="Nothing has been raised about this student." />
                 <ul v-else class="space-y-3">
                     <li
@@ -195,5 +256,21 @@ const percent = (value) => (value === null || value === undefined ? '—' : `${M
                 </ul>
             </template>
         </div>
+
+        <UiModal :open="noticeOpen" title="Send a notice" description="Only this student sees it, on their dashboard and announcements." :persistent="noticeForm.processing" @close="noticeOpen = false">
+            <form id="student-notice-form" class="space-y-4" @submit.prevent="sendNotice">
+                <UiFormField label="Title" required :error="noticeForm.errors.title">
+                    <UiInput v-model="noticeForm.title" placeholder="Your project review is on Friday" />
+                </UiFormField>
+                <UiFormField label="Message" required :error="noticeForm.errors.body">
+                    <UiTextarea v-model="noticeForm.body" :rows="5" />
+                </UiFormField>
+                <UiCheckbox v-model="noticeForm.is_pinned" label="Pin it to the top of their announcements" />
+            </form>
+            <template #footer>
+                <UiButton variant="ghost" :disabled="noticeForm.processing" @click="noticeOpen = false">Cancel</UiButton>
+                <UiButton type="submit" form="student-notice-form" :loading="noticeForm.processing">Send</UiButton>
+            </template>
+        </UiModal>
     </UiCard>
 </template>

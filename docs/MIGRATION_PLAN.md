@@ -154,7 +154,7 @@ production v2 storage/ ──rsync──▶ v3 disks, sha256 verified per file
 | `live_classes` | `live_sessions` | `join_url` → `meet_link`; `is_cancelled` → `status = cancelled`; past ones `completed`. |
 | `attendances` | `attendances` | A v2 row means the student joined → `status = present`, `marked_at = joined_at`, `is_manual` kept in `note`. **Absences are not created** for past sessions (see decision D5). |
 | `study_materials` (per batch) | `materials` (per course) | Files copied, `mime` re-read from bytes. Materials that were specific to one batch would become visible to every batch of the course → needs `materials.batch_id` (§5). |
-| `notices` + `notice_reads` | `announcements` | `target_type all` → audience all, `batch` → that batch. A notice to **one student** has no v3 equivalent → becomes a v3 database notification to that user. Read receipts are dropped. |
+| `notices` + `notice_reads` | `announcements` | `target_type all` → audience all, `batch` → that batch. A notice to **one student** → an announcement with `audience = student` and `user_id` set (built 2026-11-10), which only that student sees. Read receipts are dropped. |
 
 ### Assessment and credentials
 

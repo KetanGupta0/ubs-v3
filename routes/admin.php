@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SolutionController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\StudentNoticeController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\SupportController;
 use Illuminate\Support\Facades\Route;
@@ -329,6 +330,9 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::put('enrolments/{enrolment}/status', [EnrolmentController::class, 'updateStatus'])->name('enrolments.status');
             Route::put('enrolments/{enrolment}/batch', [EnrolmentController::class, 'move'])->name('enrolments.move');
             Route::post('enrolments/{enrolment}/waive', [EnrolmentController::class, 'waiveFee'])->name('enrolments.waive');
+
+            Route::post('students/{user}/notices', [StudentNoticeController::class, 'store'])->name('students.notices.store');
+            Route::delete('students/{user}/notices/{notice}', [StudentNoticeController::class, 'destroy'])->name('students.notices.destroy');
         });
 
         /* ------------------------------------------- issuing credentials */

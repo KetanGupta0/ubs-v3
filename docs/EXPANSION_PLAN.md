@@ -366,6 +366,7 @@ These are required before v2 is switched off.
 - *L11 built 2026-11-10: "Enrolment open" per course, set on the course form or from the course list. Closing it keeps the course on the site, refuses self sign-up, and still lets staff enrol by hand; the public pages and the student catalogue say it is closed.*
 - *L2 (most of it) built 2026-11-10: a learning record on the student's admin profile, with enrolments and their results (from `ResultCard`), payments (left out on the server for staff without billing access), certificates and warnings. Suspend and send-new-credentials already existed. Signing in as the student (audited impersonation) is still to do.*
 - *L7 built 2026-11-10: `/admin/classes`, every live class across batches. Quick views: upcoming, today, past, register not marked, cancelled. Classes that were held but never had a register marked are counted and flagged, with a link to mark them.*
+- *L8 built 2026-11-10: a notice to one student, sent from their admin profile. It is an announcement addressed to them alone, so it shows on their dashboard, announcements page and mobile app, and nobody else's. It can be withdrawn.*
 
 **Improvements for the learning experience:**
 

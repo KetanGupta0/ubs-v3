@@ -27,6 +27,7 @@ const props = defineProps({
     deliveries: { type: Array, default: () => [] },
     record: { type: Object, default: null },
     canSeeBilling: { type: Boolean, default: false },
+    canManageStudent: { type: Boolean, default: false },
 });
 
 const isStudent = props.role === 'student';
@@ -107,7 +108,13 @@ function resend() {
                 <div class="space-y-5 lg:col-span-2">
                     <!-- What they are on and how it is going comes first: it is
                          what a student's profile is usually opened for. -->
-                    <StudentRecord v-if="record" :record="record" :can-see-billing="canSeeBilling" />
+                    <StudentRecord
+                        v-if="record"
+                        :record="record"
+                        :student-id="person.id"
+                        :can-see-billing="canSeeBilling"
+                        :can-manage="canManageStudent"
+                    />
 
                     <form class="space-y-5" @submit.prevent="save">
                         <FormSection title="Account">
