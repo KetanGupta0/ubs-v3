@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Marketing\EnrolController;
 use App\Http\Controllers\Marketing\HomeController;
 use App\Http\Controllers\Marketing\InternshipController;
 use App\Http\Controllers\Marketing\LeadController;
@@ -40,6 +41,12 @@ Route::get('/training/{course}', [TrainingController::class, 'show'])->name('tra
 Route::get('/internships', [InternshipController::class, 'index'])->name('internships.index');
 Route::get('/internships/{course}', [InternshipController::class, 'show'])->name('internships.show');
 Route::get('/for-colleges', [InternshipController::class, 'forColleges'])->name('for-colleges');
+
+/*
+ * "Enrol now" from a course page. Carries the choice through sign in or
+ * registration to the student's own confirm step; see EnrolController.
+ */
+Route::get('/enrol/{course}', EnrolController::class)->middleware('throttle:30,1')->name('enrol.start');
 
 Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/process', [PageController::class, 'process'])->name('process');

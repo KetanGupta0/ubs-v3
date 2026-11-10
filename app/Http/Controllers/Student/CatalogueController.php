@@ -32,6 +32,12 @@ class CatalogueController extends StudentController
             ->get();
 
         return Inertia::render('student/Catalogue', [
+            // From "Enrol now" on the public site: open this course's confirm
+            // step straight away.
+            'join' => $request->filled('join') ? [
+                'courseId' => (int) $request->query('join'),
+                'batchId' => $request->filled('batch') ? (int) $request->query('batch') : null,
+            ] : null,
             'courses' => $courses->map(fn (Course $course) => [
                 'id' => $course->id,
                 'title' => $course->title,

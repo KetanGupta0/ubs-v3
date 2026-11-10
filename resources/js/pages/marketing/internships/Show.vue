@@ -155,7 +155,26 @@ function scheduleLine(batch) {
                             >
                                 Enrolment is closed for now and opens again with the next batch. Leave your details and we will tell you when it does.
                             </p>
-                            <UiButton class="mt-5" size="lg" block href="#apply" :inertia="false">{{ internship.enrolmentOpen === false ? 'Tell me when it opens' : 'Apply for this' }}</UiButton>
+                            <UiButton
+                                v-if="internship.enrolmentOpen !== false"
+                                class="mt-5"
+                                size="lg"
+                                block
+                                :href="`/enrol/${internship.slug}`"
+                                :inertia="false"
+                            >
+                                Enrol now
+                            </UiButton>
+                            <UiButton
+                                :class="internship.enrolmentOpen !== false ? 'mt-2' : 'mt-5'"
+                                :variant="internship.enrolmentOpen !== false ? 'ghost' : 'primary'"
+                                size="lg"
+                                block
+                                href="#apply"
+                                :inertia="false"
+                            >
+                                {{ internship.enrolmentOpen === false ? 'Tell me when it opens' : 'Ask a question first' }}
+                            </UiButton>
                         </div>
                     </div>
                 </div>

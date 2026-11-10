@@ -31,6 +31,9 @@ class RegisteredUserController extends Controller
     {
         return Inertia::render('auth/Register', [
             'googleEnabled' => filled(config('services.google.client_id')),
+            // Set by "Enrol now" on a course page, so the form can say what
+            // the account is for.
+            'enrolling' => session('enrol.course'),
         ]);
     }
 
@@ -73,7 +76,11 @@ class RegisteredUserController extends Controller
 
         $pipeline->complete($user, 'registration');
 
-        return redirect($pipeline->destinationFor($user))
+        // Somebody who came from "Enrol now" goes on to confirm the course
+        // they chose; everybody else to their dashboard.
+        $request->session()->forget('enrol.course');
+
+        return redirect()->intended($pipeline->destinationFor($user))
             ->with('success', 'Welcome aboard. Check your email to confirm your address.');
     }
 }

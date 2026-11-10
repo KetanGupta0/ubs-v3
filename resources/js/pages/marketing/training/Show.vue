@@ -151,8 +151,25 @@ function scheduleLine(batch) {
                             >
                                 Enrolment is closed for now and opens again with the next batch. Leave your details and we will tell you when it does.
                             </p>
-                            <UiButton class="mt-5" size="lg" block href="#enquire" :inertia="false">
-                                {{ course.enrolmentOpen === false ? 'Tell me when it opens' : 'Ask about joining' }}
+                            <UiButton
+                                v-if="course.enrolmentOpen !== false"
+                                class="mt-5"
+                                size="lg"
+                                block
+                                :href="`/enrol/${course.slug}`"
+                                :inertia="false"
+                            >
+                                Enrol now
+                            </UiButton>
+                            <UiButton
+                                :class="course.enrolmentOpen !== false ? 'mt-2' : 'mt-5'"
+                                :variant="course.enrolmentOpen !== false ? 'ghost' : 'primary'"
+                                size="lg"
+                                block
+                                href="#enquire"
+                                :inertia="false"
+                            >
+                                {{ course.enrolmentOpen === false ? 'Tell me when it opens' : 'Ask a question first' }}
                             </UiButton>
 
                             <p class="mt-3 text-center text-xs" style="color: var(--text-muted)">

@@ -5,7 +5,7 @@
  * Includes the offerings marked LMS only, because a student already inside is
  * exactly who those exist for. The public site still never lists them.
  */
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
 import { BookOpen, Clock, Users, Lock, Check } from 'lucide-vue-next';
 
@@ -19,8 +19,10 @@ import UiFormField from '@/components/UI/UiFormField.vue';
 import UiSelect from '@/components/UI/UiSelect.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
 
-defineProps({
+const props = defineProps({
     courses: { type: Array, default: () => [] },
+    /** { courseId, batchId } when somebody arrived from "Enrol now" on the public site. */
+    join: { type: Object, default: null },
 });
 
 const joining = ref(null);
@@ -33,6 +35,22 @@ const open = (course) => {
     form.course_id = course.id;
     form.batch_id = course.batches.find((batch) => !batch.full)?.id ?? null;
 };
+
+/*
+ * Arriving from "Enrol now" opens that course's confirm step, with the batch
+ * they picked if it still has room. Already on it, or closed, and there is
+ * nothing to confirm, so the page is simply the catalogue.
+ */
+onMounted(() => {
+    const course = props.join ? props.courses.find((item) => item.id === props.join.courseId) : null;
+
+    if (!course || course.enrolled || !course.enrolmentOpen) return;
+
+    open(course);
+
+    const chosen = course.batches.find((batch) => batch.id === props.join.batchId && !batch.full);
+    if (chosen) form.batch_id = chosen.id;
+});
 
 const submit = () => {
     form.post('/student/enrol', {

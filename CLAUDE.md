@@ -142,6 +142,12 @@ Rules for the marketing pages:
   `programme`; use the `internships()` and `taught()` scopes. Each route checks
   what the row actually is, so an internship 404s under `/training` and a course
   404s under `/internships`. Tests cover both directions.
+- **"Enrol now" creates nothing itself.** `/enrol/{course}` remembers the course
+  and batch and hands over to the doors that already exist: a signed in student
+  goes to the confirm step in their catalogue, a visitor registers or signs in
+  first and lands there afterwards. One way into an account, one way onto a
+  course, one place the fee is priced. It 404s for anything the public site does
+  not list, and sends people back to the course page while enrolment is closed.
 - **Scarcity has to be real.** Seeded batch fill levels vary per offering. A
   "only 4 seats left" badge on every card reads as a sales trick, which is the
   opposite of what the rest of the site is doing.

@@ -15,6 +15,8 @@ import GoogleButton from '@/components/Auth/GoogleButton.vue';
 
 defineProps({
     googleEnabled: { type: Boolean, default: false },
+    /** The course somebody chose with "Enrol now", if that is how they got here. */
+    enrolling: { type: String, default: null },
 });
 
 const showPassword = ref(false);
@@ -43,6 +45,15 @@ function submit() {
         subtitle="For students joining a programme. Takes about a minute."
         width="max-w-lg"
     >
+        <p
+            v-if="enrolling"
+            class="mb-4 rounded-xl px-3.5 py-2.5 text-sm"
+            style="background: var(--surface-sunken); color: var(--text-base)"
+        >
+            You are enrolling on <strong>{{ enrolling }}</strong>. Create your account, or sign in if you already
+            have one, and you will go straight on to choose your batch.
+        </p>
+
         <form class="space-y-4" @submit.prevent="submit">
             <UiFormField label="Full name" required :error="form.errors.name">
                 <template #default="field">
