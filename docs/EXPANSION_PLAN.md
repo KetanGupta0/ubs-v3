@@ -369,6 +369,7 @@ These are required before v2 is switched off.
 - *L8 built 2026-11-10: a notice to one student, sent from their admin profile. It is an announcement addressed to them alone, so it shows on their dashboard, announcements page and mobile app, and nobody else's. It can be withdrawn.*
 - *L4 built 2026-11-10: extra quiz attempts for one student, granted from the attempt's marking page with a reason (`quiz_attempt_grants`, one row per grant, audited). The allowance is the quiz's own number plus that student's grants, and earlier attempts stand.*
 - *L3 built 2026-11-10: a quiz or a handout can be set for one batch of a course, or left for every batch. Each student sees their own batch's and the course-wide ones, on the course page, the lesson, the materials list, a quiz's address, the dashboard, the result card and the mobile API. Staff can only choose a batch of the same course; assignments now check that too.*
+- *L5 built 2026-11-10: assignment versions. A resubmission keeps the version it replaces, with its files, feedback and mark, in `submission_versions`; both the student and the trainer see the history and can open earlier files. A student can replace work before it is marked, or after it is sent back; marked work is no longer replaceable by the student, who could otherwise wipe their own mark. Re-marking is audited, so a replaced mark stays on record.*
 
 **Improvements for the learning experience:**
 

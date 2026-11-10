@@ -165,7 +165,7 @@ production v2 storage/ ──rsync──▶ v3 disks, sha256 verified per file
 | `quiz_attempts` + `quiz_answers` | same | Scores copied, **not regraded**: a student's historical result must not change because the grader did. `is_graded = false` → `needs_review = true`. `expires_at` from `started_at + time limit`. |
 | `quiz_attempt_overrides` | new `quiz_attempt_grants` (§5) | |
 | `assignments` | `assignments` (`batch_id` already exists) | `instructions` → `brief`; `allowed_types` kept for the upload rule. |
-| `assignment_submissions` (every version) | `submissions` | v2 keeps resubmission history (`submission_number`, `is_latest`). v3 holds one row → history goes into `files` as earlier versions, or a `submission_versions` table (§5). Grading, feedback, `graded_by` copied. |
+| `assignment_submissions` (every version) | `submissions` | v2 keeps resubmission history (`submission_number`, `is_latest`). The latest becomes the `submissions` row, with `version` set; the earlier ones become `submission_versions` rows, feedback and marks included (built 2026-11-10). Grading, feedback, `graded_by` copied. |
 | `certificate_templates` | see §6, LMS gap L6 | `canvas_json` + background are v2's visual designer. |
 | `certificates` | `certificates` | `certificate_number` → `number` **unchanged**. New 32-character `verification_code` generated. The 64-character v2 `token` is kept in a new `legacy_token` column (§5) and `/verify/{token}` falls back to it, case-sensitively, because v3 upper-cases codes and the v2 QR codes would otherwise all 404. Before cutover, **every v2 certificate is rendered to PDF on v2 and stored as `pdf_path`**, so the document a student already holds never changes appearance. Revocations and reasons copied. |
 

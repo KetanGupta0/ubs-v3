@@ -20,6 +20,7 @@ import UiFormField from '@/components/UI/UiFormField.vue';
 const props = defineProps({
     submission: { type: Object, required: true },
     assignment: { type: Object, required: true },
+    history: { type: Array, default: () => [] },
 });
 
 const form = useForm({
@@ -131,6 +132,42 @@ function evaluate(status) {
                         {{ file.name }}
                     </UiButton>
                 </div>
+            </UiCard>
+
+            <!-- ------------------------------------------ earlier versions -->
+            <UiCard v-if="history.length">
+                <template #header>
+                    <h2 class="text-base font-semibold">Earlier versions</h2>
+                </template>
+                <ol class="space-y-4">
+                    <li v-for="item in history" :key="item.version" class="border-l-2 pl-3" style="border-color: var(--border-subtle)">
+                        <p class="text-sm font-medium">
+                            Version {{ item.version }}
+                            <span class="font-normal" style="color: var(--text-muted)">· {{ item.submittedAt }}</span>
+                            <UiBadge v-if="item.late" tone="warning" size="sm" class="ml-1">late</UiBadge>
+                        </p>
+                        <p v-if="item.notes" class="mt-1 whitespace-pre-line text-sm">{{ item.notes }}</p>
+                        <div v-if="item.files.length" class="mt-1.5 flex flex-wrap gap-2">
+                            <UiButton
+                                v-for="file in item.files"
+                                :key="file.index"
+                                :href="`/admin/marking/submissions/${submission.id}/files/${file.index}?version=${item.version}`"
+                                :inertia="false"
+                                variant="ghost"
+                                size="xs"
+                            >
+                                <template #leading><Download class="h-3 w-3" /></template>
+                                {{ file.name }}
+                            </UiButton>
+                        </div>
+                        <div v-if="item.feedback" class="mt-2 rounded-lg px-3 py-2 text-sm" style="background: var(--surface-sunken)">
+                            <p class="text-xs font-medium" style="color: var(--text-muted)">
+                                {{ item.marks !== null ? `${item.marks} / ${assignment.maxMarks}` : 'Sent back' }}<template v-if="item.evaluatedBy"> · {{ item.evaluatedBy }}</template>
+                            </p>
+                            <p class="mt-1 whitespace-pre-line">{{ item.feedback }}</p>
+                        </div>
+                    </li>
+                </ol>
             </UiCard>
 
             <!-- --------------------------------------------- the marking -->

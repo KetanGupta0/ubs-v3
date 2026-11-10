@@ -305,7 +305,10 @@ class AssessmentController extends Controller
                 'marks' => $submission->marks,
                 'feedback' => $submission->feedback,
                 'evaluatedBy' => $submission->evaluator?->name,
+                'version' => $submission->version,
             ],
+            // What they handed in before, and what they were told about it.
+            'history' => $submission->versions()->with('evaluator:id,name')->get()->map->toHistoryArray(),
             'assignment' => [
                 'id' => $submission->assignment_id,
                 'title' => $submission->assignment->title,
@@ -317,7 +320,7 @@ class AssessmentController extends Controller
         ]);
     }
 
-    public function evaluate(Request $request, Submission $submission, Activity $activity): RedirectResponse
+    public function evaluate(Request $request, Submission $submission, Activity $activity, Auditor $auditor): RedirectResponse
     {
         $validated = $this->validatedInput($request, [
             'marks' => ['required', 'integer', 'min:0', 'max:'.$submission->assignment->max_marks],
@@ -333,7 +336,12 @@ class AssessmentController extends Controller
             'status' => $validated['status'],
             'evaluated_by' => $request->user()->id,
             'evaluated_at' => now(),
-        ])->save();
+        ]);
+
+        // Re-marking, or sending marked work back, replaces a mark and its
+        // feedback on this version. The audit log keeps what they were.
+        $auditor->updated($submission, label: $submission->user->name.' — '.$submission->assignment->title);
+        $submission->save();
 
         $activity->record($submission->user, 'assignment.marked', $submission->assignment, [
             'title' => $submission->assignment->title,
@@ -347,9 +355,13 @@ class AssessmentController extends Controller
                 : 'Marked.');
     }
 
-    public function downloadSubmissionFile(Submission $submission, int $index): StreamedResponse
+    public function downloadSubmissionFile(Request $request, Submission $submission, int $index): StreamedResponse
     {
-        $file = ($submission->files ?? [])[$index] ?? null;
+        $files = $request->filled('version')
+            ? $submission->versions()->where('version', (int) $request->query('version'))->firstOrFail()->files
+            : $submission->files;
+
+        $file = ($files ?? [])[$index] ?? null;
 
         abort_unless($file && Storage::disk('private')->exists($file['path']), 404);
 
