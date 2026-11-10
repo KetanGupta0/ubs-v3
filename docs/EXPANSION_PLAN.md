@@ -360,6 +360,10 @@ without signing in.
 
 These are required before v2 is switched off.
 
+*Progress:*
+- *L1 built 2026-11-10: the Enrolments screen (`/admin/enrolments`), covering enrol by hand, move between batches, change status, record a payment made outside the gateway, and waive a fee with a reason.*
+- *Building it found that an offline payment did not open a paid course; that is fixed in `Invoicer::recordPayment()`.*
+
 **Improvements for the learning experience:**
 
 - **Next step on the dashboard:** the student's next lesson, class, due assignment and

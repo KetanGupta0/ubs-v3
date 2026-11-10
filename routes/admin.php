@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CredentialsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
+use App\Http\Controllers\Admin\EnrolmentController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\PeopleController;
 use App\Http\Controllers\Admin\ProjectController;
@@ -313,6 +314,18 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::get('marking/submissions/{submission}/files/{index}', [AssessmentController::class, 'downloadSubmissionFile'])->name('marking.submission.file');
             Route::get('marking/attempts/{attempt}', [AssessmentController::class, 'attempt'])->name('marking.attempt');
             Route::post('marking/attempts/{attempt}/answers/{answer}', [AssessmentController::class, 'markAnswer'])->name('marking.answer');
+        });
+
+        /* ------------------------------------------------------ enrolments */
+        Route::middleware('permission:students.view')->group(function () {
+            Route::get('enrolments', [EnrolmentController::class, 'index'])->name('enrolments.index');
+        });
+
+        Route::middleware('permission:students.update')->group(function () {
+            Route::post('enrolments', [EnrolmentController::class, 'store'])->name('enrolments.store');
+            Route::put('enrolments/{enrolment}/status', [EnrolmentController::class, 'updateStatus'])->name('enrolments.status');
+            Route::put('enrolments/{enrolment}/batch', [EnrolmentController::class, 'move'])->name('enrolments.move');
+            Route::post('enrolments/{enrolment}/waive', [EnrolmentController::class, 'waiveFee'])->name('enrolments.waive');
         });
 
         /* ------------------------------------------- issuing credentials */

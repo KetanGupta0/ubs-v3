@@ -2,14 +2,12 @@
 
 namespace App\Http\Controllers\Student;
 
-use App\Models\Enrollment;
 use App\Models\Invoice;
 use App\Models\PaymentRequest;
 use App\Models\Transaction;
 use App\Services\Billing\BillingDocuments;
 use App\Services\Billing\Invoicer;
 use App\Services\Billing\LedgerTable;
-use App\Services\Lms\Enroller;
 use App\Services\Payments\Checkout;
 use App\Support\Money;
 use Illuminate\Http\JsonResponse;
@@ -123,7 +121,7 @@ class BillingController extends StudentController
         ]);
     }
 
-    public function confirm(Request $request, string $reference, Checkout $checkout, Enroller $enroller): RedirectResponse
+    public function confirm(Request $request, string $reference, Checkout $checkout): RedirectResponse
     {
         $transaction = Transaction::query()
             ->forUser($this->student($request))
@@ -136,10 +134,8 @@ class BillingController extends StudentController
             return back()->with('error', $result->failureReason ?? 'The payment did not go through.');
         }
 
-        // A paid course fee opens the lessons that were waiting on it, without
-        // anybody having to remember to do it.
-        $this->openCourseFor($transaction, $enroller);
-
+        // The paid fee has already opened the course: Invoicer::recordPayment
+        // does that for every payment, online or recorded by hand.
         return redirect()
             ->route('student.payments.index')
             ->with('success', 'Paid. Your course is fully open.');
@@ -178,16 +174,5 @@ class BillingController extends StudentController
             ->forUser($this->student($request))
             ->with('invoice')
             ->findOrFail($payment);
-    }
-
-    protected function openCourseFor(Transaction $transaction, Enroller $enroller): void
-    {
-        $enrolment = Enrollment::query()
-            ->where('payment_request_id', $transaction->payment_request_id)
-            ->first();
-
-        if ($enrolment && ! $enrolment->has_paid) {
-            $enroller->markPaid($enrolment);
-        }
     }
 }

@@ -246,6 +246,14 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   answers, and says it was withdrawn.
 - **Course fees are inclusive of tax**, because that is the figure the page
   showed. `Money::taxableWithin()` works the taxable amount back out of it.
+- **A fee paid in full opens the course in one place,** `Invoicer::recordPayment()`,
+  which every payment passes through: online, webhook or recorded by hand. Until
+  November 2026 only the online path did it, so a bank transfer recorded by an
+  administrator left the paid lessons sealed.
+- **Enrolment changes go through `Enroller`**: enrol, move between batches of the
+  same course, change status, waive a fee. Moving or dropping recounts seats on
+  both batches and puts both batch groups in step. A part-paid fee cannot be
+  waived; settle or refund it first.
 - **Warnings climb one rung at a time** — notice, warning, escalation — and the
   student is told every time. The private note is for us and never reaches them.
 - `/verify` answers identically for a code that never existed and one that was
