@@ -178,6 +178,10 @@ Rules for the marketing pages:
   shows configured or not configured and nothing else. Keys belong in the
   environment; defaults live in `config/company.php`, never `env()` at the point
   of use.
+- **`UiSelect` takes options either way:** the `options` prop, or `<option>`
+  elements written inside it. Until November 2026 it had no slot, so every select
+  written the second way rendered empty: question types, lesson prerequisites,
+  assignment batches, report filters and the student's batch choice on joining.
 - **A label reaches its control through `UiFormField`**, which provides the id and
   `aria-describedby` and the inputs inject it. Do not pass an id into `UiInput`
   by hand, and keep `inheritAttrs: false` on controls that render a wrapper, or

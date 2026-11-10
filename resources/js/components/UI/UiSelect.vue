@@ -57,6 +57,12 @@ const normalise = (option) =>
             >
                 {{ option.label }}
             </option>
+            <!--
+                Options written out by the caller. Without this slot every
+                <UiSelect> that listed its own <option> elements rendered an
+                empty list: question types, lesson prerequisites, batch choices.
+            -->
+            <slot />
         </select>
 
         <ChevronDown
