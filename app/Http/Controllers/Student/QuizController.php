@@ -201,7 +201,7 @@ class QuizController extends StudentController
     protected function readable(Request $request, int $quiz): Quiz
     {
         return Quiz::query()
-            ->whereIn('course_id', $this->enrolledCourseIds($request))
+            ->visibleTo($this->student($request))
             ->published()
             ->with('course:id,title')
             ->findOrFail($quiz);

@@ -122,4 +122,39 @@ class Quiz extends Model
             ->orderByDesc('percent')
             ->first();
     }
+
+    /**
+     * The quizzes one enrolment can see: the course's own, plus any set for
+     * that enrolment's batch. A quiz set for another batch stays out of sight.
+     */
+    public function scopeForEnrolment(Builder $query, Enrollment $enrolment): Builder
+    {
+        return $query->where($this->qualifyColumn('course_id'), $enrolment->course_id)
+            ->where(fn (Builder $inner) => $inner
+                ->whereNull($this->qualifyColumn('batch_id'))
+                ->orWhere($this->qualifyColumn('batch_id'), $enrolment->batch_id));
+    }
+
+    /**
+     * Across every course a student is on, the same rule: course wide, or set
+     * for the batch they are on for that course.
+     */
+    public function scopeVisibleTo(Builder $query, User $student): Builder
+    {
+        $table = $this->getTable();
+
+        return $query->whereExists(fn ($enrolments) => $enrolments
+            ->selectRaw('1')
+            ->from('enrollments')
+            ->where('enrollments.user_id', $student->id)
+            ->whereColumn('enrollments.course_id', "{$table}.course_id")
+            ->where(fn ($batch) => $batch
+                ->whereNull("{$table}.batch_id")
+                ->orWhereColumn('enrollments.batch_id', "{$table}.batch_id")));
+    }
+
+    public function batch(): BelongsTo
+    {
+        return $this->belongsTo(Batch::class);
+    }
 }

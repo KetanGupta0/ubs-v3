@@ -41,8 +41,11 @@ class AssessmentController extends Controller
             'course' => ['id' => $course->id, 'title' => $course->title],
             'modules' => $course->modules()->get(['id', 'title'])
                 ->map(fn (CourseModule $module) => ['value' => $module->id, 'label' => $module->title]),
+            'batches' => $course->batches()->get(['id', 'name'])
+                ->map(fn (Batch $batch) => ['value' => $batch->id, 'label' => $batch->name]),
             'quizzes' => Quiz::query()
                 ->where('course_id', $course->id)
+                ->with('batch:id,name')
                 ->withCount(['questions', 'attempts'])
                 ->get()
                 ->map(fn (Quiz $quiz) => [
@@ -50,6 +53,8 @@ class AssessmentController extends Controller
                     'title' => $quiz->title,
                     'instructions' => $quiz->instructions,
                     'moduleId' => $quiz->course_module_id,
+                    'batchId' => $quiz->batch_id,
+                    'batch' => $quiz->batch?->name,
                     'questions' => $quiz->questions_count,
                     'attempts' => $quiz->attempts_count,
                     'totalMarks' => $quiz->totalMarks(),
@@ -68,7 +73,7 @@ class AssessmentController extends Controller
 
     public function storeQuiz(Request $request, Course $course): RedirectResponse
     {
-        $quiz = Quiz::query()->create($this->quizRules($request) + ['course_id' => $course->id]);
+        $quiz = Quiz::query()->create($this->quizRules($request, $course) + ['course_id' => $course->id]);
 
         return redirect()
             ->route('admin.quizzes.edit', [$course->id, $quiz->id])
@@ -112,7 +117,7 @@ class AssessmentController extends Controller
     {
         abort_unless($quiz->course_id === $course->id, 404);
 
-        $quiz->fill($this->quizRules($request))->save();
+        $quiz->fill($this->quizRules($request, $course))->save();
 
         return back()->with('success', 'Quiz saved.');
     }
@@ -202,7 +207,7 @@ class AssessmentController extends Controller
 
     public function storeAssignment(Request $request, Course $course): RedirectResponse
     {
-        Assignment::query()->create($this->assignmentRules($request) + ['course_id' => $course->id]);
+        Assignment::query()->create($this->assignmentRules($request, $course) + ['course_id' => $course->id]);
 
         return back()->with('success', 'Assignment added.');
     }
@@ -211,7 +216,7 @@ class AssessmentController extends Controller
     {
         abort_unless($assignment->course_id === $course->id, 404);
 
-        $assignment->fill($this->assignmentRules($request))->save();
+        $assignment->fill($this->assignmentRules($request, $course))->save();
 
         return back()->with('success', 'Assignment saved.');
     }
@@ -453,12 +458,14 @@ class AssessmentController extends Controller
     /* ----------------------------------------------------------- helpers */
 
     /** @return array<string, mixed> */
-    protected function quizRules(Request $request): array
+    protected function quizRules(Request $request, Course $course): array
     {
         return $this->validatedInput($request, [
             'title' => ['required', 'string', 'max:160'],
             'instructions' => ['nullable', 'string', 'max:2000'],
-            'course_module_id' => ['nullable', 'integer'],
+            'course_module_id' => ['nullable', 'integer', Rule::exists('course_modules', 'id')->where('course_id', $course->id)],
+            // One batch of this course, or every batch when left empty.
+            'batch_id' => ['nullable', 'integer', Rule::exists('batches', 'id')->where('course_id', $course->id)],
             'time_limit_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
             'attempts_allowed' => ['required', 'integer', 'min:1', 'max:20'],
             'pass_percent' => ['required', 'integer', 'min:1', 'max:100'],
@@ -496,15 +503,15 @@ class AssessmentController extends Controller
     }
 
     /** @return array<string, mixed> */
-    protected function assignmentRules(Request $request): array
+    protected function assignmentRules(Request $request, Course $course): array
     {
         return $this->validatedInput($request, [
             'title' => ['required', 'string', 'max:160'],
             'brief' => ['required', 'string', 'max:20000'],
             'checklist' => ['array', 'max:20'],
             'checklist.*' => ['string', 'max:200'],
-            'course_module_id' => ['nullable', 'integer'],
-            'batch_id' => ['nullable', 'integer'],
+            'course_module_id' => ['nullable', 'integer', Rule::exists('course_modules', 'id')->where('course_id', $course->id)],
+            'batch_id' => ['nullable', 'integer', Rule::exists('batches', 'id')->where('course_id', $course->id)],
             'due_at' => ['nullable', 'date'],
             'max_marks' => ['required', 'integer', 'min:1', 'max:1000'],
             'allow_late' => ['boolean'],

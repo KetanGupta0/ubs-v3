@@ -30,7 +30,7 @@ class CourseBuilderController extends Controller
     {
         $course->load([
             'modules.lessons' => fn ($query) => $query->orderBy('sort_order'),
-            'modules.lessons.materials',
+            'modules.lessons.materials.batch:id,name',
         ]);
 
         return Inertia::render('admin/courses/Builder', [
@@ -72,6 +72,8 @@ class CourseBuilderController extends Controller
                         'isLink' => $material->isLink(),
                         'url' => $material->external_url,
                         'downloadable' => $material->is_downloadable,
+                        // Null is the whole course; otherwise only that batch sees it.
+                        'batch' => $material->batch?->name,
                     ]),
                 ]),
             ]),
@@ -83,6 +85,8 @@ class CourseBuilderController extends Controller
                 ->where('course_id', $course->id)
                 ->get(['id', 'title'])
                 ->map(fn (Quiz $quiz) => ['value' => $quiz->id, 'label' => $quiz->title]),
+            'batches' => $course->batches()->get(['id', 'name'])
+                ->map(fn ($batch) => ['value' => $batch->id, 'label' => $batch->name]),
         ]);
     }
 
@@ -193,6 +197,8 @@ class CourseBuilderController extends Controller
     {
         $validated = $this->validatedInput($request, [
             'lesson_id' => ['nullable', 'integer'],
+            // One batch of this course, or the whole course when left empty.
+            'batch_id' => ['nullable', 'integer', Rule::exists('batches', 'id')->where('course_id', $course->id)],
             'title' => ['required', 'string', 'max:160'],
             'description' => ['nullable', 'string', 'max:500'],
             'file' => ['nullable', 'file', 'max:51200'],
@@ -213,6 +219,7 @@ class CourseBuilderController extends Controller
         $attributes = [
             'course_id' => $course->id,
             'lesson_id' => $lesson?->id,
+            'batch_id' => $validated['batch_id'],
             'title' => $validated['title'],
             'description' => $validated['description'],
             'external_url' => $validated['external_url'],

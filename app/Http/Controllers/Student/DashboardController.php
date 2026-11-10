@@ -160,7 +160,7 @@ class DashboardController extends StudentController
             });
 
         Quiz::query()
-            ->whereIn('course_id', $courseIds)
+            ->visibleTo($student)
             ->published()
             ->whereNotNull('closes_at')
             ->where('closes_at', '>=', now())
