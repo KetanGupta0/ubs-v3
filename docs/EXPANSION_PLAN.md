@@ -522,10 +522,112 @@ Both features use the Claude API through the official PHP SDK
 - The student can see the final decision and the reason, and can reply once before it is
   final.
 
-**Webcam or screen proctoring** is deliberately **not** in this plan. It needs camera
-images of students' homes, a consent process and a retention policy. It would also send
-images to the AI, which the owner has ruled out for chat. If a high-stakes exam ever
-needs it, it should be a separate decision (X4).
+### 9.1a Proctored quizzes: lockdown and live camera
+
+**Requirement** (owner, 2026-11-10):
+- the quiz goes full screen as soon as it starts, and the student cannot leave full
+  screen until they submit or time runs out
+- laptops and computers only, never phones
+- closing the browser, switching tabs and opening developer tools are blocked
+- copy and paste raise an alert
+- camera and microphone permission is required, and the video reaches the server
+- the owner watches every test live
+- **nothing is recorded:** the stream exists only while the test is running
+
+A quiz gets a `proctoring` setting: **off**, **lockdown** (browser controls only) or
+**live** (lockdown plus camera and microphone).
+
+**What a web page can and cannot do.** Browsers do not let a page take control of the
+computer. That is a security rule of every browser, not a gap in this plan. So each
+requirement is either **enforced**, **detected and answered** (the quiz locks, the event
+is logged, the proctor is alerted live), or **out of reach of a web page**:
+
+| Requirement | In a normal browser (Chrome or Edge) | How |
+|---|---|---|
+| Full screen as soon as the quiz starts | **Enforced** | The "Start quiz" click itself requests full screen. A browser allows that only from a click, so the start button is that click. |
+| Cannot leave full screen | **Mostly enforced, always detected** | Chrome and Edge's Keyboard Lock captures Esc, so leaving needs Esc held down for two seconds rather than a tap. If the student still leaves, the questions are covered at once by "Return to full screen to continue", the exit is logged, and the proctor's screen flags it live. A page cannot make leaving impossible. |
+| Laptop or computer only | **Enforced at start, can be spoofed** | Device checks (client hints, touch and pointer type, screen size) on the page and again on the server when the attempt starts. A phone in "desktop mode" can pass, but the camera shows it. |
+| No tab switching | **Detected and answered** | Leaving the tab or window covers the questions, logs the event with how long it lasted, and alerts the proctor. Alt+Tab, the Windows key and Cmd+Tab are handled by the operating system, so a page cannot block them, only notice them. |
+| No closing the browser | **Discouraged, detected** | The browser shows its own "Leave site?" prompt. If the student closes anyway, the attempt keeps running on the server clock; reopening resumes it, and the gap is logged and flagged. |
+| No copy or paste | **Enforced** | Copy, cut, paste, right click, text selection and drag are blocked inside the quiz. Each try shows the student a warning, is logged, and is counted on the proctor's screen. |
+| No developer tools | **Shortcuts blocked; opening via the menu cannot be stopped** | F12 and Ctrl+Shift+I/J/C are blocked. The browser menu still opens developer tools, and detecting it reliably is not possible. **The real protection is that the answer key never reaches the browser** (`Question::forAttempt()`), so developer tools show the student nothing worth having. |
+| Camera and microphone | **Enforced** | Permission is required before the first question appears. If either is refused or drops, the questions are covered until it is back, and the proctor sees "camera off" on that tile. |
+
+**If the owner needs truly locked computers** for a high-stakes exam, the only real
+option is a lockdown browser.
+- [Safe Exam Browser](https://safeexambrowser.org) is free and open source, for
+  Windows and macOS. It blocks app switching, other windows, shortcuts and developer
+  tools at the operating-system level.
+- A quiz can require it: the server checks the configuration key Safe Exam Browser sends
+  with each request, and refuses the attempt in an ordinary browser.
+- This is decision X10. Recommendation: plain browser lockdown for regular quizzes;
+  Safe Exam Browser plus live camera for final assessments.
+
+**Live camera, without recording.**
+
+- **Media path:**
+  - The student's browser sends camera and microphone over **WebRTC** to a self-hosted
+    **media relay**, an SFU such as LiveKit.
+  - The SFU forwards the streams to the proctor's screen and **stores nothing**.
+  - A TURN server is needed for students behind strict networks.
+- **Laravel's part:**
+  - It issues short-lived join tokens for the student (send only) and the proctor
+    (watch only).
+  - It ties the stream to the attempt.
+  - Reverb carries status: full screen, focus, copy attempts, camera state.
+  - Laravel never handles video.
+- **"Not recorded" in practice:**
+  - recording and egress are switched off in the SFU configuration
+  - nothing is written to disk
+  - the stream ends when the attempt is submitted or expires
+  - this is stated in the privacy notice
+  - The platform cannot stop somebody filming their own screen, so the policy says
+    proctors must not.
+- **Bandwidth, important on Indian home connections:**
+  - Each student sends a small stream (about 320×240 at 10–15 fps, roughly 150–300 kbps).
+  - The proctor's grid uses thumbnails.
+  - Clicking a tile opens that student large, with sound.
+  - A weak connection lowers the quality before it drops the stream.
+
+**The proctor console** (owner, plus staff given `quiz.proctor`):
+- A live grid of every student in the attempt. Each tile carries badges: full screen,
+  in focus, camera, microphone, and a count of exits and copy tries.
+- Tiles with a fresh violation move to the top.
+- Click to enlarge, with sound.
+- **Message a student:** the message appears on top of their quiz ("Please keep your
+  face in view"). That makes it plain somebody is watching, which is the deterrent the
+  owner wants.
+- **End an attempt with a reason.** This is audited, the student is told, and the trainer
+  decides afterwards whether to allow a resit, as in Layer 4.
+- **Grant extra minutes** after a genuine network drop, also audited.
+- One person can watch about 20–30 students properly. Bigger batches need more proctors,
+  or the quiz split into slots.
+
+**What the student sees.**
+- **Before starting:** a consent screen saying:
+  - camera and microphone are streamed live to Unboundbyte staff during the test only
+  - nothing is recorded
+  - what counts as a violation and what happens after one
+  
+  They must agree to start. Students under 18 need a guardian's consent recorded first.
+- **During the test:** a permanent "LIVE · proctored" badge with their own camera preview
+  in a corner, so they know they are visible.
+  - It must not say "recording", because it is not.
+- **Each violation:** an on-screen warning that it was logged, with a running count.
+
+**Rules that keep it fair.**
+- **Proctored quizzes run in scheduled slots,** so a proctor is actually present. A live
+  stream at 2 a.m. with nobody watching deters nobody and still costs the student their
+  privacy.
+- **The clock stays the server's.** A covered screen does not pause it; extra time is a
+  proctor's decision.
+- **A per-quiz rule, set by the admin and shown before the start,** can auto-submit after
+  N exits from full screen or the tab. Otherwise violations are evidence for Layer 4, not
+  automatic fails.
+- **No AI watches the video.** AI stays on the event log and the answers (Layer 3), as
+  the owner ruled out AI on images.
+- **Students without a webcam** need an alternative arranged in advance: a loaner, a
+  centre, or a supervised offline sitting.
 
 ### 9.2 Visitor assistant on the public site
 
@@ -586,7 +688,7 @@ it on v3**, rather than all of it holding v2 alive.
 | **E** | §3 client management (agreements, e-sign, PDFs, licences) | §4 |
 | **F** | §4 products, demos, cart, coupons, licences, downloads | — |
 | **G** | §8 email occasions and broadcasts | — |
-| **H** | §9.1 quiz integrity · §9.2 visitor assistant | — |
+| **H** | §9.1 quiz integrity · §9.1a proctored quizzes · §9.2 visitor assistant | — |
 | **I** | Phases 8 and 9 of `PROJECT_PLAN.md` (mobile API, hardening) | — |
 
 **Other rules for this order:**
@@ -603,7 +705,10 @@ it on v3**, rather than all of it holding v2 alive.
 | X1 | Generation 2 accounts: keep their passwords, or force a change too? | Keep. Their hashes were never published. |
 | X2 | Digital signatures: built-in OTP e-sign, Aadhaar eSign through a provider, or both? | Both: OTP for quotations and proposals, a provider for agreements. Check with a lawyer which agreements need which. |
 | X3 | AI model per feature (Opus 5.5 default; a cheaper model is your choice) | Your call on cost. Quiz review is low volume and batched, so the default costs little there. |
-| X4 | Webcam or screen proctoring for high-stakes exams? | No, unless a specific exam needs it; then decide separately, with consent and retention rules. |
+| X4 | Live camera proctoring | **Decided 2026-11-10:** yes, live only, never recorded (§9.1a). Still open: students under 18 (guardian consent) and students without a webcam. |
+| X10 | Safe Exam Browser for final assessments, on top of browser lockdown? | Yes for final assessments; plain browser lockdown for regular quizzes. |
+| X11 | Auto-submit after N full-screen or tab exits, or leave it to the reviewer? | Leave it to the reviewer by default; allow the rule per quiz, shown to students before they start. |
+| X12 | Media relay: self-host LiveKit (with a TURN server) or a managed service? | Self-host on a separate server; recording off at the configuration level. |
 | X5 | Registration form with an existing email: confirm first, or add directly? | Confirm first. Otherwise anyone can enrol anyone. |
 | X6 | Credentials vault for client handover: build it? | Only if the team hands over credentials through the platform today; it is a security surface. |
 | X7 | Festival list: which occasions, and do enquiry senders receive greetings? | National days to everyone who has not opted out; festivals switchable by the admin; enquiry senders included, with unsubscribe. |
