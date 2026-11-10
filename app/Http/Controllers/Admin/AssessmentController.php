@@ -11,6 +11,7 @@ use App\Models\Question;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
+use App\Models\QuizAttemptGrant;
 use App\Models\Submission;
 use App\Services\Admin\Auditor;
 use App\Services\Lms\Activity;
@@ -350,6 +351,41 @@ class AssessmentController extends Controller
         return Storage::disk('private')->download($file['path'], $file['name']);
     }
 
+    /**
+     * Give one student more attempts at a quiz: a power cut mid attempt, a
+     * medical absence, a resit agreed after a review. Their earlier attempts
+     * stand; this only widens how many they may make.
+     */
+    public function grantAttempts(Request $request, QuizAttempt $attempt, Auditor $auditor): RedirectResponse
+    {
+        $validated = $this->validatedInput($request, [
+            'extra_attempts' => ['required', 'integer', 'min:1', 'max:5'],
+            'reason' => ['required', 'string', 'min:5', 'max:500'],
+        ], ['reason.required' => 'Say why. It is kept with the grant and in the audit log.']);
+
+        $attempt->loadMissing(['quiz', 'user']);
+
+        $grant = QuizAttemptGrant::query()->create([
+            'quiz_id' => $attempt->quiz_id,
+            'user_id' => $attempt->user_id,
+            'extra_attempts' => $validated['extra_attempts'],
+            'reason' => $validated['reason'],
+            'granted_by' => $request->user()->id,
+        ]);
+
+        $auditor->action('quiz.attempts_granted', $grant, [
+            'quiz' => $attempt->quiz->title,
+            'student' => $attempt->user->name,
+            'extra_attempts' => $grant->extra_attempts,
+            'reason' => $grant->reason,
+        ], "{$attempt->user->name} on {$attempt->quiz->title}");
+
+        $left = $attempt->quiz->attemptsLeftFor($attempt->user);
+
+        return back()->with('success', "{$attempt->user->name} can now make {$left} more ".str('attempt')->plural($left).'.'
+            .($attempt->quiz->isOpen() ? '' : ' The quiz is closed, so they cannot use it until it reopens.'));
+    }
+
     public function attempt(QuizAttempt $attempt): Response
     {
         $attempt->load(['quiz.course:id,title', 'user:id,name', 'answers.question']);
@@ -365,7 +401,25 @@ class AssessmentController extends Controller
                 'totalMarks' => $attempt->total_marks,
                 'percent' => (float) $attempt->percent,
                 'needsReview' => $attempt->needs_review,
+                'attemptNumber' => $attempt->attempt_number,
+                'attemptsUsed' => $attempt->quiz->attemptsUsedBy($attempt->user),
+                'attemptsAllowed' => $attempt->quiz->attemptsAllowedFor($attempt->user),
+                'quizOpen' => $attempt->quiz->isOpen(),
             ],
+            'grants' => QuizAttemptGrant::query()
+                ->where('quiz_id', $attempt->quiz_id)
+                ->where('user_id', $attempt->user_id)
+                ->with('grantor:id,name')
+                ->latest('id')
+                ->get()
+                ->map(fn (QuizAttemptGrant $grant) => [
+                    'id' => $grant->id,
+                    'extra' => $grant->extra_attempts,
+                    'reason' => $grant->reason,
+                    'by' => $grant->grantor?->name,
+                    'on' => $grant->created_at->format('j M Y'),
+                ]),
+            'canGrant' => request()->user()->hasPermission('students.update'),
             'answers' => $attempt->answers->map(fn (QuizAnswer $answer) => [
                 'id' => $answer->id,
                 'question' => $answer->question->body,

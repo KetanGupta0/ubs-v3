@@ -367,6 +367,7 @@ These are required before v2 is switched off.
 - *L2 (most of it) built 2026-11-10: a learning record on the student's admin profile, with enrolments and their results (from `ResultCard`), payments (left out on the server for staff without billing access), certificates and warnings. Suspend and send-new-credentials already existed. Signing in as the student (audited impersonation) is still to do.*
 - *L7 built 2026-11-10: `/admin/classes`, every live class across batches. Quick views: upcoming, today, past, register not marked, cancelled. Classes that were held but never had a register marked are counted and flagged, with a link to mark them.*
 - *L8 built 2026-11-10: a notice to one student, sent from their admin profile. It is an announcement addressed to them alone, so it shows on their dashboard, announcements page and mobile app, and nobody else's. It can be withdrawn.*
+- *L4 built 2026-11-10: extra quiz attempts for one student, granted from the attempt's marking page with a reason (`quiz_attempt_grants`, one row per grant, audited). The allowance is the quiz's own number plus that student's grants, and earlier attempts stand.*
 
 **Improvements for the learning experience:**
 

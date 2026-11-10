@@ -114,7 +114,7 @@ class CourseController extends StudentController
                     'id' => $quiz->id,
                     'title' => $quiz->title,
                     'questions' => $quiz->questions()->count(),
-                    'attemptsLeft' => max(0, $quiz->attempts_allowed - $quiz->attemptsUsedBy($this->student($request))),
+                    'attemptsLeft' => $quiz->attemptsLeftFor($this->student($request)),
                     'best' => $quiz->bestAttemptFor($this->student($request))?->percent,
                     'open' => $quiz->isOpen(),
                     'closedReason' => $quiz->closedReason(),

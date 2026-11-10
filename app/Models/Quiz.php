@@ -89,9 +89,29 @@ class Quiz extends Model
         return $this->attempts()->where('user_id', $user->id)->count();
     }
 
+    public function grants(): HasMany
+    {
+        return $this->hasMany(QuizAttemptGrant::class);
+    }
+
+    /**
+     * How many attempts this student may make: the quiz's own number plus any
+     * extra attempts granted to them.
+     */
+    public function attemptsAllowedFor(User $user): int
+    {
+        return $this->attempts_allowed
+            + (int) $this->grants()->where('user_id', $user->id)->sum('extra_attempts');
+    }
+
+    public function attemptsLeftFor(User $user): int
+    {
+        return max(0, $this->attemptsAllowedFor($user) - $this->attemptsUsedBy($user));
+    }
+
     public function canBeAttemptedBy(User $user): bool
     {
-        return $this->isOpen() && $this->attemptsUsedBy($user) < $this->attempts_allowed;
+        return $this->isOpen() && $this->attemptsLeftFor($user) > 0;
     }
 
     public function bestAttemptFor(User $user): ?QuizAttempt

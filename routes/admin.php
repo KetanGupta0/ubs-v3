@@ -331,6 +331,8 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::put('enrolments/{enrolment}/batch', [EnrolmentController::class, 'move'])->name('enrolments.move');
             Route::post('enrolments/{enrolment}/waive', [EnrolmentController::class, 'waiveFee'])->name('enrolments.waive');
 
+            Route::post('marking/attempts/{attempt}/grant', [AssessmentController::class, 'grantAttempts'])->name('marking.attempt.grant');
+
             Route::post('students/{user}/notices', [StudentNoticeController::class, 'store'])->name('students.notices.store');
             Route::delete('students/{user}/notices/{notice}', [StudentNoticeController::class, 'destroy'])->name('students.notices.destroy');
         });

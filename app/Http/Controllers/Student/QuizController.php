@@ -45,7 +45,7 @@ class QuizController extends StudentController
                 'totalMarks' => $record->totalMarks(),
                 'timeLimit' => $record->time_limit_minutes,
                 'passPercent' => $record->pass_percent,
-                'attemptsAllowed' => $record->attempts_allowed,
+                'attemptsAllowed' => $record->attemptsAllowedFor($this->student($request)),
                 'attemptsUsed' => $attempts->count(),
                 'canAttempt' => $record->canBeAttemptedBy($student),
                 'closedReason' => $record->closedReason(),
