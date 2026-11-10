@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Student;
 
 use App\Models\Assignment;
 use App\Models\CourseModule;
+use App\Models\CourseReview;
 use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\Material;
@@ -80,6 +81,17 @@ class CourseController extends StudentController
                 'summary' => $enrolment->course->summary,
                 'accent' => $enrolment->course->accent,
             ],
+            'review' => ($review = CourseReview::query()
+                ->where('user_id', $this->student($request)->id)
+                ->where('course_id', $enrolment->course_id)
+                ->first()) ? [
+                    'rating' => $review->rating,
+                    'title' => $review->title,
+                    'body' => $review->body,
+                    'mayPublish' => $review->may_publish,
+                    'status' => $review->status,
+                    'reply' => $review->reply,
+                ] : null,
             'enrolment' => [
                 'progress' => $enrolment->progress_percent,
                 'status' => $enrolment->status,
@@ -213,6 +225,45 @@ class CourseController extends StudentController
             : $progress->markComplete($this->student($request), $record, $enrolment);
 
         return back();
+    }
+
+    /**
+     * Write or rewrite this student's review of the course.
+     *
+     * An edit goes back for moderation, since what was approved was the old
+     * text. Whether it may appear on the public site is the student's call,
+     * asked every time they save it.
+     */
+    public function review(Request $request, int $course): RedirectResponse
+    {
+        $enrolment = $this->enrolment($request, $course);
+
+        abort_if($enrolment->status === 'dropped', 403, 'Reviews are for students on the course.');
+
+        $validated = $this->validatedInput($request, [
+            'rating' => ['required', 'integer', 'min:1', 'max:5'],
+            'title' => ['nullable', 'string', 'max:120'],
+            'body' => ['required', 'string', 'min:20', 'max:2000'],
+            'may_publish' => ['boolean'],
+        ], [
+            'body.min' => 'A sentence or two, please: what worked and what did not.',
+        ]);
+
+        CourseReview::query()->updateOrCreate(
+            ['user_id' => $this->student($request)->id, 'course_id' => $enrolment->course_id],
+            [
+                'enrollment_id' => $enrolment->id,
+                'rating' => $validated['rating'],
+                'title' => $validated['title'],
+                'body' => $validated['body'],
+                'may_publish' => $validated['may_publish'],
+                'status' => 'pending',
+                'moderated_by' => null,
+                'moderated_at' => null,
+            ],
+        );
+
+        return back()->with('success', 'Thank you. Your review is with us, and will show once it has been read.');
     }
 
     /** Everything attached to a course, in one list. */

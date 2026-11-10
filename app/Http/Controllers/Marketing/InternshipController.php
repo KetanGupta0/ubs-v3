@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\CourseReview;
 use App\Support\Seo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -79,6 +80,7 @@ class InternshipController extends Controller
                 'documents' => $course->documents_provided ?? [],
             ],
             'batches' => $batches->map->toPublicArray()->values(),
+            'reviews' => $this->publicReviews($course),
             'related' => Course::query()
                 ->publiclyVisible()
                 ->internships()
@@ -124,5 +126,28 @@ class InternshipController extends Controller
                 '/for-colleges',
             ),
         ]);
+    }
+
+    /**
+     * What students said, for the public page: approved reviews whose authors
+     * agreed to the public site, and an average of exactly those, so the
+     * figure and the reviews under it always match.
+     *
+     * @return array{count: int, average: float|null, items: array<int, array<string, mixed>>}
+     */
+    protected function publicReviews(Course $course): array
+    {
+        $reviews = CourseReview::query()
+            ->where('course_id', $course->id)
+            ->public()
+            ->with('student:id,name')
+            ->latest()
+            ->get();
+
+        return [
+            'count' => $reviews->count(),
+            'average' => $reviews->isEmpty() ? null : round($reviews->avg('rating'), 1),
+            'items' => $reviews->take(6)->map->toPublicArray()->values()->all(),
+        ];
     }
 }

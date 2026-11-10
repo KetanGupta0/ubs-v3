@@ -8,6 +8,7 @@ import {
 
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import Seo from '@/components/Seo.vue';
+import CourseReviews from '@/components/Marketing/CourseReviews.vue';
 import SectionHeading from '@/components/Marketing/SectionHeading.vue';
 import EnquiryForm from '@/components/Marketing/EnquiryForm.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
@@ -17,6 +18,7 @@ import { accentFor } from '@/support/accents';
 const props = defineProps({
     internship: { type: Object, required: true },
     batches: { type: Array, default: () => [] },
+    reviews: { type: Object, default: null },
     related: { type: Array, default: () => [] },
     seo: { type: Object, required: true },
 });
@@ -317,6 +319,8 @@ function scheduleLine(batch) {
                 </ul>
             </div>
         </section>
+
+        <CourseReviews v-if="reviews" :reviews="reviews" />
 
         <section id="apply" class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
             <SectionHeading
