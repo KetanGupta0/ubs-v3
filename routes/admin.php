@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\BatchRunController;
 use App\Http\Controllers\Admin\BillingController;
+use App\Http\Controllers\Admin\CertificateTemplateController;
 use App\Http\Controllers\Admin\ClassScheduleController;
 use App\Http\Controllers\Admin\CollegeController;
 use App\Http\Controllers\Admin\CollegeDeskController;
@@ -318,6 +319,17 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::get('marking/submissions/{submission}/files/{index}', [AssessmentController::class, 'downloadSubmissionFile'])->name('marking.submission.file');
             Route::get('marking/attempts/{attempt}', [AssessmentController::class, 'attempt'])->name('marking.attempt');
             Route::post('marking/attempts/{attempt}/answers/{answer}', [AssessmentController::class, 'markAnswer'])->name('marking.answer');
+        });
+
+        /* --------------------------------------------- certificate templates */
+        Route::middleware('permission:catalogue.manage')->group(function () {
+            Route::get('certificate-templates', [CertificateTemplateController::class, 'index'])->name('certificate-templates.index');
+            Route::get('certificate-templates/new', [CertificateTemplateController::class, 'create'])->name('certificate-templates.create');
+            Route::post('certificate-templates', [CertificateTemplateController::class, 'store'])->name('certificate-templates.store');
+            Route::get('certificate-templates/{template}/edit', [CertificateTemplateController::class, 'edit'])->name('certificate-templates.edit');
+            Route::post('certificate-templates/{template}', [CertificateTemplateController::class, 'update'])->name('certificate-templates.update');
+            Route::delete('certificate-templates/{template}', [CertificateTemplateController::class, 'destroy'])->name('certificate-templates.destroy');
+            Route::get('certificate-templates/{template}/preview', [CertificateTemplateController::class, 'preview'])->name('certificate-templates.preview');
         });
 
         /* ---------------------------------------------------------- reviews */

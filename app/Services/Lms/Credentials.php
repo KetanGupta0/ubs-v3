@@ -3,12 +3,17 @@
 namespace App\Services\Lms;
 
 use App\Models\Certificate;
+use App\Models\CertificateTemplate;
 use App\Models\Enrollment;
 use App\Models\InternshipDocument;
 use App\Models\MentorReview;
 use App\Models\Setting;
 use App\Models\Submission;
 use App\Models\User;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
@@ -53,6 +58,8 @@ class Credentials
             'user_id' => $enrolment->user_id,
             'course_id' => $enrolment->course_id,
             'batch_id' => $enrolment->batch_id,
+            // Recorded, so the certificate keeps the look it was issued with.
+            'certificate_template_id' => CertificateTemplate::forCourse($enrolment->course_id)?->id,
             'issued_at' => now(),
             'title' => $enrolment->course->title,
             'final_percent' => $result['overall'],
@@ -71,19 +78,74 @@ class Credentials
             return $certificate->pdf_path;
         }
 
-        $certificate->loadMissing(['user', 'course', 'batch']);
-
-        $pdf = Pdf::loadView('credentials.certificate', [
-            'certificate' => $certificate,
-            'company' => $this->company(),
-        ])->setPaper('a4', 'landscape');
+        $certificate->loadMissing(['user', 'course', 'batch', 'template']);
 
         $path = 'certificates/'.str($certificate->number)->replace('/', '-')->toString().'.pdf';
 
-        Storage::disk('private')->put($path, $pdf->output());
+        Storage::disk('private')->put($path, $this->certificatePdf($certificate, $certificate->template));
         $certificate->forceFill(['pdf_path' => $path])->save();
 
         return $path;
+    }
+
+    /**
+     * What a template produces, with made up details, for checking it before
+     * any real certificate is issued with it. Nothing is saved.
+     */
+    public function previewCertificate(CertificateTemplate $template): string
+    {
+        $sample = new Certificate([
+            'number' => 'UBS/CERT/SAMPLE',
+            'verification_code' => 'SAMPLE0000',
+            'title' => $template->course?->title ?? 'Full stack web development internship',
+            'issued_at' => now(),
+            'final_percent' => 86.5,
+            'grade' => 'A',
+        ]);
+        $sample->setRelation('user', new User(['name' => 'Asha Verma']));
+        $sample->setRelation('batch', null);
+
+        return $this->certificatePdf($sample, $template);
+    }
+
+    protected function certificatePdf(Certificate $certificate, ?CertificateTemplate $template): string
+    {
+        $verifyUrl = url('/verify/'.$certificate->verification_code);
+
+        return Pdf::loadView('credentials.certificate', [
+            'certificate' => $certificate,
+            'company' => $this->company(),
+            'template' => $template,
+            'background' => $this->embed($template?->background_path),
+            'signature' => $this->embed($template?->signature_path),
+            'qr' => ($template?->show_qr ?? true) ? $this->qrDataUri($verifyUrl) : null,
+            'verifyUrl' => $verifyUrl,
+        ])->setPaper('a4', 'landscape')->output();
+    }
+
+    /**
+     * Images go into the PDF as data, read from the private disk. Pointing
+     * dompdf at a file path or a URL would mean opening its file and network
+     * access, which a document renderer has no business having.
+     */
+    protected function embed(?string $path): ?string
+    {
+        if (! $path || ! Storage::disk('private')->exists($path)) {
+            return null;
+        }
+
+        $bytes = Storage::disk('private')->get($path);
+        $mime = str_ends_with(strtolower($path), '.png') ? 'image/png' : 'image/jpeg';
+
+        return 'data:'.$mime.';base64,'.base64_encode($bytes);
+    }
+
+    /** A QR code for the verification address, as an SVG data URI. */
+    protected function qrDataUri(string $url): string
+    {
+        $svg = (new Writer(new ImageRenderer(new RendererStyle(160, 1), new SvgImageBackEnd)))->writeString($url);
+
+        return 'data:image/svg+xml;base64,'.base64_encode($svg);
     }
 
     /* -------------------------------------------------- internship documents */

@@ -41,6 +41,7 @@ export const navigation = {
         { label: 'Marking', icon: ClipboardList, href: '/admin/marking', permission: 'students.view' },
         { label: 'Site content', icon: HelpCircle, href: '/admin/content', permission: 'catalogue.view' },
         { label: 'Reviews', icon: Star, href: '/admin/reviews?filter[status]=pending', permission: 'catalogue.view' },
+        { label: 'Certificate designs', icon: Award, href: '/admin/certificate-templates', permission: 'catalogue.manage' },
         { label: 'Billing', icon: Banknote, href: '/admin/billing', permission: 'billing.view' },
         { label: 'Invoices', icon: Receipt, href: '/admin/invoices', permission: 'billing.view' },
         { label: 'Subscriptions', icon: RefreshCw, href: '/admin/subscriptions', permission: 'billing.view' },

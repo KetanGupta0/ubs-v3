@@ -9,10 +9,12 @@
     <style>
         @page { margin: 0; }
         body { font-family: DejaVu Sans, sans-serif; margin: 0; color: #1f2430; }
-        .sheet { position: relative; width: 297mm; height: 210mm; padding: 18mm 20mm; box-sizing: border-box; }
-        .frame { position: absolute; inset: 10mm; border: 2px solid #4f46e5; }
-        .frame-inner { position: absolute; inset: 12mm; border: 1px solid #c7d2fe; }
-        .content { position: relative; text-align: center; padding-top: 10mm; }
+        /* dompdf ignores `inset` and is unreliable with `bottom`, and a sheet exactly as tall as the page
+           spills onto a second one; so every box gets an explicit top, left, width and height. */
+        .sheet { position: relative; width: 297mm; height: 208mm; overflow: hidden; }
+        .frame { position: absolute; top: 10mm; left: 10mm; width: 276mm; height: 187mm; border: 2px solid #4f46e5; }
+        .frame-inner { position: absolute; top: 12.5mm; left: 12.5mm; width: 271mm; height: 182mm; border: 1px solid #c7d2fe; }
+        .content { position: absolute; top: 24mm; left: 20mm; width: 257mm; text-align: center; }
         .brand { font-size: 20px; font-weight: bold; color: #4f46e5; letter-spacing: .04em; }
         .legal { font-size: 9.5px; color: #6b7280; margin-top: 2px; }
         .kicker { margin-top: 12mm; font-size: 10px; letter-spacing: .28em; text-transform: uppercase; color: #6b7280; }
@@ -22,7 +24,7 @@
         .course { margin-top: 2mm; font-size: 19px; font-weight: bold; color: #4f46e5; }
         .detail { margin-top: 3mm; font-size: 11px; color: #4b5563; }
         .project { margin-top: 4mm; font-size: 11px; color: #4b5563; max-width: 190mm; margin-left: auto; margin-right: auto; }
-        .feet { position: absolute; left: 20mm; right: 20mm; bottom: 22mm; }
+        .feet { position: absolute; top: 166mm; left: 24mm; width: 249mm; }
         .feet table { width: 100%; border-collapse: collapse; }
         .feet td { vertical-align: bottom; font-size: 9px; color: #6b7280; }
         .sign { border-top: 1px solid #9ca3af; padding-top: 3px; width: 60mm; }

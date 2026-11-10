@@ -248,6 +248,17 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   refuses below the pass mark or the attendance floor unless forced, and a force
   is recorded in the audit log. Revoking keeps the row so the public check still
   answers, and says it was withdrawn.
+- **A certificate keeps the look it was issued with.** `CertificateTemplate` sets
+  a background, accent, wording and signatory into one fixed layout; the newest
+  active design for the course is used, else the default, else the built-in one.
+  The certificate records which, and its PDF is cached at issue, so editing a
+  design never changes a certificate somebody holds.
+- **PDF layouts are written for dompdf, not for a browser.** It ignores `inset`,
+  mishandles `bottom`, and a box exactly as tall as the page spills onto a second
+  one. Until November 2026 that left every certificate with an open border, no
+  signatory, no verification code and no number, plus a blank page. Give each box
+  an explicit top, left, width and height, and render it to an image and look.
+  Tests assert each certificate is one page.
 - **Course fees are inclusive of tax**, because that is the figure the page
   showed. `Money::taxableWithin()` works the taxable amount back out of it.
 - **A fee paid in full opens the course in one place,** `Invoicer::recordPayment()`,
