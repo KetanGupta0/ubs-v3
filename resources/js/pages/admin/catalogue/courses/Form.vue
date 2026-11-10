@@ -56,6 +56,7 @@ const form = useForm({
     accent: props.course?.accent ?? 'brand',
     is_featured: props.course?.is_featured ?? false,
     is_published: props.course?.is_published ?? false,
+    is_enrollment_open: props.course?.is_enrollment_open ?? true,
     sort_order: props.course?.sort_order ?? 0,
 });
 
@@ -341,6 +342,11 @@ function addStandardDocuments() {
 
                 <div class="space-y-3 border-t pt-4" style="border-color: var(--border-subtle)">
                     <UiSwitch v-model="form.is_published" label="Published" />
+                    <UiSwitch
+                        v-model="form.is_enrollment_open"
+                        label="Enrolment open"
+                        description="Students can sign themselves up. Turn off between batches; the course stays on the site, and you can still enrol people by hand."
+                    />
                     <UiSwitch v-model="form.is_featured" label="Featured" description="Appears on the home page." />
                 </div>
 

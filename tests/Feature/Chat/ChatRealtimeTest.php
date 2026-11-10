@@ -169,3 +169,24 @@ it('does not broadcast a student into a batch they left', function () {
 
     authorise($this->student, $room->id)->assertForbidden();
 });
+
+it('asks the same question through a hosted Pusher service, for shared hosting', function () {
+    // Production on shared hosting cannot run Reverb, so it may point at a
+    // service that speaks the Pusher protocol. The socket is still another
+    // door into the same room, so it must refuse the same people.
+    config()->set('broadcasting.default', 'pusher');
+    config()->set('broadcasting.connections.pusher', [
+        'driver' => 'pusher',
+        'key' => 'pusher-key',
+        'secret' => 'pusher-secret',
+        'app_id' => 'pusher-app',
+        'options' => ['cluster' => 'ap2', 'useTLS' => true],
+    ]);
+    require base_path('routes/channels.php');
+
+    authorise($this->client, $this->room->id)
+        ->assertOk()
+        ->assertJson(fn ($json) => $json->where('auth', fn ($auth) => str_starts_with($auth, 'pusher-key:'))->etc());
+
+    authorise(User::factory()->client()->create(), $this->room->id)->assertForbidden();
+});

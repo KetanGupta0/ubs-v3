@@ -33,6 +33,7 @@ const props = defineProps({
     modules: { type: Array, default: () => [] },
     allLessons: { type: Array, default: () => [] },
     quizzes: { type: Array, default: () => [] },
+    batches: { type: Array, default: () => [] },
 });
 
 const base = computed(() => `/admin/courses/${props.course.id}`);
@@ -177,6 +178,7 @@ const chosen = ref([]);
 
 const materialForm = useForm({
     lesson_id: null,
+    batch_id: null,
     title: '',
     description: '',
     file: null,
@@ -351,6 +353,7 @@ function lockSummary(lesson) {
                                         <component :is="material.isLink ? Link2 : Paperclip" class="h-3 w-3 shrink-0" />
                                         <span class="min-w-0 truncate">{{ material.title }}</span>
                                         <span v-if="material.size">· {{ material.size }}</span>
+                                        <span v-if="material.batch">· {{ material.batch }} only</span>
                                         <a
                                             v-if="!material.isLink"
                                             :href="`${base}/materials/${material.id}`"
@@ -570,6 +573,13 @@ function lockSummary(lesson) {
 
                 <UiFormField label="Or a link" :error="materialForm.errors.external_url">
                     <UiInput v-model="materialForm.external_url" placeholder="https://" />
+                </UiFormField>
+
+                <UiFormField v-if="batches.length" label="For" hint="One batch, or everybody on the course." :error="materialForm.errors.batch_id">
+                    <UiSelect v-model="materialForm.batch_id">
+                        <option :value="null">Every batch</option>
+                        <option v-for="batch in batches" :key="batch.value" :value="batch.value">{{ batch.label }}</option>
+                    </UiSelect>
                 </UiFormField>
 
                 <UiSwitch v-model="materialForm.is_downloadable" label="Students may download it" />

@@ -77,6 +77,17 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(TwoFactorSecret::class);
     }
 
+    public function credentialDeliveries(): HasMany
+    {
+        return $this->hasMany(CredentialDelivery::class);
+    }
+
+    /** The most recent time credentials were sent, on any channel. */
+    public function latestCredentialDelivery(): HasOne
+    {
+        return $this->hasOne(CredentialDelivery::class)->latestOfMany();
+    }
+
     public function socialAccounts(): HasMany
     {
         return $this->hasMany(SocialAccount::class);

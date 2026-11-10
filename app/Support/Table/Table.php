@@ -194,6 +194,23 @@ class Table
         return (new TableExport($this->exportName, $columns, $rows))->download($format);
     }
 
+    /**
+     * The rows the screen is currently showing across every page: the same
+     * search and filters, without paging or sorting.
+     *
+     * For acting on "everything that matches", so an action and the list it
+     * was started from cannot disagree about who is included.
+     */
+    public function matching(Request $request): Builder
+    {
+        $query = clone $this->query;
+
+        $this->applySearch($query, (string) $request->query('q', ''));
+        $this->applyFilters($query, $request);
+
+        return $query;
+    }
+
     protected function buildQuery(Request $request): Builder
     {
         $query = clone $this->query;

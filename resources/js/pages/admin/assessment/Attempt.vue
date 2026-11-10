@@ -5,9 +5,9 @@
  * The auto marked questions are shown too, read only, because a written answer
  * marked without seeing how the student did on the rest is marked blind.
  */
-import { reactive } from 'vue';
-import { Head, router } from '@inertiajs/vue3';
-import { ArrowLeft, Check, X, PenLine } from 'lucide-vue-next';
+import { reactive, ref } from 'vue';
+import { Head, router, useForm } from '@inertiajs/vue3';
+import { ArrowLeft, Check, X, PenLine, RotateCcw } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -17,11 +17,33 @@ import UiButton from '@/components/UI/UiButton.vue';
 import UiInput from '@/components/UI/UiInput.vue';
 import UiTextarea from '@/components/UI/UiTextarea.vue';
 import UiFormField from '@/components/UI/UiFormField.vue';
+import UiModal from '@/components/UI/UiModal.vue';
+import UiSelect from '@/components/UI/UiSelect.vue';
 
 const props = defineProps({
     attempt: { type: Object, required: true },
     answers: { type: Array, default: () => [] },
+    grants: { type: Array, default: () => [] },
+    canGrant: { type: Boolean, default: false },
 });
+
+/* ------------------------------------------------- extra attempts for them */
+
+const granting = ref(false);
+const grantForm = useForm({ extra_attempts: '1', reason: '' });
+
+function openGrant() {
+    grantForm.reset();
+    grantForm.clearErrors();
+    granting.value = true;
+}
+
+function grant() {
+    grantForm.post(`/admin/marking/attempts/${props.attempt.id}/grant`, {
+        preserveScroll: true,
+        onSuccess: () => { granting.value = false; },
+    });
+}
 
 /** One draft per written answer, so marking one does not disturb the others. */
 const drafts = reactive(
@@ -80,6 +102,27 @@ const responseText = (answer) =>
                 <span>The total updates as each written answer is marked.</span>
             </div>
 
+            <UiCard padding="p-4">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-medium">Attempts</p>
+                        <p class="text-xs" style="color: var(--text-muted)">
+                            This is attempt {{ attempt.attemptNumber }}. {{ attempt.student }} has used
+                            {{ attempt.attemptsUsed }} of {{ attempt.attemptsAllowed }}<template v-if="!attempt.quizOpen">, and the quiz is closed</template>.
+                        </p>
+                    </div>
+                    <UiButton v-if="canGrant" variant="secondary" size="sm" @click="openGrant">
+                        <template #leading><RotateCcw class="h-3.5 w-3.5" /></template>
+                        Allow more attempts
+                    </UiButton>
+                </div>
+                <ul v-if="grants.length" class="mt-3 space-y-1.5 text-xs" style="color: var(--text-muted)">
+                    <li v-for="item in grants" :key="item.id">
+                        +{{ item.extra }} on {{ item.on }}<template v-if="item.by"> by {{ item.by }}</template>: {{ item.reason }}
+                    </li>
+                </ul>
+            </UiCard>
+
             <UiCard v-for="(answer, index) in answers" :key="answer.id" padding="p-4">
                 <p class="text-sm font-medium">{{ index + 1 }}. {{ answer.question }}</p>
 
@@ -127,5 +170,26 @@ const responseText = (answer) =>
                 </template>
             </UiCard>
         </div>
+
+        <UiModal
+            :open="granting"
+            title="Allow more attempts"
+            :description="`${attempt.student} keeps every attempt they have made; this only lets them make more.`"
+            :persistent="grantForm.processing"
+            @close="granting = false"
+        >
+            <form id="grant-form" class="space-y-4" @submit.prevent="grant">
+                <UiFormField label="Extra attempts" required :error="grantForm.errors.extra_attempts">
+                    <UiSelect v-model="grantForm.extra_attempts" :options="['1', '2', '3', '4', '5']" />
+                </UiFormField>
+                <UiFormField label="Why" required hint="Kept with the grant and in the audit log." :error="grantForm.errors.reason">
+                    <UiTextarea v-model="grantForm.reason" :rows="3" placeholder="Power cut during the first attempt" />
+                </UiFormField>
+            </form>
+            <template #footer>
+                <UiButton variant="ghost" :disabled="grantForm.processing" @click="granting = false">Cancel</UiButton>
+                <UiButton type="submit" form="grant-form" :loading="grantForm.processing">Allow</UiButton>
+            </template>
+        </UiModal>
     </AppLayout>
 </template>

@@ -2,6 +2,7 @@
 
 namespace App\Services\Billing;
 
+use App\Models\Enrollment;
 use App\Models\Invoice;
 use App\Models\PaymentRequest;
 use App\Models\Setting;
@@ -98,6 +99,16 @@ class Invoicer
 
                 if ($paid >= $request->total) {
                     $request->forceFill(['status' => 'paid', 'paid_at' => now()])->save();
+
+                    // A course fee settled in full opens the lessons that were
+                    // waiting on it. Here, rather than in whichever screen took
+                    // the money, so a bank transfer recorded by hand opens the
+                    // course exactly as an online payment does.
+                    Enrollment::query()
+                        ->where('payment_request_id', $request->id)
+                        ->where('has_paid', false)
+                        ->get()
+                        ->each(fn (Enrollment $enrolment) => $enrolment->forceFill(['has_paid' => true])->save());
                 }
             }
         });

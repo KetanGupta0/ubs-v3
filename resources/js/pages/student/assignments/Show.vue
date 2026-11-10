@@ -116,7 +116,9 @@ function submit() {
             <UiCard v-if="submission?.submittedAt">
                 <template #header>
                     <div class="flex flex-wrap items-center justify-between gap-2">
-                        <h2 class="text-base font-semibold">What you handed in</h2>
+                        <h2 class="text-base font-semibold">
+                            What you handed in<span v-if="submission.version > 1" class="font-normal" style="color: var(--text-muted)"> · version {{ submission.version }}</span>
+                        </h2>
                         <UiBadge v-if="submission.late" tone="warning" size="sm">late</UiBadge>
                     </div>
                 </template>
@@ -150,10 +152,17 @@ function submit() {
             </UiCard>
 
             <!-- ---------------------------------------------- submitting -->
-            <UiCard v-if="assignment.acceptsSubmissions">
+            <UiCard v-if="assignment.acceptsSubmissions && submission && !submission.canResubmit">
+                <p class="text-sm" style="color: var(--text-muted)">
+                    This has been marked. If you want to hand in a new version, ask your trainer to send it back
+                    to you; your marked version stays in your history either way.
+                </p>
+            </UiCard>
+
+            <UiCard v-else-if="assignment.acceptsSubmissions">
                 <template #header>
                     <h2 class="text-base font-semibold">
-                        {{ submission?.submittedAt ? 'Submit again' : 'Hand it in' }}
+                        {{ submission?.submittedAt ? 'Submit a new version' : 'Hand it in' }}
                     </h2>
                 </template>
 
@@ -168,13 +177,9 @@ function submit() {
                     </span>
                 </p>
 
-                <p
-                    v-if="submission?.marks !== null && submission?.marks !== undefined"
-                    class="mb-4 text-xs"
-                    style="color: var(--text-muted)"
-                >
-                    Submitting again clears the mark you already have, because a mark that belongs to work you have
-                    since changed is worse than no mark.
+                <p v-if="submission?.submittedAt" class="mb-4 text-xs" style="color: var(--text-muted)">
+                    Your current version, and any feedback on it, moves into your history below. Leave the files
+                    empty to keep the ones you already handed in.
                 </p>
 
                 <form class="space-y-4" @submit.prevent="submit">
@@ -199,7 +204,7 @@ function submit() {
                     <div class="flex justify-end">
                         <UiButton type="submit" :loading="form.processing">
                             <template #leading><Send class="h-4 w-4" /></template>
-                            {{ submission?.submittedAt ? 'Submit again' : 'Hand it in' }}
+                            {{ submission?.submittedAt ? 'Submit new version' : 'Hand it in' }}
                         </UiButton>
                     </div>
                 </form>
@@ -209,6 +214,41 @@ function submit() {
                 <p class="text-sm" style="color: var(--text-muted)">
                     This one is closed for submissions.
                 </p>
+            </UiCard>
+
+            <!-- ------------------------------------------ earlier versions -->
+            <UiCard v-if="submission?.history?.length">
+                <template #header>
+                    <h2 class="text-base font-semibold">Earlier versions</h2>
+                </template>
+
+                <ol class="space-y-4">
+                    <li
+                        v-for="item in submission.history"
+                        :key="item.version"
+                        class="border-l-2 pl-3"
+                        style="border-color: var(--border-subtle)"
+                    >
+                        <p class="text-sm font-medium">
+                            Version {{ item.version }}
+                            <span class="font-normal" style="color: var(--text-muted)">· {{ item.submittedAt }}</span>
+                            <UiBadge v-if="item.late" tone="warning" size="sm" class="ml-1">late</UiBadge>
+                        </p>
+                        <p v-if="item.notes" class="mt-1 whitespace-pre-line text-sm">{{ item.notes }}</p>
+                        <ul v-if="item.files.length" class="mt-1.5 space-y-1">
+                            <li v-for="file in item.files" :key="file.index" class="flex items-center gap-2 text-xs">
+                                <Download class="h-3 w-3 shrink-0" style="color: var(--text-muted)" />
+                                <a :href="`/student/assignments/${assignment.id}/files/${file.index}?version=${item.version}`" class="hover:underline">{{ file.name }}</a>
+                            </li>
+                        </ul>
+                        <div v-if="item.feedback" class="mt-2 rounded-lg px-3 py-2 text-sm" style="background: var(--surface-sunken)">
+                            <p class="text-xs font-medium" style="color: var(--text-muted)">
+                                {{ item.marks !== null ? `${item.marks} / ${assignment.maxMarks}` : 'Sent back for another go' }}<template v-if="item.evaluatedBy"> · {{ item.evaluatedBy }}</template>
+                            </p>
+                            <p class="mt-1 whitespace-pre-line">{{ item.feedback }}</p>
+                        </div>
+                    </li>
+                </ol>
             </UiCard>
         </div>
     </AppLayout>

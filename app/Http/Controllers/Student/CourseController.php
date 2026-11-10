@@ -107,14 +107,14 @@ class CourseController extends StudentController
                 }),
             ]),
             'quizzes' => Quiz::query()
-                ->where('course_id', $course)
+                ->forEnrolment($enrolment)
                 ->published()
                 ->get()
                 ->map(fn (Quiz $quiz) => [
                     'id' => $quiz->id,
                     'title' => $quiz->title,
                     'questions' => $quiz->questions()->count(),
-                    'attemptsLeft' => max(0, $quiz->attempts_allowed - $quiz->attemptsUsedBy($this->student($request))),
+                    'attemptsLeft' => $quiz->attemptsLeftFor($this->student($request)),
                     'best' => $quiz->bestAttemptFor($this->student($request))?->percent,
                     'open' => $quiz->isOpen(),
                     'closedReason' => $quiz->closedReason(),
@@ -149,7 +149,8 @@ class CourseController extends StudentController
         $record = Lesson::query()
             ->where('course_id', $course)
             ->where('is_published', true)
-            ->with(['materials', 'module'])
+            // Only the handouts for this student's batch, or the whole course.
+            ->with(['materials' => fn ($query) => $query->forEnrolment($enrolment), 'module'])
             ->findOrFail($lesson);
 
         $lock = $gate->check($record);
@@ -221,7 +222,7 @@ class CourseController extends StudentController
         $gate = ContentGate::for($this->student($request), $enrolment);
 
         $materials = Material::query()
-            ->where('course_id', $course)
+            ->forEnrolment($enrolment)
             ->with('lesson')
             ->orderBy('sort_order')
             ->get()
@@ -243,7 +244,7 @@ class CourseController extends StudentController
         $gate = ContentGate::for($this->student($request), $enrolment);
 
         /** @var Material $record */
-        $record = Material::query()->where('course_id', $course)->with('lesson')->findOrFail($material);
+        $record = Material::query()->forEnrolment($enrolment)->with('lesson')->findOrFail($material);
 
         abort_if($record->lesson && ! $gate->isOpen($record->lesson), 403);
         abort_unless($record->is_downloadable, 403, 'This one is view only.');

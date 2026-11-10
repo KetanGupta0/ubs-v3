@@ -19,6 +19,7 @@ import UiEmptyState from '@/components/UI/UiEmptyState.vue';
 const props = defineProps({
     course: { type: Object, required: true },
     modules: { type: Array, default: () => [] },
+    batches: { type: Array, default: () => [] },
     quizzes: { type: Array, default: () => [] },
 });
 
@@ -31,6 +32,7 @@ const form = useForm({
     title: '',
     instructions: '',
     course_module_id: null,
+    batch_id: null,
     time_limit_minutes: null,
     attempts_allowed: 1,
     pass_percent: 50,
@@ -47,6 +49,7 @@ function openForm(quiz = null) {
     form.title = quiz?.title ?? '';
     form.instructions = quiz?.instructions ?? '';
     form.course_module_id = quiz?.moduleId ?? null;
+    form.batch_id = quiz?.batchId ?? null;
     form.time_limit_minutes = quiz?.timeLimit ?? null;
     form.attempts_allowed = quiz?.attemptsAllowed ?? 1;
     form.pass_percent = quiz?.passPercent ?? 50;
@@ -135,6 +138,7 @@ function remove(quiz) {
                             {{ quiz.attemptsAllowed }} attempt{{ quiz.attemptsAllowed === 1 ? '' : 's' }}
                             <span v-if="quiz.timeLimit"> · {{ quiz.timeLimit }} min</span>
                             <span v-if="quiz.attempts"> · {{ quiz.attempts }} sat</span>
+                            <span v-if="quiz.batch"> · {{ quiz.batch }} only</span>
                         </p>
                     </div>
 
@@ -169,6 +173,13 @@ function remove(quiz) {
                         <option v-for="module in modules" :key="module.value" :value="module.value">
                             {{ module.label }}
                         </option>
+                    </UiSelect>
+                </UiFormField>
+
+                <UiFormField v-if="batches.length" label="Set for" hint="One batch, or everybody on the course." :error="form.errors.batch_id">
+                    <UiSelect v-model="form.batch_id">
+                        <option :value="null">Every batch</option>
+                        <option v-for="batch in batches" :key="batch.value" :value="batch.value">{{ batch.label }}</option>
                     </UiSelect>
                 </UiFormField>
 

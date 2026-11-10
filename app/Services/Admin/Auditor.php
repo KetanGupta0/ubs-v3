@@ -3,6 +3,7 @@
 namespace App\Services\Admin;
 
 use App\Models\AuditLog;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 
@@ -24,7 +25,24 @@ class Auditor
         'code_hash', 'token', 'api_key', 'key_hash', 'push_token',
     ];
 
+    /** Who to record as the actor when there is no signed in request, as in a queued job. */
+    protected ?User $actor = null;
+
     public function __construct(protected Request $request) {}
+
+    /**
+     * A copy of this auditor that records the given person as the actor.
+     *
+     * A queued job has no signed in user, so without this the entries it
+     * writes would say nobody did them.
+     */
+    public function actingAs(?User $actor): static
+    {
+        $copy = clone $this;
+        $copy->actor = $actor;
+
+        return $copy;
+    }
 
     public function created(Model $subject, ?string $label = null): AuditLog
     {
@@ -62,7 +80,7 @@ class Auditor
     protected function write(string $action, ?Model $subject, ?string $label, ?array $changes = null): AuditLog
     {
         return AuditLog::query()->create([
-            'actor_id' => $this->request->user()?->id,
+            'actor_id' => $this->actor?->id ?? $this->request->user()?->id,
             'action' => $action,
             'subject_type' => $subject ? $subject::class : null,
             'subject_id' => $subject?->getKey(),

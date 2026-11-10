@@ -118,12 +118,15 @@ it('flags a submission handed in after the deadline', function () {
     expect(Submission::query()->sole()->is_late)->toBeTrue();
 });
 
-it('clears an existing mark when work is submitted again', function () {
+it('clears the mark on the live version when work sent back is submitted again', function () {
+    // Since November 2026 a student cannot replace marked work on their own
+    // (it would let them wipe their own mark); the trainer sends it back,
+    // which is the 'returned' state, and that version moves into the history.
     Submission::query()->create([
         'assignment_id' => $this->assignment->id,
         'user_id' => $this->student->id,
         'submitted_at' => now()->subDays(2),
-        'status' => 'evaluated',
+        'status' => 'returned',
         'marks' => 30,
         'feedback' => 'Good, but the validation is client side only.',
     ]);
@@ -132,7 +135,10 @@ it('clears an existing mark when work is submitted again', function () {
         ->post("/student/assignments/{$this->assignment->id}", ['notes' => 'Fixed the validation.']);
 
     // A mark attached to work that has since changed is worse than no mark.
-    expect(Submission::query()->sole()->marks)->toBeNull();
+    $submission = Submission::query()->sole();
+
+    expect($submission->marks)->toBeNull()
+        ->and($submission->versions()->sole()->marks)->toBe(30);
 });
 
 it('does not accept work from somebody not on the course', function () {

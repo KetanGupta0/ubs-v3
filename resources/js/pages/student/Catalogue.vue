@@ -94,6 +94,13 @@ const scheduleLine = (batch) =>
                             <template #leading><Check class="h-3.5 w-3.5" /></template>
                             You are on this
                         </UiButton>
+                        <span
+                            v-else-if="!course.enrolmentOpen"
+                            class="text-xs font-medium"
+                            style="color: var(--text-muted)"
+                        >
+                            Enrolment opens with the next batch
+                        </span>
                         <UiButton v-else size="sm" @click="open(course)">Join</UiButton>
                     </div>
                 </UiCard>

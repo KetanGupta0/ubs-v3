@@ -121,7 +121,8 @@ class StudentApiController extends Controller
         $record = Lesson::query()
             ->where('course_id', $course)
             ->where('is_published', true)
-            ->with('materials')
+            // Only the handouts for this student's batch, or the whole course.
+            ->with(['materials' => fn ($query) => $query->forEnrolment($enrolment)])
             ->findOrFail($lesson);
 
         $lock = $gate->check($record);
@@ -248,7 +249,7 @@ class StudentApiController extends Controller
 
         return response()->json([
             'data' => Announcement::query()
-                ->for($enrolments->pluck('batch_id')->filter()->all(), $enrolments->pluck('course_id')->all())
+                ->for($enrolments->pluck('batch_id')->filter()->all(), $enrolments->pluck('course_id')->all(), $request->user()->id)
                 ->with(['author:id,name'])
                 ->orderByDesc('is_pinned')
                 ->orderByDesc('published_at')

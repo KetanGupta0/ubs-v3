@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\BatchRunController;
 use App\Http\Controllers\Admin\BillingController;
+use App\Http\Controllers\Admin\ClassScheduleController;
 use App\Http\Controllers\Admin\CollegeController;
 use App\Http\Controllers\Admin\CollegeDeskController;
 use App\Http\Controllers\Admin\ContentController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CredentialsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
+use App\Http\Controllers\Admin\EnrolmentController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\PeopleController;
 use App\Http\Controllers\Admin\ProjectController;
@@ -22,6 +24,7 @@ use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SolutionController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\StudentNoticeController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\SupportController;
 use Illuminate\Support\Facades\Route;
@@ -78,6 +81,10 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
                 ->whereIn('role', ['client', 'student'])
                 ->middleware('throttle:10,1')
                 ->name('people.resend');
+            Route::post('{role}s/send-credentials', [PeopleController::class, 'sendCredentialsInBulk'])
+                ->whereIn('role', ['client', 'student'])
+                ->middleware(['permission:clients.update,students.update', 'throttle:6,1'])
+                ->name('people.bulk-credentials');
             Route::put('{role}s/{user}/status', [PeopleController::class, 'setStatus'])
                 ->whereIn('role', ['client', 'student'])
                 ->name('people.status');
@@ -105,6 +112,7 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::get('courses/{course:id}/edit', [CourseController::class, 'edit'])->name('courses.edit');
             Route::put('courses/{course:id}', [CourseController::class, 'update'])->name('courses.update');
             Route::post('courses/{course:id}/publish', [CourseController::class, 'togglePublished'])->name('courses.publish');
+            Route::post('courses/{course:id}/enrolment', [CourseController::class, 'toggleEnrolment'])->name('courses.enrolment');
             Route::delete('courses/{course:id}', [CourseController::class, 'destroy'])->name('courses.destroy');
 
             Route::get('batches/new', [BatchController::class, 'create'])->name('batches.create');
@@ -309,6 +317,24 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::get('marking/submissions/{submission}/files/{index}', [AssessmentController::class, 'downloadSubmissionFile'])->name('marking.submission.file');
             Route::get('marking/attempts/{attempt}', [AssessmentController::class, 'attempt'])->name('marking.attempt');
             Route::post('marking/attempts/{attempt}/answers/{answer}', [AssessmentController::class, 'markAnswer'])->name('marking.answer');
+        });
+
+        /* ------------------------------------------------------ enrolments */
+        Route::middleware('permission:students.view')->group(function () {
+            Route::get('enrolments', [EnrolmentController::class, 'index'])->name('enrolments.index');
+            Route::get('classes', [ClassScheduleController::class, 'index'])->name('classes.index');
+        });
+
+        Route::middleware('permission:students.update')->group(function () {
+            Route::post('enrolments', [EnrolmentController::class, 'store'])->name('enrolments.store');
+            Route::put('enrolments/{enrolment}/status', [EnrolmentController::class, 'updateStatus'])->name('enrolments.status');
+            Route::put('enrolments/{enrolment}/batch', [EnrolmentController::class, 'move'])->name('enrolments.move');
+            Route::post('enrolments/{enrolment}/waive', [EnrolmentController::class, 'waiveFee'])->name('enrolments.waive');
+
+            Route::post('marking/attempts/{attempt}/grant', [AssessmentController::class, 'grantAttempts'])->name('marking.attempt.grant');
+
+            Route::post('students/{user}/notices', [StudentNoticeController::class, 'store'])->name('students.notices.store');
+            Route::delete('students/{user}/notices/{notice}', [StudentNoticeController::class, 'destroy'])->name('students.notices.destroy');
         });
 
         /* ------------------------------------------- issuing credentials */

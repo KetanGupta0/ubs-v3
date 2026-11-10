@@ -7,6 +7,7 @@ use App\Models\Submission;
 use App\Services\Lms\Activity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -103,6 +104,9 @@ class AssignmentController extends StudentController
                 'feedback' => $submission->feedback,
                 'evaluatedBy' => $submission->evaluator?->name,
                 'evaluatedAt' => $submission->evaluated_at?->format('j M Y'),
+                'version' => $submission->version,
+                'canResubmit' => $submission->canBeReplacedByStudent(),
+                'history' => $submission->versions()->with('evaluator:id,name')->get()->map->toHistoryArray(),
             ] : null,
         ]);
     }
@@ -125,7 +129,15 @@ class AssignmentController extends StudentController
         ]);
 
         $existing = $record->submissionFor($student);
-        $stored = $existing?->files ?? [];
+
+        if ($existing && ! $existing->canBeReplacedByStudent()) {
+            return back()->withErrors([
+                'submission' => 'This has been marked. If you want to hand in a new version, ask your trainer to send it back.',
+            ]);
+        }
+
+        // New files replace the last version's; none uploaded keeps them.
+        $stored = $request->file('files') ? [] : ($existing?->files ?? []);
 
         foreach ($request->file('files') ?? [] as $file) {
             $path = $file->store("submissions/{$record->id}/{$student->id}", 'private');
@@ -140,22 +152,36 @@ class AssignmentController extends StudentController
 
         $late = $record->isOverdue();
 
-        $submission = Submission::query()->updateOrCreate(
-            ['assignment_id' => $record->id, 'user_id' => $student->id],
-            [
-                'notes' => $validated['notes'],
-                'repository_url' => $validated['repository_url'],
-                'demo_url' => $validated['demo_url'],
-                'files' => $stored ?: null,
-                'submitted_at' => now(),
-                'is_late' => $late,
-                'status' => 'submitted',
-                // Resubmitting after feedback clears the old mark: a mark that
-                // belongs to work that has since changed is worse than none.
-                'marks' => null,
-                'feedback' => $existing?->status === 'returned' ? null : $existing?->feedback,
-            ],
-        );
+        $submission = DB::transaction(function () use ($record, $student, $existing, $validated, $stored, $late) {
+            // The version being replaced is kept, with whatever feedback it
+            // was given, so a resubmission adds to the history rather than
+            // rewriting it. A draft has nothing worth keeping.
+            if ($existing && $existing->submitted_at !== null) {
+                $existing->archiveCurrentVersion();
+            }
+
+            return Submission::query()->updateOrCreate(
+                ['assignment_id' => $record->id, 'user_id' => $student->id],
+                [
+                    'version' => $existing && $existing->submitted_at !== null ? $existing->version + 1 : ($existing?->version ?? 1),
+                    'notes' => $validated['notes'],
+                    'repository_url' => $validated['repository_url'],
+                    'demo_url' => $validated['demo_url'],
+                    'files' => $stored ?: null,
+                    'submitted_at' => now(),
+                    'is_late' => $late,
+                    'status' => 'submitted',
+                    // Resubmitting after feedback clears the old mark: a mark that
+                    // belongs to work that has since changed is worse than none.
+                    'marks' => null,
+                    // The feedback belongs to the version it was written about,
+                    // which is now in the history.
+                    'feedback' => null,
+                    'evaluated_by' => null,
+                    'evaluated_at' => null,
+                ],
+            );
+        });
 
         $activity->did($student, 'assignment.submitted', $record, [
             'title' => $record->title,
@@ -177,7 +203,12 @@ class AssignmentController extends StudentController
 
         abort_unless($submission, 404);
 
-        $file = ($submission->files ?? [])[$index] ?? null;
+        // An earlier version's file, when asked for one.
+        $files = $request->filled('version')
+            ? $submission->versions()->where('version', (int) $request->query('version'))->firstOrFail()->files
+            : $submission->files;
+
+        $file = ($files ?? [])[$index] ?? null;
 
         abort_unless($file && Storage::disk('private')->exists($file['path']), 404);
 

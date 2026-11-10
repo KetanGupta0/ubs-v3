@@ -18,8 +18,39 @@ export const live = ref(false);
 let echo = null;
 let starting = null;
 
+/**
+ * Which socket service to talk to. Reverb needs a long running server, which
+ * shared hosting cannot keep alive, so production can point at a hosted
+ * service that speaks the Pusher protocol instead. Same channels, same
+ * events, same authorisation route; only the connection differs.
+ */
+const broadcaster = (import.meta.env.VITE_BROADCASTER || 'reverb').toLowerCase();
+
+function connectionOptions() {
+    if (broadcaster === 'pusher') {
+        return {
+            broadcaster: 'pusher',
+            key: import.meta.env.VITE_PUSHER_APP_KEY,
+            cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap2',
+            forceTLS: true,
+        };
+    }
+
+    return {
+        broadcaster: 'reverb',
+        key: import.meta.env.VITE_REVERB_APP_KEY,
+        wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
+        wsPort: Number(import.meta.env.VITE_REVERB_PORT || 8080),
+        wssPort: Number(import.meta.env.VITE_REVERB_PORT || 443),
+        forceTLS: (import.meta.env.VITE_REVERB_SCHEME || 'http') === 'https',
+        enabledTransports: ['ws', 'wss'],
+    };
+}
+
 export function isConfigured() {
-    return Boolean(import.meta.env.VITE_REVERB_APP_KEY);
+    return Boolean(broadcaster === 'pusher'
+        ? import.meta.env.VITE_PUSHER_APP_KEY
+        : import.meta.env.VITE_REVERB_APP_KEY);
 }
 
 export async function connect() {
@@ -37,13 +68,7 @@ export async function connect() {
             window.Pusher = Pusher;
 
             echo = new Echo({
-                broadcaster: 'reverb',
-                key: import.meta.env.VITE_REVERB_APP_KEY,
-                wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
-                wsPort: Number(import.meta.env.VITE_REVERB_PORT || 8080),
-                wssPort: Number(import.meta.env.VITE_REVERB_PORT || 443),
-                forceTLS: (import.meta.env.VITE_REVERB_SCHEME || 'http') === 'https',
-                enabledTransports: ['ws', 'wss'],
+                ...connectionOptions(),
                 // One reconnect storm on a flaky network is enough.
                 activityTimeout: 30000,
                 pongTimeout: 10000,

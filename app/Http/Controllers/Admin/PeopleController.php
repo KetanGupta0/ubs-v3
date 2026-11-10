@@ -10,6 +10,8 @@ use App\Models\CredentialDelivery;
 use App\Models\User;
 use App\Services\Admin\AccountCreator;
 use App\Services\Admin\Auditor;
+use App\Services\Admin\CredentialBulkSender;
+use App\Services\Lms\StudentRecord;
 use App\Support\Identifier;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
@@ -51,6 +53,7 @@ class PeopleController extends Controller
             ],
             // Students may self register, so an admin creating one is optional.
             'selfRegisterable' => $roleEnum->selfRegisterable(),
+            'canSendCredentials' => $request->user()->hasPermission($roleEnum->value.'s.update'),
         ]);
     }
 
@@ -114,7 +117,7 @@ class PeopleController extends Controller
             );
     }
 
-    public function show(string $role, User $user): Response
+    public function show(Request $request, string $role, User $user, StudentRecord $record): Response
     {
         $roleEnum = $this->roleFrom($role);
         abort_unless($user->role === $roleEnum, 404);
@@ -153,6 +156,12 @@ class PeopleController extends Controller
                 ],
             ],
             'colleges' => $roleEnum === Role::Student ? $this->collegeOptions() : [],
+            // Their whole learning record, in one place, for students only.
+            'record' => $roleEnum === Role::Student
+                ? $record->for($user, withPayments: $request->user()->hasPermission('billing.view'))
+                : null,
+            'canSeeBilling' => $request->user()->hasPermission('billing.view'),
+            'canManageStudent' => $roleEnum === Role::Student && $request->user()->hasPermission('students.update'),
             'deliveries' => CredentialDelivery::query()
                 ->where('user_id', $user->id)
                 ->with('creator:id,name')
@@ -242,6 +251,81 @@ class PeopleController extends Controller
         );
     }
 
+    /**
+     * Send fresh credentials to many accounts at once.
+     *
+     * Either the rows ticked on the screen, or everybody matching the search
+     * and filters the screen is showing (sent in the query string), so a list
+     * of a hundred accounts brought across from the old platform does not have
+     * to be ticked page by page. Accounts already in use are skipped by the
+     * sender, never here, so the rule lives in one place.
+     */
+    public function sendCredentialsInBulk(Request $request, string $role, CredentialBulkSender $sender): RedirectResponse
+    {
+        $roleEnum = $this->roleFrom($role);
+
+        // The route admits either update permission; this is the one that
+        // matters for this list.
+        abort_unless($request->user()->hasPermission($roleEnum->value.'s.update'), 403);
+
+        $max = (int) config('company.credentials.bulk_max', 1000);
+
+        $validated = $this->validatedInput($request, [
+            'scope' => ['required', Rule::in(['selected', 'matching'])],
+            'ids' => ['exclude_unless:scope,selected', 'required', 'array', 'min:1', 'max:'.$max],
+            'ids.*' => ['integer'],
+            'note' => ['nullable', 'string', 'max:1000'],
+        ], [
+            'ids.required' => 'Select at least one account.',
+            'ids.max' => "At most {$max} accounts can be sent to at once.",
+        ]);
+
+        $users = $validated['scope'] === 'selected'
+            ? User::query()->role($roleEnum)->whereIn('id', $validated['ids'])->get()
+            : $this->table($roleEnum)->matching($request)->limit($max + 1)->get();
+
+        if ($users->count() > $max) {
+            return back()->with('error', "More than {$max} accounts match. Narrow the filters and send in parts.");
+        }
+
+        if ($users->isEmpty()) {
+            return back()->with('error', 'No accounts matched, so nothing was sent.');
+        }
+
+        $result = $sender->queue($users, $validated['note'] ?? null, $request->user());
+
+        return back()->with(
+            $result['queued'] > 0 ? 'success' : 'warning',
+            $this->bulkSummary($result),
+        );
+    }
+
+    /** @param  array{queued: int, skipped: array<string, int>}  $result */
+    protected function bulkSummary(array $result): string
+    {
+        $parts = [];
+
+        $parts[] = $result['queued'] === 0
+            ? 'Nothing was sent.'
+            : ($result['queued'] === 1
+                ? 'Credentials are on their way to 1 account.'
+                : "Credentials are on their way to {$result['queued']} accounts.");
+
+        $reasons = [
+            CredentialBulkSender::SKIP_IN_USE => 'already have a password they chose',
+            CredentialBulkSender::SKIP_RECENT => 'already have credentials on the way or were just sent some',
+            CredentialBulkSender::SKIP_SUSPENDED => 'are suspended',
+        ];
+
+        foreach ($reasons as $key => $words) {
+            if ($count = $result['skipped'][$key] ?? 0) {
+                $parts[] = "Skipped {$count} who {$words}.";
+            }
+        }
+
+        return implode(' ', $parts);
+    }
+
     public function setStatus(Request $request, string $role, User $user, Auditor $auditor): RedirectResponse
     {
         abort_unless($user->role === $this->roleFrom($role), 404);
@@ -265,7 +349,7 @@ class PeopleController extends Controller
 
     protected function table(Role $role): Table
     {
-        return Table::for(User::query()->role($role)->with('profile.college:id,name'))
+        return Table::for(User::query()->role($role)->with(['profile.college:id,name', 'latestCredentialDelivery']))
             ->searchable(['name', 'email', 'mobile'])
             ->defaultSort('-created_at')
             ->exportName($role->value.'s')
@@ -276,6 +360,7 @@ class PeopleController extends Controller
                 Column::make('organisation', $role === Role::Student ? 'College' : 'Company'),
                 Column::make('status', 'Status')->sortable(),
                 Column::make('last_login', 'Last sign in')->sortable(),
+                Column::make('credentials', 'Credentials sent'),
                 Column::make('created_at', 'Added')->sortable(),
             ])
             ->filters([
@@ -284,6 +369,21 @@ class PeopleController extends Controller
                     ->using(fn (Builder $query) => $query->whereNull('last_login_at')),
                 Filter::boolean('must_change_password', 'Still on a temporary password')
                     ->using(fn (Builder $query) => $query->where('must_change_password', true)),
+                Filter::select('credentials', [
+                    'never' => 'Never sent',
+                    'queued' => 'Waiting to go out',
+                    'sent' => 'Last send went out',
+                    'failed' => 'Last send failed',
+                ], 'Credentials')
+                    ->placeholder('Any')
+                    ->using(fn (Builder $query, string $value) => match ($value) {
+                        'never' => $query->whereDoesntHave('credentialDeliveries'),
+                        'queued', 'sent', 'failed' => $query->whereHas(
+                            'latestCredentialDelivery',
+                            fn (Builder $delivery) => $delivery->where('status', $value),
+                        ),
+                        default => $query,
+                    }),
                 Filter::dateRange('created_at', 'Added between'),
             ])
             ->transform(fn (User $user) => [
@@ -294,6 +394,14 @@ class PeopleController extends Controller
                 'organisation' => $user->profile?->college?->name ?? $user->profile?->company,
                 'status' => $user->status->value,
                 'last_login' => $user->last_login_at?->diffForHumans() ?? 'Never',
+                'credentials' => match ($user->latestCredentialDelivery?->status) {
+                    null => 'Never',
+                    'queued' => 'Queued',
+                    'failed' => 'Failed '.$user->latestCredentialDelivery->created_at->diffForHumans(),
+                    'skipped' => 'Skipped '.$user->latestCredentialDelivery->created_at->diffForHumans(),
+                    default => $user->latestCredentialDelivery->created_at->diffForHumans(),
+                },
+                'credentialsFailed' => $user->latestCredentialDelivery?->status === 'failed',
                 'created_at' => $user->created_at->format('j M Y'),
                 'mustChangePassword' => $user->must_change_password,
                 'neverSignedIn' => $user->last_login_at === null,

@@ -30,6 +30,7 @@ class Course extends Model
             'seo' => 'array',
             'is_featured' => 'boolean',
             'is_published' => 'boolean',
+            'is_enrollment_open' => 'boolean',
         ];
     }
 
@@ -185,6 +186,7 @@ class Course extends Model
                 : null,
             'accent' => $this->accent,
             'featured' => $this->is_featured,
+            'enrolmentOpen' => $this->is_enrollment_open,
             'tools' => array_slice($this->tools ?? [], 0, 4),
             'nextBatch' => $next?->toPublicArray(),
         ];

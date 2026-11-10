@@ -11,6 +11,7 @@ use App\Models\Question;
 use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
+use App\Models\QuizAttemptGrant;
 use App\Models\Submission;
 use App\Services\Admin\Auditor;
 use App\Services\Lms\Activity;
@@ -40,8 +41,11 @@ class AssessmentController extends Controller
             'course' => ['id' => $course->id, 'title' => $course->title],
             'modules' => $course->modules()->get(['id', 'title'])
                 ->map(fn (CourseModule $module) => ['value' => $module->id, 'label' => $module->title]),
+            'batches' => $course->batches()->get(['id', 'name'])
+                ->map(fn (Batch $batch) => ['value' => $batch->id, 'label' => $batch->name]),
             'quizzes' => Quiz::query()
                 ->where('course_id', $course->id)
+                ->with('batch:id,name')
                 ->withCount(['questions', 'attempts'])
                 ->get()
                 ->map(fn (Quiz $quiz) => [
@@ -49,6 +53,8 @@ class AssessmentController extends Controller
                     'title' => $quiz->title,
                     'instructions' => $quiz->instructions,
                     'moduleId' => $quiz->course_module_id,
+                    'batchId' => $quiz->batch_id,
+                    'batch' => $quiz->batch?->name,
                     'questions' => $quiz->questions_count,
                     'attempts' => $quiz->attempts_count,
                     'totalMarks' => $quiz->totalMarks(),
@@ -67,7 +73,7 @@ class AssessmentController extends Controller
 
     public function storeQuiz(Request $request, Course $course): RedirectResponse
     {
-        $quiz = Quiz::query()->create($this->quizRules($request) + ['course_id' => $course->id]);
+        $quiz = Quiz::query()->create($this->quizRules($request, $course) + ['course_id' => $course->id]);
 
         return redirect()
             ->route('admin.quizzes.edit', [$course->id, $quiz->id])
@@ -111,7 +117,7 @@ class AssessmentController extends Controller
     {
         abort_unless($quiz->course_id === $course->id, 404);
 
-        $quiz->fill($this->quizRules($request))->save();
+        $quiz->fill($this->quizRules($request, $course))->save();
 
         return back()->with('success', 'Quiz saved.');
     }
@@ -201,7 +207,7 @@ class AssessmentController extends Controller
 
     public function storeAssignment(Request $request, Course $course): RedirectResponse
     {
-        Assignment::query()->create($this->assignmentRules($request) + ['course_id' => $course->id]);
+        Assignment::query()->create($this->assignmentRules($request, $course) + ['course_id' => $course->id]);
 
         return back()->with('success', 'Assignment added.');
     }
@@ -210,7 +216,7 @@ class AssessmentController extends Controller
     {
         abort_unless($assignment->course_id === $course->id, 404);
 
-        $assignment->fill($this->assignmentRules($request))->save();
+        $assignment->fill($this->assignmentRules($request, $course))->save();
 
         return back()->with('success', 'Assignment saved.');
     }
@@ -299,7 +305,10 @@ class AssessmentController extends Controller
                 'marks' => $submission->marks,
                 'feedback' => $submission->feedback,
                 'evaluatedBy' => $submission->evaluator?->name,
+                'version' => $submission->version,
             ],
+            // What they handed in before, and what they were told about it.
+            'history' => $submission->versions()->with('evaluator:id,name')->get()->map->toHistoryArray(),
             'assignment' => [
                 'id' => $submission->assignment_id,
                 'title' => $submission->assignment->title,
@@ -311,7 +320,7 @@ class AssessmentController extends Controller
         ]);
     }
 
-    public function evaluate(Request $request, Submission $submission, Activity $activity): RedirectResponse
+    public function evaluate(Request $request, Submission $submission, Activity $activity, Auditor $auditor): RedirectResponse
     {
         $validated = $this->validatedInput($request, [
             'marks' => ['required', 'integer', 'min:0', 'max:'.$submission->assignment->max_marks],
@@ -327,7 +336,12 @@ class AssessmentController extends Controller
             'status' => $validated['status'],
             'evaluated_by' => $request->user()->id,
             'evaluated_at' => now(),
-        ])->save();
+        ]);
+
+        // Re-marking, or sending marked work back, replaces a mark and its
+        // feedback on this version. The audit log keeps what they were.
+        $auditor->updated($submission, label: $submission->user->name.' — '.$submission->assignment->title);
+        $submission->save();
 
         $activity->record($submission->user, 'assignment.marked', $submission->assignment, [
             'title' => $submission->assignment->title,
@@ -341,13 +355,52 @@ class AssessmentController extends Controller
                 : 'Marked.');
     }
 
-    public function downloadSubmissionFile(Submission $submission, int $index): StreamedResponse
+    public function downloadSubmissionFile(Request $request, Submission $submission, int $index): StreamedResponse
     {
-        $file = ($submission->files ?? [])[$index] ?? null;
+        $files = $request->filled('version')
+            ? $submission->versions()->where('version', (int) $request->query('version'))->firstOrFail()->files
+            : $submission->files;
+
+        $file = ($files ?? [])[$index] ?? null;
 
         abort_unless($file && Storage::disk('private')->exists($file['path']), 404);
 
         return Storage::disk('private')->download($file['path'], $file['name']);
+    }
+
+    /**
+     * Give one student more attempts at a quiz: a power cut mid attempt, a
+     * medical absence, a resit agreed after a review. Their earlier attempts
+     * stand; this only widens how many they may make.
+     */
+    public function grantAttempts(Request $request, QuizAttempt $attempt, Auditor $auditor): RedirectResponse
+    {
+        $validated = $this->validatedInput($request, [
+            'extra_attempts' => ['required', 'integer', 'min:1', 'max:5'],
+            'reason' => ['required', 'string', 'min:5', 'max:500'],
+        ], ['reason.required' => 'Say why. It is kept with the grant and in the audit log.']);
+
+        $attempt->loadMissing(['quiz', 'user']);
+
+        $grant = QuizAttemptGrant::query()->create([
+            'quiz_id' => $attempt->quiz_id,
+            'user_id' => $attempt->user_id,
+            'extra_attempts' => $validated['extra_attempts'],
+            'reason' => $validated['reason'],
+            'granted_by' => $request->user()->id,
+        ]);
+
+        $auditor->action('quiz.attempts_granted', $grant, [
+            'quiz' => $attempt->quiz->title,
+            'student' => $attempt->user->name,
+            'extra_attempts' => $grant->extra_attempts,
+            'reason' => $grant->reason,
+        ], "{$attempt->user->name} on {$attempt->quiz->title}");
+
+        $left = $attempt->quiz->attemptsLeftFor($attempt->user);
+
+        return back()->with('success', "{$attempt->user->name} can now make {$left} more ".str('attempt')->plural($left).'.'
+            .($attempt->quiz->isOpen() ? '' : ' The quiz is closed, so they cannot use it until it reopens.'));
     }
 
     public function attempt(QuizAttempt $attempt): Response
@@ -365,7 +418,25 @@ class AssessmentController extends Controller
                 'totalMarks' => $attempt->total_marks,
                 'percent' => (float) $attempt->percent,
                 'needsReview' => $attempt->needs_review,
+                'attemptNumber' => $attempt->attempt_number,
+                'attemptsUsed' => $attempt->quiz->attemptsUsedBy($attempt->user),
+                'attemptsAllowed' => $attempt->quiz->attemptsAllowedFor($attempt->user),
+                'quizOpen' => $attempt->quiz->isOpen(),
             ],
+            'grants' => QuizAttemptGrant::query()
+                ->where('quiz_id', $attempt->quiz_id)
+                ->where('user_id', $attempt->user_id)
+                ->with('grantor:id,name')
+                ->latest('id')
+                ->get()
+                ->map(fn (QuizAttemptGrant $grant) => [
+                    'id' => $grant->id,
+                    'extra' => $grant->extra_attempts,
+                    'reason' => $grant->reason,
+                    'by' => $grant->grantor?->name,
+                    'on' => $grant->created_at->format('j M Y'),
+                ]),
+            'canGrant' => request()->user()->hasPermission('students.update'),
             'answers' => $attempt->answers->map(fn (QuizAnswer $answer) => [
                 'id' => $answer->id,
                 'question' => $answer->question->body,
@@ -399,12 +470,14 @@ class AssessmentController extends Controller
     /* ----------------------------------------------------------- helpers */
 
     /** @return array<string, mixed> */
-    protected function quizRules(Request $request): array
+    protected function quizRules(Request $request, Course $course): array
     {
         return $this->validatedInput($request, [
             'title' => ['required', 'string', 'max:160'],
             'instructions' => ['nullable', 'string', 'max:2000'],
-            'course_module_id' => ['nullable', 'integer'],
+            'course_module_id' => ['nullable', 'integer', Rule::exists('course_modules', 'id')->where('course_id', $course->id)],
+            // One batch of this course, or every batch when left empty.
+            'batch_id' => ['nullable', 'integer', Rule::exists('batches', 'id')->where('course_id', $course->id)],
             'time_limit_minutes' => ['nullable', 'integer', 'min:1', 'max:600'],
             'attempts_allowed' => ['required', 'integer', 'min:1', 'max:20'],
             'pass_percent' => ['required', 'integer', 'min:1', 'max:100'],
@@ -442,15 +515,15 @@ class AssessmentController extends Controller
     }
 
     /** @return array<string, mixed> */
-    protected function assignmentRules(Request $request): array
+    protected function assignmentRules(Request $request, Course $course): array
     {
         return $this->validatedInput($request, [
             'title' => ['required', 'string', 'max:160'],
             'brief' => ['required', 'string', 'max:20000'],
             'checklist' => ['array', 'max:20'],
             'checklist.*' => ['string', 'max:200'],
-            'course_module_id' => ['nullable', 'integer'],
-            'batch_id' => ['nullable', 'integer'],
+            'course_module_id' => ['nullable', 'integer', Rule::exists('course_modules', 'id')->where('course_id', $course->id)],
+            'batch_id' => ['nullable', 'integer', Rule::exists('batches', 'id')->where('course_id', $course->id)],
             'due_at' => ['nullable', 'date'],
             'max_marks' => ['required', 'integer', 'min:1', 'max:1000'],
             'allow_late' => ['boolean'],

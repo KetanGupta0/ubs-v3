@@ -78,7 +78,7 @@ class ResultCard
     protected function quizzes(Enrollment $enrolment): array
     {
         $quizzes = Quiz::query()
-            ->where('course_id', $enrolment->course_id)
+            ->forEnrolment($enrolment)
             ->published()
             ->get();
 

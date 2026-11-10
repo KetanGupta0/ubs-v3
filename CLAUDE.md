@@ -30,6 +30,14 @@ written for it.
 
 Visit `/design` in a non production environment for the live component gallery.
 
+**Production is Hostinger shared hosting.** No long-running processes, no root, no
+system binaries, capped mail and entry processes. The queue runs from the
+scheduler (`QUEUE_FROM_SCHEDULER=true` plus one cron entry), realtime goes through
+a hosted Pusher-protocol service instead of Reverb, video lives on a video host and
+bulk mail goes through a transactional provider. Read
+[`docs/HOSTING.md`](docs/HOSTING.md) before adding anything that needs a process, a
+binary or a lot of bandwidth.
+
 ## Conventions
 
 **Frontend paths are lowercase.** `resources/js/pages`, `components`, `layouts`,
@@ -157,6 +165,12 @@ Rules for the marketing pages:
   `credential_deliveries` row per channel. A delivery failure marks the row failed
   and never rolls back the account: a provider being down is not a reason to lose
   a record somebody just typed in.
+- **A bulk credential send never touches a password somebody chose.** Only accounts
+  on a temporary password, or with none (Google only), are sent to, whether or not
+  they have signed in here: accounts brought across from the old site keep their
+  own password and the old site never recorded sign ins. Each send is recorded as
+  queued the moment it is planned, so a second click finds it, and the job checks
+  again before it goes. `App\Services\Admin\CredentialBulkSender` holds the rule.
 - **Every change goes through `App\Services\Admin\Auditor`.** It stores only what
   actually moved, as before and after, with passwords, secrets and tokens replaced
   by dots. There is no route to edit or delete an entry.
@@ -164,6 +178,10 @@ Rules for the marketing pages:
   shows configured or not configured and nothing else. Keys belong in the
   environment; defaults live in `config/company.php`, never `env()` at the point
   of use.
+- **`UiSelect` takes options either way:** the `options` prop, or `<option>`
+  elements written inside it. Until November 2026 it had no slot, so every select
+  written the second way rendered empty: question types, lesson prerequisites,
+  assignment batches, report filters and the student's batch choice on joining.
 - **A label reaches its control through `UiFormField`**, which provides the id and
   `aria-describedby` and the inputs inject it. Do not pass an id into `UiInput`
   by hand, and keep `inheritAttrs: false` on controls that render a wrapper, or
@@ -232,6 +250,14 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   answers, and says it was withdrawn.
 - **Course fees are inclusive of tax**, because that is the figure the page
   showed. `Money::taxableWithin()` works the taxable amount back out of it.
+- **A fee paid in full opens the course in one place,** `Invoicer::recordPayment()`,
+  which every payment passes through: online, webhook or recorded by hand. Until
+  November 2026 only the online path did it, so a bank transfer recorded by an
+  administrator left the paid lessons sealed.
+- **Enrolment changes go through `Enroller`**: enrol, move between batches of the
+  same course, change status, waive a fee. Moving or dropping recounts seats on
+  both batches and puts both batch groups in step. A part-paid fee cannot be
+  waived; settle or refund it first.
 - **Warnings climb one rung at a time** — notice, warning, escalation — and the
   student is told every time. The private note is for us and never reaches them.
 - `/verify` answers identically for a code that never existed and one that was

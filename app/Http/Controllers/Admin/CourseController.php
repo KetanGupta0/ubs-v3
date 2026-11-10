@@ -101,6 +101,7 @@ class CourseController extends Controller
                 'accent' => $course->accent,
                 'is_featured' => $course->is_featured,
                 'is_published' => $course->is_published,
+                'is_enrollment_open' => $course->is_enrollment_open,
                 'sort_order' => $course->sort_order,
                 'publicUrl' => $course->visibility === 'public'
                     ? ($course->isInternship() ? "/internships/{$course->slug}" : "/training/{$course->slug}")
@@ -130,6 +131,18 @@ class CourseController extends Controller
         $course->save();
 
         return back()->with('success', $course->is_published ? 'Published.' : 'Unpublished.');
+    }
+
+    /** Open or close sign ups without taking the course off the site. */
+    public function toggleEnrolment(Course $course, Auditor $auditor): RedirectResponse
+    {
+        $course->is_enrollment_open = ! $course->is_enrollment_open;
+        $auditor->updated($course);
+        $course->save();
+
+        return back()->with('success', $course->is_enrollment_open
+            ? 'Enrolment is open. Students can sign up again.'
+            : 'Enrolment is closed. The course stays on the site, and you can still enrol people by hand.');
     }
 
     public function destroy(Course $course, Auditor $auditor): RedirectResponse
@@ -192,6 +205,7 @@ class CourseController extends Controller
             'accent' => ['required', Rule::in($this->accents())],
             'is_featured' => ['boolean'],
             'is_published' => ['boolean'],
+            'is_enrollment_open' => ['boolean'],
             'sort_order' => ['nullable', 'integer', 'min:0', 'max:9999'],
         ], [
             'slug.regex' => 'Use lowercase letters, numbers and hyphens only.',
@@ -253,6 +267,7 @@ class CourseController extends Controller
                     $course->visibility === 'lms_only' => 'LMS only',
                     default => 'Live',
                 },
+                'enrolmentOpen' => $course->is_enrollment_open,
                 'published' => $course->is_published,
                 'batches' => $course->batches_count,
                 'updated_at' => $course->updated_at?->diffForHumans(),
