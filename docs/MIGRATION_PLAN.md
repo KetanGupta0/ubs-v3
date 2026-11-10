@@ -185,7 +185,7 @@ exactly, and every Razorpay payment id must appear exactly once.
 | v2 | v3 | Notes |
 |---|---|---|
 | `support_tickets` + `ticket_replies` | depends on decision D2 | v3 tickets belong to clients (`client_id`, contracts, SLA). Student tickets need either a student-capable ticket or an import into chat. `is_internal` replies stay staff-only either way. |
-| `reviews` | new `course_reviews` (§5) | Imported with status. Only an `approved` review can be promoted to a homepage `testimonial`, by a person, because of the no-fabricated-proof rule. |
+| `reviews` | `course_reviews` (built 2026-11-10) | Imported with status. Only an `approved` review can be promoted to a homepage `testimonial`, by a person, because of the no-fabricated-proof rule. |
 | `contact_queries` | `leads` | `status unread→new`, `read→contacted`, `replied→contacted`, `archived→lost`; `admin_note` → `lead_notes`. `reference` generated. |
 
 ### Content (CMS)

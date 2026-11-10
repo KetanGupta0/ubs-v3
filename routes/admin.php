@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\PeopleController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProposalController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SolutionController;
@@ -317,6 +318,17 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::get('marking/submissions/{submission}/files/{index}', [AssessmentController::class, 'downloadSubmissionFile'])->name('marking.submission.file');
             Route::get('marking/attempts/{attempt}', [AssessmentController::class, 'attempt'])->name('marking.attempt');
             Route::post('marking/attempts/{attempt}/answers/{answer}', [AssessmentController::class, 'markAnswer'])->name('marking.answer');
+        });
+
+        /* ---------------------------------------------------------- reviews */
+        Route::middleware('permission:catalogue.view')->group(function () {
+            Route::get('reviews', [ReviewController::class, 'index'])->name('reviews.index');
+        });
+
+        Route::middleware('permission:catalogue.manage')->group(function () {
+            Route::put('reviews/{review}/status', [ReviewController::class, 'moderate'])->name('reviews.moderate');
+            Route::put('reviews/{review}/reply', [ReviewController::class, 'reply'])->name('reviews.reply');
+            Route::post('reviews/{review}/testimonial', [ReviewController::class, 'promote'])->name('reviews.promote');
         });
 
         /* ------------------------------------------------------ enrolments */

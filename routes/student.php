@@ -32,6 +32,10 @@ Route::middleware(['auth', 'password.owned', 'role:student'])
         Route::get('courses/{course}', [CourseController::class, 'show'])
             ->whereNumber('course')
             ->name('courses.show');
+        Route::post('courses/{course}/review', [CourseController::class, 'review'])
+            ->whereNumber('course')
+            ->middleware('throttle:10,1')
+            ->name('courses.review');
         Route::get('courses/{course}/materials', [CourseController::class, 'materials'])
             ->whereNumber('course')
             ->name('courses.materials');

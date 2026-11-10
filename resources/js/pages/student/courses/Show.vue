@@ -18,10 +18,12 @@ import UiBadge from '@/components/UI/UiBadge.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import UiProgress from '@/components/UI/UiProgress.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
+import CourseReviewCard from '@/components/Student/CourseReviewCard.vue';
 
 const props = defineProps({
     course: { type: Object, required: true },
     enrolment: { type: Object, required: true },
+    review: { type: Object, default: null },
     modules: { type: Array, default: () => [] },
     quizzes: { type: Array, default: () => [] },
     assignments: { type: Array, default: () => [] },
@@ -215,6 +217,8 @@ const lockIcons = {
                     </ul>
                 </UiCard>
             </div>
+
+            <CourseReviewCard v-if="enrolment.status !== 'dropped'" :course-id="course.id" :review="review" />
         </div>
     </AppLayout>
 </template>
