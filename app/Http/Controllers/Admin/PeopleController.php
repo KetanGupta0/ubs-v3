@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\Admin\AccountCreator;
 use App\Services\Admin\Auditor;
 use App\Services\Admin\CredentialBulkSender;
+use App\Services\Lms\StudentRecord;
 use App\Support\Identifier;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
@@ -116,7 +117,7 @@ class PeopleController extends Controller
             );
     }
 
-    public function show(string $role, User $user): Response
+    public function show(Request $request, string $role, User $user, StudentRecord $record): Response
     {
         $roleEnum = $this->roleFrom($role);
         abort_unless($user->role === $roleEnum, 404);
@@ -155,6 +156,11 @@ class PeopleController extends Controller
                 ],
             ],
             'colleges' => $roleEnum === Role::Student ? $this->collegeOptions() : [],
+            // Their whole learning record, in one place, for students only.
+            'record' => $roleEnum === Role::Student
+                ? $record->for($user, withPayments: $request->user()->hasPermission('billing.view'))
+                : null,
+            'canSeeBilling' => $request->user()->hasPermission('billing.view'),
             'deliveries' => CredentialDelivery::query()
                 ->where('user_id', $user->id)
                 ->with('creator:id,name')

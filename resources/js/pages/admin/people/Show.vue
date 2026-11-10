@@ -17,6 +17,7 @@ import UiCombobox from '@/components/UI/UiCombobox.vue';
 import UiFormField from '@/components/UI/UiFormField.vue';
 import UiModal from '@/components/UI/UiModal.vue';
 import UiAvatar from '@/components/UI/UiAvatar.vue';
+import StudentRecord from '@/components/Admin/StudentRecord.vue';
 
 const props = defineProps({
     role: { type: String, required: true },
@@ -24,6 +25,8 @@ const props = defineProps({
     person: { type: Object, required: true },
     colleges: { type: Array, default: () => [] },
     deliveries: { type: Array, default: () => [] },
+    record: { type: Object, default: null },
+    canSeeBilling: { type: Boolean, default: false },
 });
 
 const isStudent = props.role === 'student';
@@ -102,6 +105,10 @@ function resend() {
 
             <div class="grid gap-5 lg:grid-cols-3">
                 <div class="space-y-5 lg:col-span-2">
+                    <!-- What they are on and how it is going comes first: it is
+                         what a student's profile is usually opened for. -->
+                    <StudentRecord v-if="record" :record="record" :can-see-billing="canSeeBilling" />
+
                     <form class="space-y-5" @submit.prevent="save">
                         <FormSection title="Account">
                             <UiFormField label="Full name" required :error="form.errors.name">
@@ -205,6 +212,7 @@ function resend() {
                             </UiButton>
                         </div>
                     </form>
+
                 </div>
 
                 <div class="space-y-5">

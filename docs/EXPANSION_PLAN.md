@@ -364,6 +364,7 @@ These are required before v2 is switched off.
 - *L1 built 2026-11-10: the Enrolments screen (`/admin/enrolments`), covering enrol by hand, move between batches, change status, record a payment made outside the gateway, and waive a fee with a reason.*
 - *Building it found that an offline payment did not open a paid course; that is fixed in `Invoicer::recordPayment()`.*
 - *L11 built 2026-11-10: "Enrolment open" per course, set on the course form or from the course list. Closing it keeps the course on the site, refuses self sign-up, and still lets staff enrol by hand; the public pages and the student catalogue say it is closed.*
+- *L2 (most of it) built 2026-11-10: a learning record on the student's admin profile, with enrolments and their results (from `ResultCard`), payments (left out on the server for staff without billing access), certificates and warnings. Suspend and send-new-credentials already existed. Signing in as the student (audited impersonation) is still to do.*
 
 **Improvements for the learning experience:**
 
