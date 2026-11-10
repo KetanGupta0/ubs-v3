@@ -30,6 +30,14 @@ written for it.
 
 Visit `/design` in a non production environment for the live component gallery.
 
+**Production is Hostinger shared hosting.** No long-running processes, no root, no
+system binaries, capped mail and entry processes. The queue runs from the
+scheduler (`QUEUE_FROM_SCHEDULER=true` plus one cron entry), realtime goes through
+a hosted Pusher-protocol service instead of Reverb, video lives on a video host and
+bulk mail goes through a transactional provider. Read
+[`docs/HOSTING.md`](docs/HOSTING.md) before adding anything that needs a process, a
+binary or a lot of bandwidth.
+
 ## Conventions
 
 **Frontend paths are lowercase.** `resources/js/pages`, `components`, `layouts`,

@@ -17,6 +17,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Work the queue from the scheduler
+    |--------------------------------------------------------------------------
+    |
+    | Shared hosting (the live site is on Hostinger shared hosting) cannot keep
+    | a `queue:work` process running. With this on, the scheduler, driven by a
+    | one-minute cron entry, drains the queue every minute and exits before
+    | the next run starts. Leave it off where a real worker runs.
+    |
+    */
+
+    'from_scheduler' => (bool) env('QUEUE_FROM_SCHEDULER', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Queue Connections
     |--------------------------------------------------------------------------
     |

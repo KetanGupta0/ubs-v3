@@ -5,6 +5,14 @@ Status: **plan only**. Nothing here is built. Companion to `docs/MIGRATION_PLAN.
 Every rule in `CLAUDE.md` applies unless this document says it changes, and where it
 changes a rule it says so in **bold**.
 
+**Hosting.** Production is Hostinger shared hosting (owner, 2026-11-10). Each step
+below has to fit `docs/HOSTING.md`. Where a feature needs something the shared plan
+cannot run, it uses a managed service reached over HTTPS:
+- live video uses a managed media relay or a separate VPS
+- realtime uses a hosted Pusher-protocol service
+- bulk mail uses a transactional provider
+- video files live on a video host
+
 Requirements came from the owner on 2026-11-10. Each section starts with what v3
 already does, so the work is only the gap.
 
@@ -628,8 +636,9 @@ option is a lockdown browser.
 **Live camera, without recording.**
 
 - **Media path:**
-  - The student's browser sends camera and microphone over **WebRTC** to a self-hosted
-    **media relay**, an SFU such as LiveKit.
+  - The student's browser sends camera and microphone over **WebRTC** to a
+    **media relay**, an SFU such as LiveKit. It is managed, or on a separate VPS, because
+    shared hosting cannot run one (X12).
   - The SFU forwards the streams to the proctor's screen and **stores nothing**.
   - A TURN server is needed for students behind strict networks.
 - **Laravel's part:**
@@ -774,7 +783,9 @@ the middle of it.
 | X4 | Live camera proctoring | **Decided 2026-11-10:** yes, live only, never recorded (§9.1a). Still open: students under 18 (guardian consent) and students without a webcam. |
 | X10 | Safe Exam Browser for final assessments, on top of browser lockdown? | Yes for final assessments; plain browser lockdown for regular quizzes. |
 | X11 | Auto-submit after N full-screen or tab exits, or leave it to the reviewer? | Leave it to the reviewer by default; allow the rule per quiz, shown to students before they start. |
-| X12 | Media relay: self-host LiveKit (with a TURN server) or a managed service? | Self-host on a separate server; recording off at the configuration level. |
+| X12 | Media relay for live proctoring | **Not on the shared plan** (it cannot run an SFU or TURN). A managed service (for example LiveKit Cloud) or a separate small VPS, with recording off in its configuration. Ask before step H. |
+| X13 | Hosted realtime service (Pusher protocol) for chat and proctor status | Needed before cutover, since Reverb cannot run on shared hosting. The client switch is built; choose the service before step C. |
+| X14 | Hostinger plan: SSH access, PHP 8.4, MySQL version, mail and process limits | Check in hPanel before step C; the deploy steps in `docs/HOSTING.md` depend on SSH. |
 | X5 | Registration form with an existing email: confirm first, or add directly? | Confirm first. Otherwise anyone can enrol anyone. |
 | X6 | Credentials vault for client handover: build it? | Only if the team hands over credentials through the platform today; it is a security surface. |
 | X7 | Festival list: which occasions, and do enquiry senders receive greetings? | National days to everyone who has not opted out; festivals switchable by the admin; enquiry senders included, with unsubscribe. |

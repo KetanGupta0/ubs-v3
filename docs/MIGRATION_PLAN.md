@@ -307,10 +307,10 @@ Run after every import, printed and saved:
 ## 9. Cutover runbook (outline)
 
 1. Announce a window to students two days ahead (email + notice on v2).
-2. Put v2 in maintenance mode; stop its queue and scheduler. Disable the Razorpay webhook
+2. Put v2 in maintenance mode; disable its cron entries in hPanel (shared hosting has no worker to stop). Disable the Razorpay webhook
    to v2, note the time.
 3. Final dump + `storage/` sync.
-4. `legacy:import` (real) → `legacy:reconcile`. Stop if any difference is unexplained.
+4. `legacy:import` (real) → `legacy:reconcile`, over SSH from the command line (web time limits on shared hosting would cut it off). Stop if any difference is unexplained.
 5. Point Razorpay webhooks at v3; fetch any payments captured during the window from the
    Razorpay dashboard and reconcile by hand.
 6. Switch DNS / vhost. Enable the v2 → v3 redirect map:
