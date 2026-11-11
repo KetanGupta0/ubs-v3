@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\EnrolmentController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\LegalDocumentController;
+use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\PeopleController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProposalController;
@@ -353,6 +354,12 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             // POST so a photo can travel with the form.
             Route::post('team/{member:id}', [TeamMemberController::class, 'update'])->name('team.update');
             Route::delete('team/{member:id}', [TeamMemberController::class, 'destroy'])->name('team.destroy');
+
+            Route::get('media', [MediaController::class, 'index'])->name('media.index');
+            Route::get('media/picker', [MediaController::class, 'picker'])->name('media.picker');
+            Route::post('media', [MediaController::class, 'store'])->name('media.store');
+            Route::put('media/{media:id}', [MediaController::class, 'update'])->name('media.update');
+            Route::delete('media/{media:id}', [MediaController::class, 'destroy'])->name('media.destroy');
 
             Route::get('menus', [SiteMenuController::class, 'index'])->name('menus.index');
             Route::put('menus/{menu:key}', [SiteMenuController::class, 'update'])->name('menus.update');

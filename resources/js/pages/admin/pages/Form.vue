@@ -8,7 +8,7 @@
 import { computed, ref } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import {
-    ArrowLeft, ArrowUp, ArrowDown, Trash2, Heading, AlignLeft, Image, Megaphone, HelpCircle, Plus, Eye, EyeOff,
+    ArrowLeft, ArrowUp, ArrowDown, Trash2, Heading, AlignLeft, Image, Images, Megaphone, HelpCircle, Plus, Eye, EyeOff,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -21,6 +21,7 @@ import UiTextarea from '@/components/UI/UiTextarea.vue';
 import UiSelect from '@/components/UI/UiSelect.vue';
 import UiSwitch from '@/components/UI/UiSwitch.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
+import MediaPicker from '@/components/Admin/MediaPicker.vue';
 
 const props = defineProps({
     page: { type: Object, default: null },
@@ -59,6 +60,19 @@ function move(index, by) {
     if (target < 0 || target >= form.blocks.length) return;
     const [block] = form.blocks.splice(index, 1);
     form.blocks.splice(target, 0, block);
+}
+
+/* The picture block the library picker is open for, or null. */
+const pickingFor = ref(null);
+
+function useLibraryPicture(item) {
+    const block = pickingFor.value;
+    if (!block) return;
+    block.src = item.path;
+    block.previewUrl = item.url;
+    block.upload = null;
+    // The library's description is a starting point; the page may say more.
+    if (!block.alt) block.alt = item.alt;
 }
 
 function choosePicture(block, event) {
@@ -160,8 +174,15 @@ const adding = ref(false);
 
                         <div v-else-if="block.type === 'image'" class="space-y-3">
                             <img v-if="block.previewUrl" :src="block.previewUrl" alt="" class="max-h-48 rounded-lg border" style="border-color: var(--border-subtle)">
-                            <UiFormField label="Picture" hint="JPG, PNG or WebP under 5 MB. It is resized to 1600 px wide and its metadata removed." :error="err(index, 'upload')">
-                                <input type="file" accept="image/jpeg,image/png,image/webp" class="block text-sm" @change="choosePicture(block, $event)">
+                            <UiFormField label="Picture" hint="Choose one from the media library, or upload a JPG, PNG or WebP under 8 MB. An upload is resized to 1600 px wide, its metadata removed, and it joins the library." :error="err(index, 'upload')">
+                                <div class="flex flex-wrap items-center gap-3">
+                                    <UiButton variant="secondary" size="sm" @click="pickingFor = block">
+                                        <template #leading><Images class="h-3.5 w-3.5" /></template>
+                                        Choose from library
+                                    </UiButton>
+                                    <span class="text-xs" style="color: var(--text-muted)">or</span>
+                                    <input type="file" accept="image/jpeg,image/png,image/webp" class="block text-sm" @change="choosePicture(block, $event)">
+                                </div>
                             </UiFormField>
                             <UiFormField label="Description for screen readers" required :error="err(index, 'alt')">
                                 <UiInput v-model="block.alt" placeholder="Students presenting their projects to the panel" />
@@ -234,5 +255,6 @@ const adding = ref(false);
                 </div>
             </form>
         </div>
+        <MediaPicker :open="pickingFor !== null" @close="pickingFor = null" @select="useLibraryPicture" />
     </AppLayout>
 </template>

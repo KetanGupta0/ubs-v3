@@ -173,7 +173,10 @@ Rules for the marketing pages:
   refused, and buttons go to a path on this site or an `https://` address only.
   Pages live at `/pages/{slug}` (v2's path too), 404 until published, can be
   previewed by staff with `noindex`, and published indexable ones are in the
-  sitemap. `content.manage` is the permission.
+  sitemap. `content.manage` is the permission. A picture block takes a
+  picture from the media library (`Media`, `/admin/media`) or an upload, which
+  joins the library once the whole page is valid. Every library picture has a
+  description, and one a page still shows cannot be deleted.
 - **A legal document is versions, and a published version is permanent.** Privacy,
   terms and refunds live in `legal_documents` with every version in
   `legal_document_versions`; `LegalDocumentVersion` refuses to change or delete a

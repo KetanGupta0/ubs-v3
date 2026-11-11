@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Media;
 use App\Models\Page;
 use App\Services\Admin\Auditor;
-use App\Support\ImageUpload;
 use App\Support\Seo;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
@@ -31,6 +31,9 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
  */
 class SitePageController extends Controller
 {
+    /** @var array<int, array{0: UploadedFile, 1: ?string}> Pictures to store once the page is valid. */
+    protected array $pendingUploads = [];
+
     public function index(Request $request): Response|HttpResponse
     {
         $table = Table::for(Page::query())
@@ -228,6 +231,12 @@ class SitePageController extends Controller
             throw ValidationException::withMessages($errors);
         }
 
+        // A picture uploaded in the editor goes into the media library, so it
+        // can be used again on another page.
+        foreach ($this->pendingUploads as $index => [$upload, $alt]) {
+            $clean[$index]['src'] = Media::upload($upload, (string) $alt, $request->user(), "blocks.{$index}.upload")->path;
+        }
+
         return $clean;
     }
 
@@ -249,28 +258,33 @@ class SitePageController extends Controller
         $key = "blocks.{$index}";
         $upload = $request->file("blocks.{$index}.upload");
         $src = $block['src'] ?? null;
+        $alt = $this->text($block, 'alt', 200, true, "{$key}.alt", $errors);
 
-        // An existing picture can only be one this page editor stored.
-        if ($src !== null && ! preg_match('#^pages/[0-9a-f-]{36}\.(jpg|png)$#', (string) $src)) {
+        // An existing picture can only be one from the media library, or one
+        // this editor stored before the library existed.
+        $fromLibrary = is_string($src) && preg_match(Media::PATH_PATTERN, $src)
+            && Media::query()->where('path', $src)->exists();
+
+        if (! $fromLibrary && ! (is_string($src) && preg_match('#^pages/[0-9a-f-]{36}\.(jpg|png)$#', $src))) {
             $src = null;
         }
 
         if ($upload instanceof UploadedFile) {
-            if ($upload->getSize() > 5 * 1024 * 1024) {
-                $errors["{$key}.upload"] = 'Keep pictures under 5 MB.';
+            if ($upload->getSize() > 8 * 1024 * 1024) {
+                $errors["{$key}.upload"] = 'Keep pictures under 8 MB.';
             } else {
-                $src = ImageUpload::store($upload, 'public', 'pages', 1600, 'jpg', "{$key}.upload");
+                // Stored only once the whole page is valid, so a mistake in
+                // another block does not leave a copy in the library.
+                $this->pendingUploads[$index] = [$upload, $alt];
             }
-        }
-
-        if ($src === null && ! isset($errors["{$key}.upload"])) {
+        } elseif ($src === null && ! isset($errors["{$key}.upload"])) {
             $errors["{$key}.upload"] = 'Choose a picture.';
         }
 
         return [
             'type' => 'image',
             'src' => $src,
-            'alt' => $this->text($block, 'alt', 200, true, "{$key}.alt", $errors),
+            'alt' => $alt,
             'caption' => $this->text($block, 'caption', 300, false, "{$key}.caption", $errors),
         ];
     }

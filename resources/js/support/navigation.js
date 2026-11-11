@@ -18,7 +18,7 @@
  */
 import {
     LayoutDashboard, FolderKanban, FileText, Receipt, LifeBuoy, MessagesSquare,
-    KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy, UserCheck, Video, Star, Search, Scale, Contact, PanelTop,
+    KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy, UserCheck, Video, Star, Search, Scale, Contact, PanelTop, Images,
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
     UserPlus, Package, ShieldCheck, Building2, Wrench, HelpCircle, UserCog,
     ScrollText, FileSignature, Files, LifeBuoy as LifeBuoyIcon, Banknote,
@@ -63,6 +63,7 @@ export const navigation = {
         { group: 'Website', label: 'Solutions', icon: Package, href: '/admin/solutions', permission: 'catalogue.view' },
         { group: 'Website', label: 'Services', icon: Wrench, href: '/admin/services', permission: 'catalogue.view' },
         { group: 'Website', label: 'Pages', icon: FileText, href: '/admin/pages', permission: 'content.manage' },
+        { group: 'Website', label: 'Media library', icon: Images, href: '/admin/media', permission: 'content.manage' },
         { group: 'Website', label: 'Site menus', icon: PanelTop, href: '/admin/menus', permission: 'content.manage' },
         { group: 'Website', label: 'Site content', icon: HelpCircle, href: '/admin/content', permission: 'catalogue.view' },
         { group: 'Website', label: 'Team and mentors', icon: Contact, href: '/admin/team', permission: 'content.manage' },

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AuditLog;
+use App\Models\Media;
 use App\Models\Page;
 use App\Models\Permission;
 use App\Models\User;
@@ -119,15 +120,16 @@ it('keeps only the fields a block type allows', function () {
     expect(Page::query()->sole()->blocks)->toBe([['type' => 'heading', 'text' => 'Hi', 'level' => 2]]);
 });
 
-it('stores a picture re-encoded on the public disk, and refuses a path it did not store', function () {
+it('stores a picture re-encoded into the media library, and refuses a path it did not store', function () {
     $this->actingAs($this->owner)->post('/admin/pages', pagePayload([
-        'blocks' => [['type' => 'image', 'alt' => 'The hall', 'upload' => UploadedFile::fake()->image('hall.png', 2400, 1200)]],
+        'blocks' => [['type' => 'image', 'alt' => 'The hall', 'upload' => UploadedFile::fake()->image('hall.jpg', 2400, 1200)]],
     ]))->assertSessionHasNoErrors();
 
     $src = Page::query()->sole()->blocks[0]['src'];
 
-    expect($src)->toMatch('#^pages/[0-9a-f-]{36}\.jpg$#')
-        ->and(getimagesizefromstring(Storage::disk('public')->get($src))[0])->toBe(1600);
+    expect($src)->toMatch('#^media/[0-9a-f-]{36}\.jpg$#')
+        ->and(getimagesizefromstring(Storage::disk('public')->get($src))[0])->toBe(1600)
+        ->and(Media::query()->where('path', $src)->sole()->alt)->toBe('The hall');
 
     $this->actingAs($this->owner)->post('/admin/pages', pagePayload([
         'title' => 'Sneaky',
