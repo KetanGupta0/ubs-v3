@@ -13,7 +13,13 @@ applyStoredTheme();
 const appName = import.meta.env.VITE_APP_NAME || 'Unboundbyte Solutions';
 
 createInertiaApp({
-    title: (title) => (title ? `${title} — ${appName}` : appName),
+    // The site name is added once. A title that already carries it (the home
+    // page, legal pages, pages written in the panel) is left alone; until
+    // November 2026 those showed the name twice in every search result.
+    title: (title) => {
+        if (!title) return appName;
+        return title.includes(appName) ? title : `${title} — ${appName}`;
+    },
     resolve: (name) =>
         resolvePageComponent(`./pages/${name}.vue`, import.meta.glob('./pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
