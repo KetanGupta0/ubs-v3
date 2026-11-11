@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\CredentialsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\EnrolmentController;
+use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\PeopleController;
 use App\Http\Controllers\Admin\ProjectController;
@@ -87,6 +88,13 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
                 ->whereIn('role', ['client', 'student'])
                 ->middleware(['permission:clients.update,students.update', 'throttle:6,1'])
                 ->name('people.bulk-credentials');
+            // See the platform as this person does, read only. Its own
+            // permission: being able to edit a student is not being trusted
+            // to look at everything they can.
+            Route::post('{role}s/{user}/view-as', [ImpersonationController::class, 'start'])
+                ->whereIn('role', ['client', 'student'])
+                ->middleware(['permission:people.view_as', 'throttle:10,1'])
+                ->name('people.view-as');
             Route::put('{role}s/{user}/status', [PeopleController::class, 'setStatus'])
                 ->whereIn('role', ['client', 'student'])
                 ->name('people.status');

@@ -162,6 +162,7 @@ class PeopleController extends Controller
                 : null,
             'canSeeBilling' => $request->user()->hasPermission('billing.view'),
             'canManageStudent' => $roleEnum === Role::Student && $request->user()->hasPermission('students.update'),
+            'canViewAs' => $request->user()->hasPermission('people.view_as'),
             'deliveries' => CredentialDelivery::query()
                 ->where('user_id', $user->id)
                 ->with('creator:id,name')

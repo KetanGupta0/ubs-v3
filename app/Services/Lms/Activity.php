@@ -31,6 +31,24 @@ class Activity
         'course.completed' => 100,
     ];
 
+    /**
+     * Stop recording for the rest of this request.
+     *
+     * Used while a member of staff is viewing the platform as a student: the
+     * pages they open must not be written into that student's record as
+     * things the student did. Held on the container, so it lasts exactly one
+     * request and cannot leak into the next.
+     */
+    public static function mute(): void
+    {
+        app()->instance('lms.activity.muted', true);
+    }
+
+    public static function muted(): bool
+    {
+        return app()->bound('lms.activity.muted');
+    }
+
     public function record(
         User $student,
         string $action,
@@ -39,6 +57,11 @@ class Activity
         ?int $courseId = null,
         ?int $batchId = null,
     ): ActivityLog {
+        if (self::muted()) {
+            // Built but never saved, so callers that read it back still can.
+            return new ActivityLog(['user_id' => $student->id, 'action' => $action]);
+        }
+
         return ActivityLog::query()->create([
             'user_id' => $student->id,
             'course_id' => $courseId,
@@ -67,7 +90,7 @@ class Activity
     ): ?LeaderboardPoint {
         $value = $points ?? self::POINTS[$source] ?? 0;
 
-        if ($value === 0) {
+        if ($value === 0 || self::muted()) {
             return null;
         }
 

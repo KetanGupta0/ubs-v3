@@ -8,7 +8,7 @@
  * student's menu even momentarily.
  */
 import { ref, computed } from 'vue';
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     Bell, LogOut, Settings, ShieldCheck, PanelLeftClose, PanelLeft,
     MoreHorizontal, ChevronRight,
@@ -201,6 +201,26 @@ function isActive(item) {
 
                 <slot name="subheader" />
             </header>
+
+            <!--
+                A member of staff seeing the platform as this person. Always
+                visible and always offering the way back, so it cannot be
+                forgotten about or mistaken for their own account.
+            -->
+            <div
+                v-if="page.props.viewingAs"
+                role="status"
+                class="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2 text-sm sm:px-6"
+                style="background: color-mix(in oklab, var(--color-warn-500) 14%, var(--surface)); border-color: var(--border-subtle); color: var(--text-strong)"
+            >
+                <span>
+                    Viewing as <strong>{{ page.props.viewingAs.name }}</strong>. Read only: nothing you do here changes
+                    anything. Ends at {{ page.props.viewingAs.endsAt }}.
+                </span>
+                <UiButton size="xs" variant="secondary" @click="router.post('/viewing-as/stop')">
+                    Back to {{ page.props.viewingAs.staff ?? 'my account' }}
+                </UiButton>
+            </div>
 
             <main class="flex-1 px-4 py-5 pb-28 sm:px-6 sm:py-6 lg:pb-8">
                 <slot />

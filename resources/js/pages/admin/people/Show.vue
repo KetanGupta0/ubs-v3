@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import {
     ArrowLeft, KeyRound, ShieldCheck, ShieldOff, MailCheck, MailWarning,
-    PhoneCall, Send, CheckCircle2, XCircle, Clock,
+    PhoneCall, Send, CheckCircle2, XCircle, Clock, Eye,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -17,6 +17,7 @@ import UiCombobox from '@/components/UI/UiCombobox.vue';
 import UiFormField from '@/components/UI/UiFormField.vue';
 import UiModal from '@/components/UI/UiModal.vue';
 import UiAvatar from '@/components/UI/UiAvatar.vue';
+import UiTextarea from '@/components/UI/UiTextarea.vue';
 import StudentRecord from '@/components/Admin/StudentRecord.vue';
 
 const props = defineProps({
@@ -28,10 +29,19 @@ const props = defineProps({
     record: { type: Object, default: null },
     canSeeBilling: { type: Boolean, default: false },
     canManageStudent: { type: Boolean, default: false },
+    canViewAs: { type: Boolean, default: false },
 });
 
 const isStudent = props.role === 'student';
 const resending = ref(false);
+
+/* See the platform as this person does, read only, with a reason on record. */
+const viewingAs = ref(false);
+const viewAsForm = useForm({ reason: '' });
+
+function startViewAs() {
+    viewAsForm.post(`/admin/${props.role}s/${props.person.id}/view-as`);
+}
 
 const statusTones = { active: 'success', suspended: 'danger', pending: 'warning' };
 const deliveryIcons = { sent: CheckCircle2, failed: XCircle, queued: Clock };
@@ -88,6 +98,10 @@ function resend() {
                         Back
                     </UiButton>
 
+                    <UiButton v-if="canViewAs" variant="secondary" size="sm" @click="viewingAs = true">
+                        <template #leading><Eye class="h-3.5 w-3.5" /></template>
+                        View as
+                    </UiButton>
                     <UiButton
                         v-if="person.status === 'active'"
                         variant="secondary"
@@ -339,6 +353,31 @@ function resend() {
             <template #footer>
                 <UiButton variant="secondary" @click="resending = false">Cancel</UiButton>
                 <UiButton @click="resend">Generate and send</UiButton>
+            </template>
+        </UiModal>
+
+        <UiModal
+            :open="viewingAs"
+            :title="`View as ${person.name}`"
+            description="You will see exactly what they see. Nothing can be changed, chat stays closed, and it ends by itself after 30 minutes."
+            :persistent="viewAsForm.processing"
+            @close="viewingAs = false"
+        >
+            <form id="view-as-form" @submit.prevent="startViewAs">
+                <UiFormField
+                    label="Why"
+                    required
+                    hint="Recorded in the audit log, and in their own security log, so it is never done behind their back."
+                    :error="viewAsForm.errors.reason"
+                >
+                    <UiTextarea v-model="viewAsForm.reason" :rows="3" placeholder="They say lesson three will not open" />
+                </UiFormField>
+            </form>
+            <template #footer>
+                <UiButton variant="ghost" :disabled="viewAsForm.processing" @click="viewingAs = false">Cancel</UiButton>
+                <UiButton type="submit" form="view-as-form" :loading="viewAsForm.processing" :disabled="viewAsForm.reason.trim().length < 5">
+                    View as {{ person.name }}
+                </UiButton>
             </template>
         </UiModal>
     </AppLayout>

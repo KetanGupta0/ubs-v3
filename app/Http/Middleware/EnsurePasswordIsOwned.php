@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Auth\Impersonation;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,6 +20,12 @@ class EnsurePasswordIsOwned
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
+
+        // A member of staff viewing as this person is not the one who has to
+        // choose their password, and could not: viewing is read only.
+        if (app(Impersonation::class)->active()) {
+            return $next($request);
+        }
 
         if ($user?->must_change_password && ! $this->isExempt($request)) {
             return $request->expectsJson()

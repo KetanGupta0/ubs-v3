@@ -28,6 +28,9 @@ class PermissionSeeder extends Seeder
                 'students.create' => 'Create student accounts',
                 'students.update' => 'Edit students',
             ],
+            'Support access' => [
+                'people.view_as' => 'See the platform as a student or client, read only',
+            ],
             'Leads' => [
                 'leads.view' => 'View the leads inbox',
                 'leads.assign' => 'Assign leads',

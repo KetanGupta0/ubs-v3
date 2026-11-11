@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\Auth\Impersonation;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -38,6 +39,20 @@ class HandleInertiaRequests extends Middleware
                 'name' => config('app.name'),
                 'env' => app()->environment(),
             ],
+
+            /*
+             * Set while a member of staff is viewing the platform as this
+             * person, so every page can say so and offer the way back.
+             */
+            'viewingAs' => function () use ($request) {
+                $impersonation = app(Impersonation::class);
+
+                return $impersonation->active() ? [
+                    'name' => $request->user()?->name,
+                    'staff' => $impersonation->staff()?->name,
+                    'endsAt' => $impersonation->expiresAt()->format('g:i a'),
+                ] : null;
+            },
 
             'auth' => [
                 'user' => fn () => $request->user()?->only([

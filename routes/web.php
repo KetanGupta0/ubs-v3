@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\DesignController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\SearchController;
@@ -30,6 +31,14 @@ Route::middleware(['auth', 'password.owned'])->group(function () {
     Route::get('views/{view}', [SavedViewController::class, 'apply'])->whereNumber('view')->name('views.apply');
     Route::delete('views/{view}', [SavedViewController::class, 'destroy'])->whereNumber('view')->name('views.destroy');
 });
+
+/*
+ * Ending "view as". Outside every panel's own middleware, because the person
+ * signed in at that moment is the student or client being viewed, not staff.
+ */
+Route::post('viewing-as/stop', [ImpersonationController::class, 'stop'])
+    ->middleware('auth')
+    ->name('viewing-as.stop');
 
 /*
  * Checking a certificate.

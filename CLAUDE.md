@@ -112,6 +112,14 @@ Rules that are easy to break and expensive to get wrong:
   challenge token opening the rest of the API.
 - **Google linking requires a verified Google email.** Accepting an unverified
   one hands an existing account to whoever can claim that address.
+- **"View as" is not a sign in, and it is read only.** `App\Services\Auth\Impersonation`
+  lets staff holding `people.view_as` see the platform as a student or client,
+  with a reason that goes into the audit log and into that person's own security
+  log. It skips `LoginPipeline` on purpose (they did not sign in, so their last
+  sign in is untouched). `GuardImpersonation` refuses every non-GET request,
+  sign out included, keeps chat closed because opening it marks messages read,
+  mutes `Activity` so nothing lands in their record, and ends it after 30 minutes.
+  The way back is `POST /viewing-as/stop`.
 - Anything flashed for a single render, such as a two factor secret or a set of
   recovery codes, has to be listed in `HandleInertiaRequests::share` under
   `flash` or it never reaches the client.

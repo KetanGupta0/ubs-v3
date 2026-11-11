@@ -35,4 +35,8 @@ enum AuthEvent: string
     case SessionRevoked = 'session.revoked';
     case TokenIssued = 'token.issued';
     case TokenRevoked = 'token.revoked';
+
+    /** A member of staff looked at the platform as this person, read only. */
+    case ViewedAsStarted = 'viewed_as.started';
+    case ViewedAsStopped = 'viewed_as.stopped';
 }

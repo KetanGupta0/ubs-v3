@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsurePasswordIsOwned;
 use App\Http\Middleware\EnsureUserHasPermission;
 use App\Http\Middleware\EnsureUserHasRole;
+use App\Http\Middleware\GuardImpersonation;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use Illuminate\Foundation\Application;
@@ -23,6 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [
+            // Before anything renders: a member of staff viewing as somebody
+            // else may look and nothing more.
+            GuardImpersonation::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
