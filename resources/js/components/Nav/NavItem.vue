@@ -6,6 +6,8 @@ const props = defineProps({
     item: { type: Object, required: true },
     active: { type: Boolean, default: false },
     collapsed: { type: Boolean, default: false },
+    /** A little tighter, for the grouped admin sidebar, which is long. */
+    dense: { type: Boolean, default: false },
 });
 
 const component = computed(() => (props.item.href ? Link : 'span'));
@@ -17,7 +19,8 @@ const component = computed(() => (props.item.href ? Link : 'span'));
         :href="item.href || undefined"
         :aria-current="active ? 'page' : undefined"
         :class="[
-            'group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors',
+            'group flex items-center gap-3 rounded-xl px-3 text-sm font-medium transition-colors',
+            dense ? 'py-2' : 'py-2.5',
             active
                 ? 'bg-brand-600 text-white shadow-sm'
                 : item.href

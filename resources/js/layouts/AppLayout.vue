@@ -7,11 +7,11 @@
  * reach. The navigation set is chosen by role, so a client never sees a
  * student's menu even momentarily.
  */
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, nextTick } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     Bell, LogOut, Settings, ShieldCheck, PanelLeftClose, PanelLeft,
-    MoreHorizontal, ChevronRight,
+    MoreHorizontal, ChevronRight, ChevronDown,
 } from 'lucide-vue-next';
 
 import BrandLogo from '@/components/Brand/BrandLogo.vue';
@@ -25,7 +25,7 @@ import UiDropdown from '@/components/UI/UiDropdown.vue';
 import UiDropdownItem from '@/components/UI/UiDropdownItem.vue';
 import UiToaster from '@/components/UI/UiToaster.vue';
 import UiButton from '@/components/UI/UiButton.vue';
-import { navigationFor, primaryNavFor, secondaryNavFor, roleLabels } from '@/support/navigation';
+import { navigationFor, primaryNavFor, secondaryNavFor, groupNav, roleLabels } from '@/support/navigation';
 
 const props = defineProps({
     title: { type: String, default: null },
@@ -51,8 +51,51 @@ const items = computed(() => navigationFor(role.value, permissions.value));
 const primary = computed(() => primaryNavFor(role.value, permissions.value));
 const secondary = computed(() => secondaryNavFor(role.value, permissions.value));
 
-const collapsed = ref(false);
+const groups = computed(() => groupNav(items.value));
+const secondaryGroups = computed(() => groupNav(secondary.value));
+
+/*
+ * The sidebar's width and which groups are closed, remembered in this
+ * browser. Every page mounts its own copy of this layout, so without this the
+ * sidebar sprang open again on each click. Read before the first render so it
+ * does not flash open and then shut.
+ */
+function remembered(key, fallback) {
+    try {
+        const value = window.localStorage.getItem(key);
+        return value === null ? fallback : JSON.parse(value);
+    } catch {
+        return fallback;
+    }
+}
+
+function remember(key, value) {
+    try {
+        window.localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+        // Private browsing or storage full: it simply is not remembered.
+    }
+}
+
+const collapsed = ref(remembered('nav.sidebar-collapsed', false) === true);
+const closedGroups = ref(remembered('nav.closed-groups', []));
 const moreOpen = ref(false);
+
+function toggleSidebar() {
+    collapsed.value = !collapsed.value;
+    remember('nav.sidebar-collapsed', collapsed.value);
+}
+
+function toggleGroup(label) {
+    closedGroups.value = closedGroups.value.includes(label)
+        ? closedGroups.value.filter((entry) => entry !== label)
+        : [...closedGroups.value, label];
+    remember('nav.closed-groups', closedGroups.value);
+}
+
+// Icons alone carry no headings, so a narrow sidebar shows every item.
+const isOpen = (group) => collapsed.value || !group.label || !closedGroups.value.includes(group.label);
+const groupId = (label) => `nav-group-${String(label).toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
 
 /*
  * The most specific match wins, and only that one.
@@ -81,6 +124,22 @@ const activeHref = computed(() => {
 function isActive(item) {
     return Boolean(item.href) && item.href === activeHref.value;
 }
+
+/*
+ * The page you are on is never hidden: its group opens, and the sidebar
+ * scrolls to it, because a highlight below the fold tells you nothing.
+ */
+const sidebarNav = ref(null);
+
+onMounted(() => {
+    const activeGroup = items.value.find((item) => isActive(item))?.group;
+
+    if (activeGroup && closedGroups.value.includes(activeGroup)) {
+        toggleGroup(activeGroup);
+    }
+
+    nextTick(() => sidebarNav.value?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest' }));
+});
 </script>
 
 <template>
@@ -100,14 +159,33 @@ function isActive(item) {
                 </Link>
             </div>
 
-            <nav class="flex-1 space-y-1 overflow-y-auto scrollbar-thin p-3" aria-label="Main">
-                <NavItem
-                    v-for="item in items"
-                    :key="item.label"
-                    :item="item"
-                    :active="isActive(item)"
-                    :collapsed="collapsed"
-                />
+            <nav ref="sidebarNav" class="flex-1 overflow-y-auto scrollbar-thin p-3" aria-label="Main">
+                <div v-for="(group, index) in groups" :key="group.label ?? 'all'" :class="index > 0 && 'mt-3'">
+                    <button
+                        v-if="group.label && !collapsed"
+                        type="button"
+                        class="flex w-full items-center justify-between rounded-lg px-3 py-1.5 text-[0.68rem] font-semibold uppercase tracking-wider transition hover:bg-[var(--surface-sunken)]"
+                        style="color: var(--text-muted)"
+                        :aria-expanded="isOpen(group)"
+                        :aria-controls="groupId(group.label)"
+                        @click="toggleGroup(group.label)"
+                    >
+                        <span>{{ group.label }}</span>
+                        <ChevronDown :class="['h-3.5 w-3.5 transition-transform', !isOpen(group) && '-rotate-90']" aria-hidden="true" />
+                    </button>
+                    <div v-else-if="group.label && index > 0" class="mx-2 mb-3 border-t" style="border-color: var(--border-subtle)" />
+
+                    <div v-show="isOpen(group)" :id="group.label ? groupId(group.label) : undefined" class="space-y-0.5">
+                        <NavItem
+                            v-for="item in group.items"
+                            :key="item.label"
+                            :item="item"
+                            :active="isActive(item)"
+                            :collapsed="collapsed"
+                            :dense="Boolean(group.label)"
+                        />
+                    </div>
+                </div>
             </nav>
 
             <div class="border-t p-3" style="border-color: var(--border-subtle)">
@@ -116,7 +194,7 @@ function isActive(item) {
                     class="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm transition hover:bg-[var(--surface-sunken)]"
                     style="color: var(--text-muted)"
                     :aria-label="collapsed ? 'Expand sidebar' : 'Collapse sidebar'"
-                    @click="collapsed = !collapsed"
+                    @click="toggleSidebar"
                 >
                     <component :is="collapsed ? PanelLeft : PanelLeftClose" class="h-[18px] w-[18px] shrink-0" />
                     <span v-if="!collapsed">Collapse</span>
@@ -263,14 +341,25 @@ function isActive(item) {
         </nav>
 
         <UiDrawer :open="moreOpen" title="Menu" side="right" @close="moreOpen = false">
-            <div class="space-y-1">
-                <NavItem
-                    v-for="item in secondary"
-                    :key="item.label"
-                    :item="item"
-                    :active="isActive(item)"
-                    @click="moreOpen = false"
-                />
+            <div class="space-y-4">
+                <section v-for="group in secondaryGroups" :key="group.label ?? 'all'">
+                    <h3
+                        v-if="group.label"
+                        class="mb-1 px-3 text-[0.68rem] font-semibold uppercase tracking-wider"
+                        style="color: var(--text-muted)"
+                    >
+                        {{ group.label }}
+                    </h3>
+                    <div class="space-y-0.5">
+                        <NavItem
+                            v-for="item in group.items"
+                            :key="item.label"
+                            :item="item"
+                            :active="isActive(item)"
+                            @click="moreOpen = false"
+                        />
+                    </div>
+                </section>
             </div>
 
             <template #footer>

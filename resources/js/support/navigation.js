@@ -8,6 +8,11 @@
  * often than anything else on the platform, and a tab is cheaper than a trip
  * through the More sheet twenty times a day.
  *
+ * The admin menu is long, so its items carry a `group`: the sidebar shows each
+ * group under a heading that can be closed (remembered per browser), and the
+ * More sheet uses the same headings. Client and student menus are short
+ * enough to stay one list.
+ *
  * Routes referenced here land in later phases. `href: null` renders the item
  * disabled rather than linking nowhere.
  */
@@ -21,40 +26,51 @@ import {
 } from 'lucide-vue-next';
 
 export const navigation = {
+    /*
+     * Grouped by the work, in the order a working day touches it: what needs
+     * a look today, then clients, then learning, then money, then the public
+     * site, then running the platform. Items keep their group's order inside
+     * it, so a new screen goes next to its neighbours, not at the bottom.
+     */
     admin: [
-        { label: 'Dashboard', icon: LayoutDashboard, href: '/admin', primary: true },
-        { label: 'Leads', icon: Inbox, href: '/admin/leads', permission: 'leads.view', primary: true },
-        { label: 'Clients', icon: Briefcase, href: '/admin/clients', permission: 'clients.view', primary: true },
-        { label: 'Students', icon: Users, href: '/admin/students', permission: 'students.view', primary: true },
-        { label: 'Colleges', icon: Building2, href: '/admin/colleges', permission: 'students.view' },
-        { label: 'Projects', icon: FolderKanban, href: '/admin/projects', permission: 'projects.view' },
-        { label: 'Proposals', icon: FileSignature, href: '/admin/proposals', permission: 'proposals.manage' },
-        { label: 'Documents', icon: Files, href: '/admin/documents', permission: 'documents.manage' },
-        { label: 'Tickets', icon: LifeBuoyIcon, href: '/admin/tickets', permission: 'support.manage' },
-        { label: 'Contracts', icon: ShieldCheck, href: '/admin/contracts', permission: 'support.manage' },
-        { label: 'Solutions', icon: Package, href: '/admin/solutions', permission: 'catalogue.view' },
-        { label: 'Services', icon: Wrench, href: '/admin/services', permission: 'catalogue.view' },
-        { label: 'Courses', icon: GraduationCap, href: '/admin/courses', permission: 'catalogue.view' },
-        { label: 'Batches', icon: CalendarCheck, href: '/admin/batches', permission: 'catalogue.view' },
-        { label: 'Enrolments', icon: UserCheck, href: '/admin/enrolments', permission: 'students.view' },
-        { label: 'Classes', icon: Video, href: '/admin/classes?filter[when]=upcoming', permission: 'students.view' },
-        { label: 'Marking', icon: ClipboardList, href: '/admin/marking', permission: 'students.view' },
-        { label: 'Site content', icon: HelpCircle, href: '/admin/content', permission: 'catalogue.view' },
-        { label: 'Pages', icon: FileText, href: '/admin/pages', permission: 'content.manage' },
-        { label: 'Search wording', icon: Search, href: '/admin/seo', permission: 'content.manage' },
-        { label: 'Legal documents', icon: Scale, href: '/admin/legal', permission: 'legal.manage' },
-        { label: 'Reviews', icon: Star, href: '/admin/reviews?filter[status]=pending', permission: 'catalogue.view' },
-        { label: 'Certificate designs', icon: Award, href: '/admin/certificate-templates', permission: 'catalogue.manage' },
-        { label: 'Billing', icon: Banknote, href: '/admin/billing', permission: 'billing.view' },
-        { label: 'Invoices', icon: Receipt, href: '/admin/invoices', permission: 'billing.view' },
-        { label: 'Subscriptions', icon: RefreshCw, href: '/admin/subscriptions', permission: 'billing.view' },
-        { label: 'API plans', icon: KeyRound, href: '/admin/api-plans', permission: 'api.manage' },
-        { label: 'Chat', icon: MessagesSquare, href: '/chat', permission: 'chat.reply' },
-        { label: 'Reports', icon: BarChart3, href: '/admin/reports' },
-        { label: 'Staff', icon: UserCog, href: '/admin/staff', permission: 'staff.manage' },
-        { label: 'Settings', icon: Settings, href: '/admin/settings', permission: 'settings.view' },
-        { label: 'Audit log', icon: ScrollText, href: '/admin/audit-log', permission: 'audit.view' },
-        { label: 'Security', icon: ShieldCheck, href: '/settings/security' },
+        { group: 'Overview', label: 'Dashboard', icon: LayoutDashboard, href: '/admin', primary: true },
+        { group: 'Overview', label: 'Leads', icon: Inbox, href: '/admin/leads', permission: 'leads.view', primary: true },
+        { group: 'Overview', label: 'Chat', icon: MessagesSquare, href: '/chat', permission: 'chat.reply' },
+        { group: 'Overview', label: 'Reports', icon: BarChart3, href: '/admin/reports' },
+
+        { group: 'Clients', label: 'Clients', icon: Briefcase, href: '/admin/clients', permission: 'clients.view', primary: true },
+        { group: 'Clients', label: 'Projects', icon: FolderKanban, href: '/admin/projects', permission: 'projects.view' },
+        { group: 'Clients', label: 'Proposals', icon: FileSignature, href: '/admin/proposals', permission: 'proposals.manage' },
+        { group: 'Clients', label: 'Documents', icon: Files, href: '/admin/documents', permission: 'documents.manage' },
+        { group: 'Clients', label: 'Contracts', icon: ShieldCheck, href: '/admin/contracts', permission: 'support.manage' },
+        { group: 'Clients', label: 'Tickets', icon: LifeBuoyIcon, href: '/admin/tickets', permission: 'support.manage' },
+
+        { group: 'Learning', label: 'Students', icon: Users, href: '/admin/students', permission: 'students.view', primary: true },
+        { group: 'Learning', label: 'Colleges', icon: Building2, href: '/admin/colleges', permission: 'students.view' },
+        { group: 'Learning', label: 'Courses', icon: GraduationCap, href: '/admin/courses', permission: 'catalogue.view' },
+        { group: 'Learning', label: 'Batches', icon: CalendarCheck, href: '/admin/batches', permission: 'catalogue.view' },
+        { group: 'Learning', label: 'Enrolments', icon: UserCheck, href: '/admin/enrolments', permission: 'students.view' },
+        { group: 'Learning', label: 'Classes', icon: Video, href: '/admin/classes?filter[when]=upcoming', permission: 'students.view' },
+        { group: 'Learning', label: 'Marking', icon: ClipboardList, href: '/admin/marking', permission: 'students.view' },
+        { group: 'Learning', label: 'Reviews', icon: Star, href: '/admin/reviews?filter[status]=pending', permission: 'catalogue.view' },
+        { group: 'Learning', label: 'Certificate designs', icon: Award, href: '/admin/certificate-templates', permission: 'catalogue.manage' },
+
+        { group: 'Billing', label: 'Billing', icon: Banknote, href: '/admin/billing', permission: 'billing.view' },
+        { group: 'Billing', label: 'Invoices', icon: Receipt, href: '/admin/invoices', permission: 'billing.view' },
+        { group: 'Billing', label: 'Subscriptions', icon: RefreshCw, href: '/admin/subscriptions', permission: 'billing.view' },
+        { group: 'Billing', label: 'API plans', icon: KeyRound, href: '/admin/api-plans', permission: 'api.manage' },
+
+        { group: 'Website', label: 'Solutions', icon: Package, href: '/admin/solutions', permission: 'catalogue.view' },
+        { group: 'Website', label: 'Services', icon: Wrench, href: '/admin/services', permission: 'catalogue.view' },
+        { group: 'Website', label: 'Pages', icon: FileText, href: '/admin/pages', permission: 'content.manage' },
+        { group: 'Website', label: 'Site content', icon: HelpCircle, href: '/admin/content', permission: 'catalogue.view' },
+        { group: 'Website', label: 'Search wording', icon: Search, href: '/admin/seo', permission: 'content.manage' },
+        { group: 'Website', label: 'Legal documents', icon: Scale, href: '/admin/legal', permission: 'legal.manage' },
+
+        { group: 'Administration', label: 'Staff', icon: UserCog, href: '/admin/staff', permission: 'staff.manage' },
+        { group: 'Administration', label: 'Settings', icon: Settings, href: '/admin/settings', permission: 'settings.view' },
+        { group: 'Administration', label: 'Audit log', icon: ScrollText, href: '/admin/audit-log', permission: 'audit.view' },
+        { group: 'Administration', label: 'My security', icon: ShieldCheck, href: '/settings/security' },
     ],
 
     client: [
@@ -112,6 +128,31 @@ export function navigationFor(role, permissions = null) {
     }
 
     return items.filter((item) => !item.permission || permissions.includes(item.permission));
+}
+
+/**
+ * Items in their groups, in order: [{ label, items }].
+ *
+ * A group with nothing this account can reach is left out, so a staff member
+ * who only marks work does not see five empty headings. Items without a group
+ * (the client and student menus) come back as one group with no label.
+ */
+export function groupNav(items) {
+    const groups = [];
+
+    for (const item of items) {
+        const label = item.group ?? null;
+        let group = groups.find((entry) => entry.label === label);
+
+        if (!group) {
+            group = { label, items: [] };
+            groups.push(group);
+        }
+
+        group.items.push(item);
+    }
+
+    return groups;
 }
 
 /** Four tab bar slots. More items live behind the More sheet. */

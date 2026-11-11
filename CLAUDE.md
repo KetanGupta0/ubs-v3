@@ -75,6 +75,13 @@ have their LIKE wildcards escaped. Keep it that way when adding tables.
 it picks its navigation by role from `resources/js/support/navigation.js`, gives
 desktop a collapsible sidebar and phones a bottom tab bar with a More sheet.
 
+The admin menu is grouped: every admin entry carries a `group` (Overview,
+Clients, Learning, Billing, Website, Administration), and a new screen goes in
+the group it belongs to, next to its neighbours, never at the bottom. Groups
+can be closed and the browser remembers it, as it does the narrow sidebar; the
+group holding the current page always opens. `tests/Feature/Navigation` reads
+the menus out of `navigation.js` and opens every link, for all three roles.
+
 Phones are not an afterthought. The target is that a dashboard feels like a
 native app, because a mobile app per panel is planned and the web version sets
 the expectation.
