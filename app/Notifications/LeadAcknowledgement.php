@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Lead;
+use App\Models\MessageTemplate;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -28,19 +29,34 @@ class LeadAcknowledgement extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
-        $about = match (true) {
-            (bool) $this->lead->solution_id => 'about '.$this->lead->solution?->title,
-            (bool) $this->lead->service_id => 'about '.$this->lead->service?->title,
-            (bool) $this->lead->course_id => 'about '.$this->lead->course?->title,
-            default => null,
-        };
+        $topic = $this->lead->solution?->title ?? $this->lead->service?->title ?? $this->lead->course?->title;
+        $template = MessageTemplate::find_by_key('lead.acknowledgement');
 
-        return (new MailMessage)
+        $message = (new MailMessage)->greeting("Hello {$this->lead->name},")->salutation('— '.config('app.name'));
+
+        if ($template) {
+            // The wording set in the panel, used as written. Until November
+            // 2026 this template could be switched on and changed nothing.
+            $values = [
+                'name' => $this->lead->name,
+                'reference' => $this->lead->reference,
+                'subject' => $topic,
+                'company' => config('app.name'),
+            ];
+
+            $message->subject($template->renderSubject($values) ?? "We have your enquiry ({$this->lead->reference})");
+
+            foreach (preg_split('/\n{2,}/', $template->render($values)) as $paragraph) {
+                $message->line(trim($paragraph));
+            }
+
+            return $message;
+        }
+
+        return $message
             ->subject("We have your enquiry ({$this->lead->reference})")
-            ->greeting("Hello {$this->lead->name},")
-            ->line('Thanks for getting in touch'.($about ? " {$about}" : '').'.')
+            ->line('Thanks for getting in touch'.($topic ? " about {$topic}" : '').'.')
             ->line('Someone from our team will read this properly and reply within one working day. If it is urgent, reply to this email and say so.')
-            ->line("Your reference is **{$this->lead->reference}**. Quoting it saves us both time.")
-            ->salutation('— Unboundbyte Solutions');
+            ->line("Your reference is **{$this->lead->reference}**. Quoting it saves us both time.");
     }
 }

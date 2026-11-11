@@ -3,12 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\TemplateTest;
 use App\Models\MessageTemplate;
 use App\Models\Setting;
 use App\Services\Admin\Auditor;
+use App\Support\MessageCatalogue;
 use App\Support\SiteIdentity;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -49,19 +53,7 @@ class SettingsController extends Controller
                 'default_tax_rate' => Setting::get('invoicing.default_tax_rate', 18),
                 'terms' => Setting::get('invoicing.terms'),
             ],
-            'templates' => MessageTemplate::query()
-                ->orderBy('key')
-                ->get()
-                ->map(fn (MessageTemplate $template) => [
-                    'id' => $template->id,
-                    'key' => $template->key,
-                    'name' => $template->name,
-                    'channel' => $template->channel,
-                    'subject' => $template->subject,
-                    'body' => $template->body,
-                    'variables' => $template->variables ?? [],
-                    'isActive' => $template->is_active,
-                ]),
+            'templates' => $this->templates(),
 
             /*
              * Whether each provider is wired up, never the credential itself.
@@ -187,16 +179,150 @@ class SettingsController extends Controller
 
     public function updateTemplate(Request $request, MessageTemplate $template, Auditor $auditor): RedirectResponse
     {
-        $validated = $request->validate([
+        $validated = $this->validatedTemplate($request, $template);
+
+        $template->fill([
+            'subject' => $template->channel === 'mail' ? $validated['subject'] : null,
+            'body' => $validated['body'],
+            'is_active' => (bool) $validated['is_active'],
+        ]);
+        $auditor->updated($template, label: $template->name);
+        $template->save();
+
+        return back()->with('success', $template->is_active
+            ? 'Template saved and in use from the next message.'
+            : 'Template saved. It is switched off, so the built in wording is still what goes out.');
+    }
+
+    /**
+     * The wording as typed, rendered through the real notification with
+     * sample details. Nothing is saved.
+     */
+    public function previewTemplate(Request $request, MessageTemplate $template): JsonResponse
+    {
+        $draft = $this->draft($request, $template);
+        [$notification, $notifiable] = MessageCatalogue::sampleNotification($template->key);
+
+        return response()->json(MessageTemplate::using($draft, function () use ($template, $notification, $notifiable) {
+            if ($template->channel === 'sms') {
+                $text = $notification->toSms($notifiable);
+                // Anything outside plain ASCII sends the whole message in the
+                // larger encoding, which fits 70 characters a part, not 160.
+                $unicode = (bool) preg_match('/[^\x00-\x7F]/', $text);
+                $length = mb_strlen($text);
+                $perPart = $unicode ? ($length > 70 ? 67 : 70) : ($length > 160 ? 153 : 160);
+
+                return ['text' => $text, 'length' => $length, 'parts' => max(1, (int) ceil($length / $perPart)), 'unicode' => $unicode];
+            }
+
+            $mail = $notification->toMail($notifiable);
+
+            return ['subject' => $mail->subject, 'html' => (string) $mail->render()];
+        }));
+    }
+
+    /** Send the wording as typed to the person asking, as an email marked as a test. */
+    public function testTemplate(Request $request, MessageTemplate $template, Auditor $auditor): RedirectResponse
+    {
+        abort_unless($template->channel === 'mail', 404);
+
+        $draft = $this->draft($request, $template);
+        [$notification, $notifiable] = MessageCatalogue::sampleNotification($template->key);
+        $mail = MessageTemplate::using($draft, fn () => $notification->toMail($notifiable));
+        $to = $request->user()->email;
+
+        Mail::to($to)->send(new TemplateTest((string) $mail->subject, (string) $mail->render()));
+        $auditor->action('settings.template_tested', $template, [], $template->name);
+
+        return back()->with('success', "Test sent to {$to}, with sample details in place of a real person's.");
+    }
+
+    /** What the editor needs for each message: the wording, and what it can and must say. */
+    protected function templates(): array
+    {
+        MessageCatalogue::sync();
+
+        return MessageTemplate::query()
+            ->whereIn('key', array_keys(MessageCatalogue::MESSAGES))
+            ->orderBy('key')
+            ->get()
+            ->map(function (MessageTemplate $template) {
+                $entry = MessageCatalogue::for($template->key);
+
+                return [
+                    'id' => $template->id,
+                    'key' => $template->key,
+                    'name' => $template->name,
+                    'channel' => $template->channel,
+                    'sent' => $entry['sent'],
+                    'subject' => $template->subject,
+                    'body' => $template->body,
+                    'variables' => collect($entry['variables'])->map(fn (array $variable, string $name) => [
+                        'name' => $name,
+                        'description' => $variable[0],
+                        'sample' => $variable[1],
+                        'required' => in_array($name, $entry['required'], true),
+                    ])->values(),
+                    'defaults' => ['subject' => $entry['subject'], 'body' => $entry['body']],
+                    'isActive' => $template->is_active,
+                ];
+            })
+            ->all();
+    }
+
+    /**
+     * The submitted wording, checked: every placeholder must be one the
+     * message fills in, and the ones it cannot do without must be there.
+     *
+     * @return array{subject: ?string, body: string, is_active: bool}
+     */
+    protected function validatedTemplate(Request $request, MessageTemplate $template): array
+    {
+        $validated = $this->validatedInput($request, [
             'subject' => [Rule::requiredIf($template->channel === 'mail'), 'nullable', 'string', 'max:200'],
             'body' => ['required', 'string', 'max:5000'],
             'is_active' => ['boolean'],
         ]);
 
-        $template->fill($validated);
-        $auditor->updated($template, label: $template->name);
-        $template->save();
+        $entry = MessageCatalogue::for($template->key) ?? abort(404);
+        $known = array_keys($entry['variables']);
+        $errors = [];
 
-        return back()->with('success', 'Template saved.');
+        foreach (['subject', 'body'] as $field) {
+            $unknown = array_diff(MessageTemplate::placeholdersIn($validated[$field]), $known);
+
+            if ($unknown) {
+                $shown = collect($unknown)->map(fn ($name) => '{{'.$name.'}}')->implode(', ');
+                $errors[$field] = "{$shown} is not something this message fills in, so it would arrive exactly as typed. Use one from the list below.";
+            }
+        }
+
+        $used = array_merge(
+            MessageTemplate::placeholdersIn($validated['subject']),
+            MessageTemplate::placeholdersIn($validated['body']),
+        );
+        $missing = array_diff($entry['required'], $used);
+
+        if ($missing && ! isset($errors['body'])) {
+            $shown = collect($missing)->map(fn ($name) => '{{'.$name.'}}')->implode(' and ');
+            $errors['body'] = "This message has to include {$shown}, or the person receiving it cannot do what it is for.";
+        }
+
+        if ($errors) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return $validated;
+    }
+
+    /** An unsaved copy of the template carrying the wording as typed, checked the same way as a save. */
+    protected function draft(Request $request, MessageTemplate $template): MessageTemplate
+    {
+        $validated = $this->validatedTemplate($request, $template);
+
+        return (clone $template)->forceFill([
+            'subject' => $validated['subject'],
+            'body' => $validated['body'],
+        ]);
     }
 }

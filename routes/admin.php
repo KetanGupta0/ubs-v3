@@ -458,6 +458,8 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
 
         Route::middleware('permission:settings.view')->group(function () {
             Route::get('settings', [SettingsController::class, 'index'])->name('settings.index');
+            // Renders a draft; changes nothing, so viewing settings is enough.
+            Route::post('settings/templates/{template}/preview', [SettingsController::class, 'previewTemplate'])->name('settings.templates.preview');
         });
 
         Route::middleware('permission:settings.manage')->group(function () {
@@ -465,6 +467,9 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::put('settings/site', [SettingsController::class, 'updateSite'])->name('settings.site');
             Route::put('settings/invoicing', [SettingsController::class, 'updateInvoicing'])->name('settings.invoicing');
             Route::put('settings/templates/{template}', [SettingsController::class, 'updateTemplate'])->name('settings.templates.update');
+            Route::post('settings/templates/{template}/test', [SettingsController::class, 'testTemplate'])
+                ->middleware('throttle:5,1')
+                ->name('settings.templates.test');
         });
 
         /* ------------------------------------------------- reports (P7) */

@@ -8,8 +8,8 @@
  * whether each provider is wired up.
  */
 import { computed, ref } from 'vue';
-import { Head, useForm } from '@inertiajs/vue3';
-import { Check, X, Mail, MessageSquare, Info } from 'lucide-vue-next';
+import { Head, useForm, usePage } from '@inertiajs/vue3';
+import { Check, X, Info } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -22,6 +22,7 @@ import UiSelect from '@/components/UI/UiSelect.vue';
 import UiSwitch from '@/components/UI/UiSwitch.vue';
 import UiTabs from '@/components/UI/UiTabs.vue';
 import UiFormField from '@/components/UI/UiFormField.vue';
+import TemplateEditor from '@/components/Admin/TemplateEditor.vue';
 
 const props = defineProps({
     company: { type: Object, required: true },
@@ -33,6 +34,10 @@ const props = defineProps({
 });
 
 const tab = ref('company');
+
+/* Viewing settings is a separate permission from changing them. */
+const page = usePage();
+const canManage = computed(() => (page.props.auth?.permissions ?? []).includes('settings.manage'));
 
 const tabs = [
     { value: 'company', label: 'Company' },
@@ -55,25 +60,6 @@ const siteForm = useForm({
     social: Object.fromEntries(props.socialNetworks.map(({ key }) => [key, props.site.social?.[key] ?? ''])),
 });
 
-/*
- * One form per template, keyed by id, so saving the welcome email does not
- * quietly resubmit an unrelated SMS somebody else was halfway through editing.
- */
-const templateForms = Object.fromEntries(
-    props.templates.map((template) => [
-        template.id,
-        useForm({
-            subject: template.subject ?? '',
-            body: template.body,
-            is_active: template.isActive,
-        }),
-    ]),
-);
-
-/* Written out rather than interpolated, because a literal }} would close the
- * interpolation it sits in. */
-const placeholder = (variable) => `{${'{'}${variable}}${'}'}`;
-
 const nextInvoiceNumber = computed(
     () => `${invoicingForm.prefix}-${String(invoicingForm.next_number).padStart(4, '0')}`,
 );
@@ -90,9 +76,6 @@ function saveInvoicing() {
     invoicingForm.put('/admin/settings/invoicing', { preserveScroll: true });
 }
 
-function saveTemplate(template) {
-    templateForms[template.id].put(`/admin/settings/templates/${template.id}`, { preserveScroll: true });
-}
 </script>
 
 <template>
@@ -250,61 +233,18 @@ function saveTemplate(template) {
                 >
                     <Info class="mt-0.5 h-4 w-4 shrink-0" />
                     <span>
-                        Anything in double braces is filled in when the message goes out. Leave a placeholder alone
-                        unless you also remove every mention of it.
+                        Anything in double braces is filled in when the message goes out. Each message lists what it
+                        can fill in, and saving refuses a placeholder it cannot, so nobody receives literal braces.
+                        A message stays on its built in wording until its template is switched on.
                     </span>
                 </p>
 
-                <FormSection
+                <TemplateEditor
                     v-for="template in templates"
                     :key="template.id"
-                    :title="template.name"
-                    :description="template.channel === 'mail' ? 'Sent by email' : 'Sent by SMS'"
-                >
-                    <form class="space-y-4" @submit.prevent="saveTemplate(template)">
-                        <UiFormField
-                            v-if="template.channel === 'mail'"
-                            label="Subject"
-                            required
-                            :error="templateForms[template.id].errors.subject"
-                        >
-                            <UiInput v-model="templateForms[template.id].subject" />
-                        </UiFormField>
-
-                        <UiFormField label="Message" required :error="templateForms[template.id].errors.body">
-                            <UiTextarea
-                                v-model="templateForms[template.id].body"
-                                :rows="template.channel === 'mail' ? 8 : 4"
-                            />
-                        </UiFormField>
-
-                        <div v-if="template.variables.length" class="flex flex-wrap items-center gap-1.5">
-                            <span class="text-xs" style="color: var(--text-muted)">Placeholders:</span>
-                            <UiBadge v-for="variable in template.variables" :key="variable" size="sm">
-                                {{ placeholder(variable) }}
-                            </UiBadge>
-                        </div>
-
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <UiSwitch
-                                v-model="templateForms[template.id].is_active"
-                                label="In use"
-                                description="Switched off, the built in wording is used instead."
-                            />
-
-                            <UiButton
-                                type="submit"
-                                size="sm"
-                                :loading="templateForms[template.id].processing"
-                            >
-                                <template #leading>
-                                    <component :is="template.channel === 'mail' ? Mail : MessageSquare" class="h-3.5 w-3.5" />
-                                </template>
-                                Save
-                            </UiButton>
-                        </div>
-                    </form>
-                </FormSection>
+                    :template="template"
+                    :can-manage="canManage"
+                />
             </div>
 
             <!-- ------------------------------------------------- providers -->

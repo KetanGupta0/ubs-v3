@@ -235,6 +235,13 @@ Rules for the marketing pages:
 - **Every change goes through `App\Services\Admin\Auditor`.** It stores only what
   actually moved, as before and after, with passwords, secrets and tokens replaced
   by dots. There is no route to edit or delete an entry.
+- **An editable message is listed in `App\Support\MessageCatalogue`** with its
+  placeholders, the ones it must include and its starting wording, and its
+  notification must read the template through `MessageTemplate::find_by_key()`.
+  Until November 2026 the enquiry acknowledgement had a template that changed
+  nothing when switched on. Saving refuses unknown placeholders and missing required
+  ones; the preview and the test send go through the real notification via
+  `MessageTemplate::using()`, so they cannot drift from what is sent.
 - **Provider credentials are never editable from a screen.** The settings page
   shows configured or not configured and nothing else. Keys belong in the
   environment; defaults live in `config/company.php`, never `env()` at the point
