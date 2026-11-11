@@ -47,19 +47,35 @@ class Seo
         ];
     }
 
-    /** The organisation block, repeated on every page for search engines. */
+    /**
+     * The organisation block for search engines.
+     *
+     * Contact details and profiles appear here only when the settings screen
+     * chose to show them on the site, so structured data never says more than
+     * the page itself does.
+     */
     public static function organisation(): array
     {
-        return [
+        $site = SiteIdentity::forPublic();
+
+        return array_filter([
             '@context' => 'https://schema.org',
             '@type' => 'Organization',
-            'name' => 'Unboundbyte Solutions Private Limited',
+            'name' => $site['name'],
+            'legalName' => $site['legalName'],
             'alternateName' => 'Unboundbyte',
             'url' => url('/'),
             'logo' => url('/brand/icon-512.png'),
             'description' => 'Custom software development, maintenance and live technical training.',
-            'address' => ['@type' => 'PostalAddress', 'addressCountry' => 'IN'],
-        ];
+            'email' => $site['email'],
+            'telephone' => $site['phone'],
+            'address' => array_filter([
+                '@type' => 'PostalAddress',
+                'streetAddress' => $site['address'] ? str_replace("\n", ', ', $site['address']) : null,
+                'addressCountry' => 'IN',
+            ]),
+            'sameAs' => collect($site['social'])->pluck('url')->all() ?: null,
+        ], fn ($value) => $value !== null);
     }
 
     public static function breadcrumbs(array $crumbs): array

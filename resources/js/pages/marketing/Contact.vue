@@ -1,17 +1,25 @@
 <script setup>
-import { ref } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { computed, ref } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import { Building2, Code2, GraduationCap, MessageCircle, Clock, ShieldCheck } from 'lucide-vue-next';
 
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import Seo from '@/components/Seo.vue';
 import EnquiryForm from '@/components/Marketing/EnquiryForm.vue';
+import ContactDetails from '@/components/Marketing/ContactDetails.vue';
+import SocialLinks from '@/components/Marketing/SocialLinks.vue';
 
 defineProps({
     solutions: { type: Array, default: () => [] },
     services: { type: Array, default: () => [] },
     courses: { type: Array, default: () => [] },
     seo: { type: Object, required: true },
+});
+
+const page = usePage();
+const hasOtherWays = computed(() => {
+    const site = page.props.site ?? {};
+    return Boolean(site.email || site.phone || site.whatsapp || site.address || site.social?.length);
 });
 
 /** Which form to show. Changes the prompts and the fields, not the endpoint. */
@@ -97,6 +105,17 @@ const assurances = [
                 :show-college-fields="interest === 'college'"
                 compact
             />
+
+            <!-- Only what the settings screen chose to show; nothing at all otherwise. -->
+            <div
+                v-if="hasOtherWays"
+                class="mt-8 rounded-xl border p-5"
+                style="border-color: var(--border-subtle); background: var(--surface-sunken)"
+            >
+                <h2 class="text-sm font-semibold">Other ways to reach us</h2>
+                <ContactDetails class="mt-3" />
+                <SocialLinks class="mt-4" />
+            </div>
         </section>
     </PublicLayout>
 </template>

@@ -11,6 +11,8 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { Menu, X, ArrowUpRight } from 'lucide-vue-next';
 
 import BrandLogo from '@/components/Brand/BrandLogo.vue';
+import ContactDetails from '@/components/Marketing/ContactDetails.vue';
+import SocialLinks from '@/components/Marketing/SocialLinks.vue';
 import ThemeToggle from '@/components/Nav/ThemeToggle.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import UiDrawer from '@/components/UI/UiDrawer.vue';
@@ -48,6 +50,8 @@ const fallbackMenus = {
 };
 
 const menus = computed(() => page.props.menus ?? fallbackMenus);
+const site = computed(() => page.props.site ?? { legalName: 'Unboundbyte Solutions Private Limited' });
+const registration = computed(() => Object.entries(site.value.registration ?? {}).map(([name, value]) => `${name} ${value}`));
 const links = computed(() => menus.value.header);
 const footerColumns = computed(() => menus.value.footer);
 
@@ -147,6 +151,8 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                             We build and maintain software, and we train the people who will run it.
                             Two halves of the same problem, handled by one team.
                         </p>
+                        <ContactDetails class="mt-5" />
+                        <SocialLinks class="mt-4" />
                     </div>
 
                     <div v-for="(column, index) in footerColumns" :key="index">
@@ -177,7 +183,10 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                     class="mt-10 flex flex-col gap-3 border-t pt-6 text-xs sm:flex-row sm:items-center sm:justify-between"
                     style="border-color: var(--border-subtle); color: var(--text-muted)"
                 >
-                    <p>&copy; {{ new Date().getFullYear() }} Unboundbyte Solutions Private Limited. All rights reserved.</p>
+                    <div class="space-y-1">
+                        <p>&copy; {{ new Date().getFullYear() }} {{ site.legalName }}. All rights reserved.</p>
+                        <p v-if="registration.length">{{ registration.join(' · ') }}</p>
+                    </div>
                     <ThemeToggle />
                 </div>
             </div>

@@ -25,6 +25,8 @@ import UiFormField from '@/components/UI/UiFormField.vue';
 
 const props = defineProps({
     company: { type: Object, required: true },
+    site: { type: Object, required: true },
+    socialNetworks: { type: Array, default: () => [] },
     invoicing: { type: Object, required: true },
     templates: { type: Array, default: () => [] },
     providers: { type: Array, default: () => [] },
@@ -34,6 +36,7 @@ const tab = ref('company');
 
 const tabs = [
     { value: 'company', label: 'Company' },
+    { value: 'site', label: 'Public site' },
     { value: 'invoicing', label: 'Invoicing' },
     { value: 'templates', label: 'Messages' },
     { value: 'providers', label: 'Providers' },
@@ -46,6 +49,11 @@ const months = [
 
 const companyForm = useForm({ ...props.company });
 const invoicingForm = useForm({ ...props.invoicing });
+const siteForm = useForm({
+    ...props.site,
+    whatsapp: props.site.whatsapp ?? '',
+    social: Object.fromEntries(props.socialNetworks.map(({ key }) => [key, props.site.social?.[key] ?? ''])),
+});
 
 /*
  * One form per template, keyed by id, so saving the welcome email does not
@@ -72,6 +80,10 @@ const nextInvoiceNumber = computed(
 
 function saveCompany() {
     companyForm.put('/admin/settings/company', { preserveScroll: true });
+}
+
+function saveSite() {
+    siteForm.put('/admin/settings/site', { preserveScroll: true });
 }
 
 function saveInvoicing() {
@@ -151,6 +163,34 @@ function saveTemplate(template) {
 
                 <div class="flex justify-end pb-safe">
                     <UiButton type="submit" :loading="companyForm.processing">Save company details</UiButton>
+                </div>
+            </form>
+
+            <!-- ------------------------------------------------ public site -->
+            <form v-else-if="tab === 'site'" class="space-y-5" @submit.prevent="saveSite">
+                <FormSection
+                    title="What the public site shows"
+                    description="The details come from the Company tab. Each one appears in the footer of every public page and on the contact page only if it is switched on here. The PAN is never shown."
+                >
+                    <UiSwitch v-model="siteForm.show_email" label="Email address" :description="company.email || 'Not set on the Company tab yet.'" />
+                    <UiSwitch v-model="siteForm.show_phone" label="Phone number" :description="company.phone || 'Not set on the Company tab yet.'" />
+                    <UiSwitch v-model="siteForm.show_address" label="Address" :description="company.address ? 'As written on the Company tab.' : 'Not set on the Company tab yet.'" />
+                    <UiSwitch v-model="siteForm.show_registration" label="CIN and GSTIN" description="As a small line at the foot of every page. A GSTIN has the PAN inside it; both are public records, but leave this off if you would rather not show them." />
+                    <UiFormField label="WhatsApp" hint="Optional. With the country code. Shown as a chat link." :error="siteForm.errors.whatsapp">
+                        <UiInput v-model="siteForm.whatsapp" type="tel" placeholder="+91 98765 43210" class="max-w-xs" />
+                    </UiFormField>
+                </FormSection>
+
+                <FormSection title="Elsewhere" description="The full address of each profile. Each must be on the network it is listed under. Leave empty to leave it out.">
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <UiFormField v-for="network in socialNetworks" :key="network.key" :label="network.label" :error="siteForm.errors[`social.${network.key}`]">
+                            <UiInput v-model="siteForm.social[network.key]" type="url" placeholder="https://…" />
+                        </UiFormField>
+                    </div>
+                </FormSection>
+
+                <div class="flex justify-end pb-safe">
+                    <UiButton type="submit" :loading="siteForm.processing">Save public site details</UiButton>
                 </div>
             </form>
 

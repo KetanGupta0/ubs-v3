@@ -462,6 +462,7 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
 
         Route::middleware('permission:settings.manage')->group(function () {
             Route::put('settings/company', [SettingsController::class, 'updateCompany'])->name('settings.company');
+            Route::put('settings/site', [SettingsController::class, 'updateSite'])->name('settings.site');
             Route::put('settings/invoicing', [SettingsController::class, 'updateInvoicing'])->name('settings.invoicing');
             Route::put('settings/templates/{template}', [SettingsController::class, 'updateTemplate'])->name('settings.templates.update');
         });

@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\MessageTemplate;
 use App\Models\Setting;
 use App\Services\Admin\Auditor;
+use App\Support\SiteIdentity;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -38,6 +40,8 @@ class SettingsController extends Controller
                 'cin' => Setting::get('company.cin', config('company.cin')),
                 'pan' => Setting::get('company.pan', config('company.pan')),
             ],
+            'site' => SiteIdentity::settings(),
+            'socialNetworks' => collect(SiteIdentity::SOCIAL)->map(fn ($network, $key) => ['key' => $key, 'label' => $network['label']])->values(),
             'invoicing' => [
                 'prefix' => Setting::get('invoicing.prefix', 'UBS'),
                 'next_number' => Setting::get('invoicing.next_number', 1),
@@ -96,6 +100,68 @@ class SettingsController extends Controller
         $auditor->action('settings.company_updated', context: ['fields' => array_keys($validated)]);
 
         return back()->with('success', 'Company details saved.');
+    }
+
+    /**
+     * What the public site shows of the company details, and where to find us
+     * elsewhere. A social link has to be on the network it is filed under, so
+     * the LinkedIn icon cannot quietly send people somewhere else.
+     */
+    public function updateSite(Request $request, Auditor $auditor): RedirectResponse
+    {
+        $rules = [
+            'show_email' => ['boolean'],
+            'show_phone' => ['boolean'],
+            'show_address' => ['boolean'],
+            'show_registration' => ['boolean'],
+            'whatsapp' => ['nullable', 'string', 'max:20', 'regex:/^\+?[\d\s-]{10,18}$/'],
+        ];
+
+        foreach (array_keys(SiteIdentity::SOCIAL) as $network) {
+            $rules["social.{$network}"] = ['nullable', 'string', 'max:300'];
+        }
+
+        $validated = $this->validatedInput($request, $rules, [
+            'whatsapp.regex' => 'Use the full number with the country code, like +91 98765 43210.',
+        ]);
+
+        $errors = [];
+        foreach (array_keys(SiteIdentity::SOCIAL) as $network) {
+            $url = trim((string) data_get($validated, "social.{$network}"));
+
+            if ($url !== '' && ! SiteIdentity::belongsTo($network, $url)) {
+                $hosts = implode(' or ', SiteIdentity::SOCIAL[$network]['hosts']);
+                $errors["social.{$network}"] = "Use the full https:// address of the page on {$hosts}.";
+            }
+        }
+
+        if ($errors) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        $before = SiteIdentity::settings();
+
+        foreach (['show_email', 'show_phone', 'show_address', 'show_registration'] as $key) {
+            Setting::put("site.{$key}", (bool) $validated[$key], 'site');
+        }
+
+        Setting::put('site.whatsapp', filled($validated['whatsapp']) ? trim($validated['whatsapp']) : null, 'site');
+
+        foreach (array_keys(SiteIdentity::SOCIAL) as $network) {
+            Setting::put("site.social.{$network}", trim((string) data_get($validated, "social.{$network}")) ?: null, 'site');
+        }
+
+        $after = SiteIdentity::settings();
+        $changes = collect($after)
+            ->map(fn ($value, $key) => ['from' => $before[$key], 'to' => $value])
+            ->filter(fn ($change) => $change['from'] !== $change['to'])
+            ->all();
+
+        if ($changes) {
+            $auditor->action('settings.site_updated', context: $changes);
+        }
+
+        return back()->with('success', 'Saved. The public site shows it from the next page load.');
     }
 
     public function updateInvoicing(Request $request, Auditor $auditor): RedirectResponse

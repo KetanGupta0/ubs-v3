@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\LegalDocument;
 use App\Models\SiteMenu;
 use App\Services\Auth\Impersonation;
+use App\Support\SiteIdentity;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -47,6 +48,12 @@ class HandleInertiaRequests extends Middleware
              * panel. One cached array, dropped whenever a menu is saved.
              */
             'menus' => fn () => SiteMenu::forLayout(),
+
+            /*
+             * The company's name and the contact details chosen to be shown on
+             * the public site. Built from the cached settings map.
+             */
+            'site' => fn () => SiteIdentity::forPublic(),
 
             /*
              * Legal documents with a published version, for the footer of the

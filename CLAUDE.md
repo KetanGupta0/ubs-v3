@@ -199,6 +199,11 @@ Rules for the marketing pages:
   or legal document must also be published) or an `https://` address; the check runs
   on save. Do not add links to `PublicLayout` by hand: add them in the panel, or in a
   migration if every install needs them.
+- **Contact details reach the public site only when switched on.**
+  `App\Support\SiteIdentity` reads the company details kept for invoices and shares
+  as `site` only what the Settings "Public site" tab switched on; the same data feeds
+  `Seo::organisation()`, so structured data never says more than the page. The PAN is
+  never shown. Profile links must be on their own network's host.
 - **Search wording for the fixed pages is set in the panel,** in `seo_overrides`
   (`/admin/seo`). `Seo::for()` applies it by path, so no controller changes when
   somebody edits it; empty fields keep the page's own wording. The list of fixed
