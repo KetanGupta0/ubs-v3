@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\LegalDocument;
 use App\Models\Page;
 use App\Models\Service;
 use App\Models\Solution;
@@ -31,9 +32,16 @@ class SitemapController extends Controller
             ['loc' => url('/technology'), 'priority' => '0.6', 'changefreq' => 'monthly'],
             ['loc' => url('/faq'), 'priority' => '0.7', 'changefreq' => 'monthly'],
             ['loc' => url('/contact'), 'priority' => '0.8', 'changefreq' => 'yearly'],
-            ['loc' => url('/legal/privacy'), 'priority' => '0.3', 'changefreq' => 'yearly'],
-            ['loc' => url('/legal/terms'), 'priority' => '0.3', 'changefreq' => 'yearly'],
         ]);
+
+        // The version in force of each published legal document; earlier
+        // versions stay readable but out of search.
+        $urls = $urls->concat(collect(LegalDocument::published())->map(fn (array $document) => [
+            'loc' => url($document['href']),
+            'lastmod' => $document['publishedAt'],
+            'priority' => '0.3',
+            'changefreq' => 'yearly',
+        ]));
 
         $urls = $urls
             ->concat(Solution::query()->published()->get()->map(fn (Solution $s) => [

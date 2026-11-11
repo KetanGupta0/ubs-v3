@@ -492,6 +492,10 @@ So the allowed media types are already exactly what was asked for.
   - enquiry senders are included only while they have not opted out
   - service mail (credentials, receipts, class reminders) is separate from promotional
     mail and is unaffected by unsubscribing from the latter
+  - **the privacy policy has to change first.** Version 1 says "we do not add you to a
+    mailing list because you contacted us", which greetings to enquiry senders would
+    break. Publish a new version at `/admin/legal/privacy` saying what is sent, to whom
+    and how to stop it before the first greeting goes out.
 - **Broadcasts:**
   - compose with templates and variables
   - pick the audience: all users, role, course, batch, college, enrolment status,

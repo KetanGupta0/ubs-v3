@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use App\Support\Markdown;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 /**
  * A page on the public site, written in the admin panel as a list of blocks.
@@ -80,11 +80,7 @@ class Page extends Model
     /** Markdown to HTML, with typed HTML stripped and unsafe links refused. */
     public static function markdown(string $markdown): string
     {
-        return Str::markdown($markdown, [
-            'html_input' => 'strip',
-            'allow_unsafe_links' => false,
-            'max_nesting_level' => 10,
-        ]);
+        return Markdown::html($markdown);
     }
 
     /** A description for search results when none was written: the summary, else the first text. */
@@ -100,6 +96,6 @@ class Page extends Model
 
         $firstText = collect($this->blocks ?? [])->firstWhere('type', 'text')['markdown'] ?? '';
 
-        return Str::of(strip_tags(self::markdown($firstText)))->squish()->limit(155)->toString() ?: $this->title;
+        return Markdown::excerpt($firstText) ?: $this->title;
     }
 }

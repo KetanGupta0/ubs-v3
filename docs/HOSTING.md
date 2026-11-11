@@ -46,8 +46,9 @@ over time. Read them in hPanel for the plan in use, and do not hard-code them he
 - **Build assets in CI** (GitHub Actions: `npm ci && npm run build`), never on the
   server.
 - **Upload over SSH,** then run `composer install --no-dev --optimize-autoloader`,
-  `php artisan migrate --force`, `php artisan config:cache route:cache view:cache` and
-  `php artisan storage:link`.
+  `php artisan migrate --force`, `php artisan db:seed --class=PermissionSeeder --force`
+  (new permission keys exist only once it has run; it is safe to repeat),
+  `php artisan config:cache route:cache view:cache` and `php artisan storage:link`.
   - SSH access depends on the plan, so check it before step C.
 - **Document root:** the domain must serve Laravel's `public/` directory, not the
   project root. Either point the domain there in hPanel or place the project above

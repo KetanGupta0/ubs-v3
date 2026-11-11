@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\EnrolmentController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\LeadController;
+use App\Http\Controllers\Admin\LegalDocumentController;
 use App\Http\Controllers\Admin\PeopleController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProposalController;
@@ -345,6 +346,19 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
 
             Route::get('seo', [SeoController::class, 'index'])->name('seo.index');
             Route::post('seo/{override}', [SeoController::class, 'update'])->name('seo.update');
+        });
+
+        /* ------------------------------------------------- legal documents */
+        // Their own permission: the terms and the privacy policy bind the
+        // company, which is not the same trust as writing a campaign page.
+        Route::middleware('permission:legal.manage')->group(function () {
+            Route::get('legal', [LegalDocumentController::class, 'index'])->name('legal.index');
+            Route::get('legal/{document:key}', [LegalDocumentController::class, 'edit'])->name('legal.edit');
+            Route::post('legal/{document:key}', [LegalDocumentController::class, 'save'])->name('legal.save');
+            Route::delete('legal/{document:key}/draft', [LegalDocumentController::class, 'discard'])->name('legal.discard');
+            Route::get('legal/{document:key}/versions/{version}', [LegalDocumentController::class, 'preview'])
+                ->whereNumber('version')
+                ->name('legal.preview');
         });
 
         /* --------------------------------------------- certificate templates */

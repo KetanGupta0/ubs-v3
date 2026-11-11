@@ -49,6 +49,7 @@ class PermissionSeeder extends Seeder
             ],
             'Public site' => [
                 'content.manage' => 'Write and publish pages on the public site',
+                'legal.manage' => 'Edit and publish the privacy policy, terms and refund policy',
             ],
             'Catalogue' => [
                 'catalogue.view' => 'View the catalogue',

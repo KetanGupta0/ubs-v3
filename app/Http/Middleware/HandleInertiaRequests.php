@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\LegalDocument;
 use App\Services\Auth\Impersonation;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -39,6 +40,15 @@ class HandleInertiaRequests extends Middleware
                 'name' => config('app.name'),
                 'env' => app()->environment(),
             ],
+
+            /*
+             * Legal documents with a published version, for the footer of the
+             * public site. A cached list of two or three links; a document
+             * with nothing published is left out rather than linked to a 404.
+             */
+            'legal' => fn () => collect(LegalDocument::published())
+                ->map(fn (array $document) => ['title' => $document['title'], 'href' => $document['href']])
+                ->all(),
 
             /*
              * Set while a member of staff is viewing the platform as this

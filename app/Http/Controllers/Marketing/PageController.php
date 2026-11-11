@@ -121,24 +121,4 @@ class PageController extends Controller
             ],
         ]);
     }
-
-    public function legal(string $document): Response
-    {
-        abort_unless(in_array($document, ['privacy', 'terms'], true), 404);
-
-        $titles = [
-            'privacy' => 'Privacy policy',
-            'terms' => 'Terms of service',
-        ];
-
-        return Inertia::render('marketing/Legal', [
-            'document' => $document,
-            'title' => $titles[$document],
-            'seo' => Seo::for(
-                $titles[$document].' — Unboundbyte Solutions',
-                'How we handle your information and the terms under which we provide our services.',
-                "/legal/{$document}",
-            ),
-        ]);
-    }
 }

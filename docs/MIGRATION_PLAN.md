@@ -266,6 +266,7 @@ public site comes from `database/data/*.php` through the seeder. "Full CMS" mean
 *Progress:*
 - *C1 built 2026-11-11: pages at `/admin/pages`. Each is written as blocks (heading, text in Markdown, picture, call to action, questions), saved as a draft, previewed, then published to `/pages/{slug}`, with its own search title, description and a switch to keep it out of search. HTML typed into text is stripped and unsafe links are refused. New permission `content.manage`. Menu entries are left to C5.*
 - *C2 built 2026-11-11: search wording for the thirteen fixed public pages at `/admin/seo` (title, description, share picture, keep out of search), applied by path in `Seo::for()`. Pages written in the panel and catalogue items keep their own search fields. v2's `page_metas` map onto these rows by path.*
+- *C6 built 2026-11-11: the privacy policy, terms and refund policy at `/admin/legal`, with their own permission `legal.manage`. Each change is a new version with a note on what changed; a published version is never edited or deleted (the model refuses both), and every earlier one stays readable at `/legal/{document}/versions/{n}`, kept out of search. The page shows the date the version was published, where it used to print today's date. Privacy and terms start from the text that was in the code; the refund policy has no text until somebody publishes one, and until then it 404s and stays out of the footer and sitemap. v2's refund policy comes across in Step C as a draft of version 1, published by a person after a read.*
 
 All of this follows `CLAUDE.md`: shared `DataTable` for lists, `UiFormField` labels,
 semantic tokens, permissions per screen (`content.pages`, `content.seo`, …).
@@ -319,7 +320,8 @@ Run after every import, printed and saved:
    Razorpay dashboard and reconcile by hand.
 6. Switch DNS / vhost. Enable the v2 → v3 redirect map:
    `/training/{slug}` (by the explicit course map), `/enroll/{slug}` → course page,
-   `/privacy-policy`, `/terms`, `/refund-policy` → `/legal/...`, `/pages/{slug}` → CMS page,
+   `/privacy-policy` → `/legal/privacy`, `/terms` → `/legal/terms`, `/refund-policy` →
+   `/legal/refunds` (publish the refund policy first), `/pages/{slug}` → CMS page,
    `/verify/{token}` served directly, `/dashboard` → role dashboard. All 301s.
 7. Smoke test: sign in as each role, open a course, verify three certificates (one revoked),
    make a ₹1 test payment and refund it.

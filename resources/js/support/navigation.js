@@ -13,7 +13,7 @@
  */
 import {
     LayoutDashboard, FolderKanban, FileText, Receipt, LifeBuoy, MessagesSquare,
-    KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy, UserCheck, Video, Star, Search,
+    KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy, UserCheck, Video, Star, Search, Scale,
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
     UserPlus, Package, ShieldCheck, Building2, Wrench, HelpCircle, UserCog,
     ScrollText, FileSignature, Files, LifeBuoy as LifeBuoyIcon, Banknote,
@@ -42,6 +42,7 @@ export const navigation = {
         { label: 'Site content', icon: HelpCircle, href: '/admin/content', permission: 'catalogue.view' },
         { label: 'Pages', icon: FileText, href: '/admin/pages', permission: 'content.manage' },
         { label: 'Search wording', icon: Search, href: '/admin/seo', permission: 'content.manage' },
+        { label: 'Legal documents', icon: Scale, href: '/admin/legal', permission: 'legal.manage' },
         { label: 'Reviews', icon: Star, href: '/admin/reviews?filter[status]=pending', permission: 'catalogue.view' },
         { label: 'Certificate designs', icon: Award, href: '/admin/certificate-templates', permission: 'catalogue.manage' },
         { label: 'Billing', icon: Banknote, href: '/admin/billing', permission: 'billing.view' },

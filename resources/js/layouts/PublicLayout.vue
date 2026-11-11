@@ -6,8 +6,8 @@
  * a visitor arrives wanting either software built or training taken, and the
  * fastest way to lose them is to make them work out which door is theirs.
  */
-import { ref, onMounted, onBeforeUnmount } from 'vue';
-import { Link } from '@inertiajs/vue3';
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
+import { Link, usePage } from '@inertiajs/vue3';
 import { Menu, X, ArrowUpRight } from 'lucide-vue-next';
 
 import BrandLogo from '@/components/Brand/BrandLogo.vue';
@@ -18,6 +18,16 @@ import UiToaster from '@/components/UI/UiToaster.vue';
 
 const menuOpen = ref(false);
 const scrolled = ref(false);
+
+/*
+ * Legal documents come from the server, because which ones exist is decided in
+ * the admin panel: a refund policy appears here the day it is published.
+ */
+const page = usePage();
+const legalLinks = computed(() => page.props.legal ?? [
+    { title: 'Privacy policy', href: '/legal/privacy' },
+    { title: 'Terms of service', href: '/legal/terms' },
+]);
 
 const footerCompany = [
     { label: 'Solutions', href: '/solutions' },
@@ -136,8 +146,9 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                             <li><Link href="/login" class="transition hover:text-[var(--text-strong)]">Sign in</Link></li>
                             <li><Link href="/register" class="transition hover:text-[var(--text-strong)]">Student sign up</Link></li>
                             <li><Link href="/faq" class="transition hover:text-[var(--text-strong)]">FAQ</Link></li>
-                            <li><Link href="/legal/privacy" class="transition hover:text-[var(--text-strong)]">Privacy</Link></li>
-                            <li><Link href="/legal/terms" class="transition hover:text-[var(--text-strong)]">Terms</Link></li>
+                            <li v-for="document in legalLinks" :key="document.href">
+                                <Link :href="document.href" class="transition hover:text-[var(--text-strong)]">{{ document.title }}</Link>
+                            </li>
                         </ul>
                     </div>
                 </div>

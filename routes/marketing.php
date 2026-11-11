@@ -4,6 +4,7 @@ use App\Http\Controllers\Marketing\EnrolController;
 use App\Http\Controllers\Marketing\HomeController;
 use App\Http\Controllers\Marketing\InternshipController;
 use App\Http\Controllers\Marketing\LeadController;
+use App\Http\Controllers\Marketing\LegalController;
 use App\Http\Controllers\Marketing\PageController;
 use App\Http\Controllers\Marketing\ServiceController;
 use App\Http\Controllers\Marketing\SitemapController;
@@ -53,7 +54,15 @@ Route::get('/process', [PageController::class, 'process'])->name('process');
 Route::get('/technology', [PageController::class, 'technology'])->name('technology');
 Route::get('/faq', [PageController::class, 'faq'])->name('faq');
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
-Route::get('/legal/{document}', [PageController::class, 'legal'])->name('legal');
+
+/* Legal documents: the version in force, and every earlier published version. */
+Route::get('/legal/{document}', [LegalController::class, 'show'])
+    ->where('document', '[a-z]+')
+    ->name('legal');
+Route::get('/legal/{document}/versions/{version}', [LegalController::class, 'version'])
+    ->where('document', '[a-z]+')
+    ->whereNumber('version')
+    ->name('legal.version');
 
 /* Pages written in the admin panel. Also where v2 served its custom pages. */
 Route::get('/pages/{slug}', [PageController::class, 'page'])

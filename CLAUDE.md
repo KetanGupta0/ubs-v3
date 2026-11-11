@@ -164,6 +164,16 @@ Rules for the marketing pages:
   Pages live at `/pages/{slug}` (v2's path too), 404 until published, can be
   previewed by staff with `noindex`, and published indexable ones are in the
   sitemap. `content.manage` is the permission.
+- **A legal document is versions, and a published version is permanent.** Privacy,
+  terms and refunds live in `legal_documents` with every version in
+  `legal_document_versions`; `LegalDocumentVersion` refuses to change or delete a
+  published one, whichever code path asks. Editing starts a draft of the next version,
+  publishing needs a note on what changed, and earlier versions stay readable at
+  `/legal/{document}/versions/{n}` with `noindex`. The date shown is the day the version
+  was published, never today's. A document with nothing published 404s and is left out
+  of the footer and sitemap. `legal.manage` is the permission, deliberately not
+  `content.manage`. The privacy policy has to be changed before any mail starts that it
+  says we do not send.
 - **Scarcity has to be real.** Seeded batch fill levels vary per offering. A
   "only 4 seats left" badge on every card reads as a sales trick, which is the
   opposite of what the rest of the site is doing.
