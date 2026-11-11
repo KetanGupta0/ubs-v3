@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\LegalDocument;
+use App\Models\SiteMenu;
 use App\Services\Auth\Impersonation;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -40,6 +41,12 @@ class HandleInertiaRequests extends Middleware
                 'name' => config('app.name'),
                 'env' => app()->environment(),
             ],
+
+            /*
+             * The public site's header and footer menus, as set in the admin
+             * panel. One cached array, dropped whenever a menu is saved.
+             */
+            'menus' => fn () => SiteMenu::forLayout(),
 
             /*
              * Legal documents with a published version, for the footer of the

@@ -27,6 +27,7 @@ use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SeoController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SiteMenuController;
 use App\Http\Controllers\Admin\SitePageController;
 use App\Http\Controllers\Admin\SolutionController;
 use App\Http\Controllers\Admin\StaffController;
@@ -352,6 +353,9 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             // POST so a photo can travel with the form.
             Route::post('team/{member:id}', [TeamMemberController::class, 'update'])->name('team.update');
             Route::delete('team/{member:id}', [TeamMemberController::class, 'destroy'])->name('team.destroy');
+
+            Route::get('menus', [SiteMenuController::class, 'index'])->name('menus.index');
+            Route::put('menus/{menu:key}', [SiteMenuController::class, 'update'])->name('menus.update');
 
             Route::get('seo', [SeoController::class, 'index'])->name('seo.index');
             Route::post('seo/{override}', [SeoController::class, 'update'])->name('seo.update');

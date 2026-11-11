@@ -29,23 +29,39 @@ const legalLinks = computed(() => page.props.legal ?? [
     { title: 'Terms of service', href: '/legal/terms' },
 ]);
 
-const footerCompany = [
-    { label: 'Solutions', href: '/solutions' },
-    { label: 'Services', href: '/services' },
-    { label: 'Internships', href: '/internships' },
-    { label: 'Training', href: '/training' },
-    { label: 'For colleges', href: '/for-colleges' },
-    { label: 'Process', href: '/process' },
-    { label: 'Contact', href: '/contact' },
-];
+/*
+ * The header and footer menus are set in the admin panel (/admin/menus). The
+ * lists below are only what to show if the server sent none.
+ */
+const fallbackMenus = {
+    header: [
+        { label: 'Solutions', href: '/solutions' },
+        { label: 'Services', href: '/services' },
+        { label: 'Internships', href: '/internships' },
+        { label: 'Training', href: '/training' },
+        { label: 'About', href: '/about' },
+    ],
+    footer: [
+        { title: 'Company', links: [{ label: 'Contact', href: '/contact' }] },
+        { title: 'Account', links: [{ label: 'Sign in', href: '/login' }] },
+    ],
+};
 
-const links = [
-    { label: 'Solutions', href: '/solutions' },
-    { label: 'Services', href: '/services' },
-    { label: 'Internships', href: '/internships' },
-    { label: 'Training', href: '/training' },
-    { label: 'About', href: '/about' },
-];
+const menus = computed(() => page.props.menus ?? fallbackMenus);
+const links = computed(() => menus.value.header);
+const footerColumns = computed(() => menus.value.footer);
+
+/** The drawer on a phone offers Contact even when the header does not. */
+const drawerLinks = computed(() => (links.value.some((link) => link.href === '/contact')
+    ? links.value
+    : [...links.value, { label: 'Contact', href: '/contact' }]));
+
+const isCurrent = (href) => {
+    const url = page.url.split(/[?#]/)[0];
+    const path = href.split(/[?#]/)[0];
+
+    return path === '/' ? url === '/' : url === path || url.startsWith(`${path}/`);
+};
 
 function onScroll() {
     scrolled.value = window.scrollY > 8;
@@ -76,18 +92,22 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                 </Link>
 
                 <nav class="hidden flex-1 items-center gap-1 lg:flex" aria-label="Main">
-                    <Link
+                    <component
+                        :is="link.external ? 'a' : Link"
                         v-for="link in links"
-                        :key="link.label"
+                        :key="`${link.label}${link.href}`"
                         :href="link.href"
+                        :target="link.external ? '_blank' : undefined"
+                        :rel="link.external ? 'noopener' : undefined"
+                        :aria-current="isCurrent(link.href) ? 'page' : undefined"
                         :class="[
                             'rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-[var(--surface-sunken)]',
-                            $page.url.startsWith(link.href) && 'text-brand-600 dark:text-brand-400',
+                            isCurrent(link.href) && 'text-brand-600 dark:text-brand-400',
                         ]"
-                        :style="$page.url.startsWith(link.href) ? {} : { color: 'var(--text-base)' }"
+                        :style="isCurrent(link.href) ? {} : { color: 'var(--text-base)' }"
                     >
                         {{ link.label }}
-                    </Link>
+                    </component>
                 </nav>
 
                 <div class="ml-auto flex items-center gap-2">
@@ -129,26 +149,26 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                         </p>
                     </div>
 
-                    <div>
-                        <h3 class="text-sm font-semibold">Company</h3>
+                    <div v-for="(column, index) in footerColumns" :key="index">
+                        <h3 class="text-sm font-semibold">{{ column.title }}</h3>
                         <ul class="mt-3 space-y-2 text-sm" style="color: var(--text-muted)">
-                            <li v-for="item in footerCompany" :key="item.href">
-                                <Link :href="item.href" class="transition hover:text-[var(--text-strong)]">
+                            <li v-for="item in column.links" :key="`${item.label}${item.href}`">
+                                <component
+                                    :is="item.external ? 'a' : Link"
+                                    :href="item.href"
+                                    :target="item.external ? '_blank' : undefined"
+                                    :rel="item.external ? 'noopener' : undefined"
+                                    class="transition hover:text-[var(--text-strong)]"
+                                >
                                     {{ item.label }}
-                                </Link>
+                                </component>
                             </li>
-                        </ul>
-                    </div>
-
-                    <div>
-                        <h3 class="text-sm font-semibold">Account</h3>
-                        <ul class="mt-3 space-y-2 text-sm" style="color: var(--text-muted)">
-                            <li><Link href="/login" class="transition hover:text-[var(--text-strong)]">Sign in</Link></li>
-                            <li><Link href="/register" class="transition hover:text-[var(--text-strong)]">Student sign up</Link></li>
-                            <li><Link href="/faq" class="transition hover:text-[var(--text-strong)]">FAQ</Link></li>
-                            <li v-for="document in legalLinks" :key="document.href">
-                                <Link :href="document.href" class="transition hover:text-[var(--text-strong)]">{{ document.title }}</Link>
-                            </li>
+                            <!-- Published legal documents always close the last column. -->
+                            <template v-if="index === footerColumns.length - 1">
+                                <li v-for="document in legalLinks" :key="document.href">
+                                    <Link :href="document.href" class="transition hover:text-[var(--text-strong)]">{{ document.title }}</Link>
+                                </li>
+                            </template>
                         </ul>
                     </div>
                 </div>
@@ -165,24 +185,19 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
 
         <UiDrawer :open="menuOpen" title="Menu" @close="menuOpen = false">
             <nav class="space-y-1">
-                <Link
-                    v-for="link in links"
-                    :key="link.label"
+                <component
+                    :is="link.external ? 'a' : Link"
+                    v-for="link in drawerLinks"
+                    :key="`${link.label}${link.href}`"
                     :href="link.href"
+                    :target="link.external ? '_blank' : undefined"
+                    :rel="link.external ? 'noopener' : undefined"
                     class="block rounded-xl px-3 py-3 text-base font-medium transition hover:bg-[var(--surface-sunken)]"
                     style="color: var(--text-strong)"
                     @click="menuOpen = false"
                 >
                     {{ link.label }}
-                </Link>
-                <Link
-                    href="/contact"
-                    class="block rounded-xl px-3 py-3 text-base font-medium transition hover:bg-[var(--surface-sunken)]"
-                    style="color: var(--text-strong)"
-                    @click="menuOpen = false"
-                >
-                    Contact
-                </Link>
+                </component>
             </nav>
 
             <template #footer>

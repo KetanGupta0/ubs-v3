@@ -190,6 +190,12 @@ Rules for the marketing pages:
 - **Every public page renders `Seo.vue`** with a title, description, canonical
   URL and, where it applies, structured data. Descriptions are capped at 158
   characters counted as characters, not bytes.
+- **The header and footer menus are set in the panel** (`/admin/menus`,
+  `site_menus` and `site_menu_items`), shared to every page as `menus`, cached and
+  dropped on save. A menu link must be a path the site's routes answer (a panel page
+  or legal document must also be published) or an `https://` address; the check runs
+  on save. Do not add links to `PublicLayout` by hand: add them in the panel, or in a
+  migration if every install needs them.
 - **Search wording for the fixed pages is set in the panel,** in `seo_overrides`
   (`/admin/seo`). `Seo::for()` applies it by path, so no controller changes when
   somebody edits it; empty fields keep the page's own wording. The list of fixed
