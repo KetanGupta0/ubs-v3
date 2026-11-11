@@ -13,6 +13,7 @@ import PublicLayout from '@/layouts/PublicLayout.vue';
 import Seo from '@/components/Seo.vue';
 import SectionHeading from '@/components/Marketing/SectionHeading.vue';
 import CtaSection from '@/components/Marketing/CtaSection.vue';
+import PeopleGrid from '@/components/Marketing/PeopleGrid.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import { accentFor } from '@/support/accents';
@@ -22,6 +23,7 @@ const props = defineProps({
     filters: { type: Object, default: () => ({}) },
     levels: { type: Array, default: () => [] },
     totalCount: { type: Number, default: 0 },
+    mentors: { type: Array, default: () => [] },
     seo: { type: Object, required: true },
 });
 
@@ -215,6 +217,15 @@ const promises = [
                 </Link>
             </div>
         </div>
+
+        <PeopleGrid
+            :people="mentors"
+            variant="mentor"
+            width="max-w-7xl"
+            eyebrow="Mentors"
+            title="Who teaches"
+            body="Working engineers who run the live classes and review your code every week."
+        />
 
         <CtaSection
             title="Training a whole team?"

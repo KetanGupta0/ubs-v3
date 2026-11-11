@@ -194,7 +194,7 @@ exactly, and every Razorpay payment id must appear exactly once.
 |---|---|---|
 | `services` | `services` | Content reviewed by a person, not copied blind: v3 services are richer and already seeded. |
 | `faqs` | `faqs` | Merged by question text, duplicates listed. |
-| `team_members` | new `team_members` (§6, CMS gap C4) | |
+| `team_members` | `team_members` (built 2026-11-11) | `type` mentor/team/both → `is_mentor` / `on_about`; `tech_stack` split on commas into `skills`; `avatar_url` downloaded and re-encoded into `photo_path`; `initials` and the gradient columns are dropped (initials are worked out from the name). |
 | `custom_pages` | `pages` (built 2026-11-11) | v2 stored HTML; v3 pages are blocks. Each v2 page is converted to Markdown text blocks (HTML to Markdown, so scripts and inline handlers cannot survive), kept as a draft, and published by a person after a look. |
 | `page_metas` | `seo` json on the page/route it describes (CMS gap C2) | |
 | `settings` (general, appearance) | v3 `settings` | Name, contact details, social links, logo, favicon. **Secrets are excluded** (§2.7). |
@@ -266,6 +266,7 @@ public site comes from `database/data/*.php` through the seeder. "Full CMS" mean
 *Progress:*
 - *C1 built 2026-11-11: pages at `/admin/pages`. Each is written as blocks (heading, text in Markdown, picture, call to action, questions), saved as a draft, previewed, then published to `/pages/{slug}`, with its own search title, description and a switch to keep it out of search. HTML typed into text is stripped and unsafe links are refused. New permission `content.manage`. Menu entries are left to C5.*
 - *C2 built 2026-11-11: search wording for the thirteen fixed public pages at `/admin/seo` (title, description, share picture, keep out of search), applied by path in `Seo::for()`. Pages written in the panel and catalogue items keep their own search fields. v2's `page_metas` map onto these rows by path.*
+- *C4 built 2026-11-11: team and mentors at `/admin/team` (permission `content.manage`): name, role, experience, a short bio, what they teach, LinkedIn, a re-encoded photo, order, shown or hidden, and whether each person appears on the About page, as a mentor on the Training page, or both. Nobody is seeded: each section stays off the site until a real person is added. A replaced or removed photo is deleted from disk.*
 - *C6 built 2026-11-11: the privacy policy, terms and refund policy at `/admin/legal`, with their own permission `legal.manage`. Each change is a new version with a note on what changed; a published version is never edited or deleted (the model refuses both), and every earlier one stays readable at `/legal/{document}/versions/{n}`, kept out of search. The page shows the date the version was published, where it used to print today's date. Privacy and terms start from the text that was in the code; the refund policy has no text until somebody publishes one, and until then it 404s and stays out of the footer and sitemap. v2's refund policy comes across in Step C as a draft of version 1, published by a person after a read.*
 
 All of this follows `CLAUDE.md`: shared `DataTable` for lists, `UiFormField` labels,

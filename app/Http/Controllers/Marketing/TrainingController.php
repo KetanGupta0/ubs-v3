@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Marketing;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseReview;
+use App\Models\TeamMember;
 use App\Support\Seo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -40,6 +41,7 @@ class TrainingController extends Controller
             'filters' => ['level' => $level, 'type' => $type],
             'levels' => Course::query()->publiclyVisible()->taught()->distinct()->orderBy('level')->pluck('level'),
             'totalCount' => Course::query()->publiclyVisible()->taught()->count(),
+            'mentors' => TeamMember::query()->mentors()->get()->map->toPublicArray()->values(),
             'seo' => Seo::for(
                 'Live training — programmes taught by working developers',
                 'Live technical training on Google Meet, with attendance, assessment, projects and a certificate that can be verified. Full stack, Laravel, Vue, Python and databases.',

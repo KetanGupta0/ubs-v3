@@ -6,8 +6,12 @@ import PublicLayout from '@/layouts/PublicLayout.vue';
 import Seo from '@/components/Seo.vue';
 import SectionHeading from '@/components/Marketing/SectionHeading.vue';
 import CtaSection from '@/components/Marketing/CtaSection.vue';
+import PeopleGrid from '@/components/Marketing/PeopleGrid.vue';
 
-defineProps({ seo: { type: Object, required: true } });
+defineProps({
+    team: { type: Array, default: () => [] },
+    seo: { type: Object, required: true },
+});
 
 const principles = [
     {
@@ -125,6 +129,14 @@ const principles = [
                 </div>
             </div>
         </section>
+
+        <PeopleGrid
+            :people="team"
+            width="max-w-4xl"
+            eyebrow="The people"
+            title="Who you will work with"
+            body="The people who answer your messages, write your code and teach your classes."
+        />
 
         <section class="mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:px-8">
             <div

@@ -9,6 +9,7 @@ use App\Models\Faq;
 use App\Models\Page;
 use App\Models\Service;
 use App\Models\Solution;
+use App\Models\TeamMember;
 use App\Support\Seo;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -18,6 +19,7 @@ class PageController extends Controller
     public function about(): Response
     {
         return Inertia::render('marketing/About', [
+            'team' => TeamMember::query()->forAbout()->get()->map->toPublicArray()->values(),
             'seo' => Seo::for(
                 'About Unboundbyte Solutions',
                 'A software company that also teaches. We build and maintain systems, and we train the people who will run them.',

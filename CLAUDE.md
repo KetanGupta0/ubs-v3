@@ -146,7 +146,10 @@ Rules for the marketing pages:
 - **No fabricated proof.** No client screenshots (we have no permission to
   publish any), no invented testimonials, no logo wall. Product pages carry a
   clearly labelled illustrative interface, and the testimonials section renders
-  nothing until there is a real quote.
+  nothing until there is a real quote. The same goes for people: the team on
+  About and the mentors on Training come from `/admin/team`, nobody is seeded,
+  and `PeopleGrid` renders nothing, heading included, until a real person is
+  added.
 - **Prices are bands, never figures.** A number on a catalogue page is a guess
   presented as a price. Every band is captioned as indicative.
 - **Course visibility is enforced server side.** Anything marked `lms_only`

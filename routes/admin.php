@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\StudentNoticeController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\SupportController;
+use App\Http\Controllers\Admin\TeamMemberController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -343,6 +344,14 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('pages/{page}/unpublish', [SitePageController::class, 'unpublish'])->name('pages.unpublish');
             Route::delete('pages/{page}', [SitePageController::class, 'destroy'])->name('pages.destroy');
             Route::get('pages/{page}/preview', [SitePageController::class, 'preview'])->name('pages.preview');
+
+            Route::get('team', [TeamMemberController::class, 'index'])->name('team.index');
+            Route::get('team/new', [TeamMemberController::class, 'create'])->name('team.create');
+            Route::post('team', [TeamMemberController::class, 'store'])->name('team.store');
+            Route::get('team/{member:id}/edit', [TeamMemberController::class, 'edit'])->name('team.edit');
+            // POST so a photo can travel with the form.
+            Route::post('team/{member:id}', [TeamMemberController::class, 'update'])->name('team.update');
+            Route::delete('team/{member:id}', [TeamMemberController::class, 'destroy'])->name('team.destroy');
 
             Route::get('seo', [SeoController::class, 'index'])->name('seo.index');
             Route::post('seo/{override}', [SeoController::class, 'update'])->name('seo.update');
