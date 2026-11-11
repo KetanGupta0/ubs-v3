@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Models\Page;
 use App\Models\Service;
 use App\Models\Solution;
 use Illuminate\Http\Response;
@@ -60,6 +61,13 @@ class SitemapController extends Controller
                 'lastmod' => $c->updated_at?->toAtomString(),
                 'priority' => '0.8',
                 'changefreq' => 'weekly',
+            ]))
+            // Published pages from the admin panel, unless kept out of search.
+            ->concat(Page::query()->published()->where('is_indexable', true)->get()->map(fn (Page $p) => [
+                'loc' => url($p->path()),
+                'lastmod' => $p->updated_at?->toAtomString(),
+                'priority' => '0.6',
+                'changefreq' => 'monthly',
             ]));
 
         $xml = view('sitemap', ['urls' => $urls])->render();

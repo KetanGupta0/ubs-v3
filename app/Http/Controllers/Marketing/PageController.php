@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Marketing;
 
+use App\Http\Controllers\Admin\SitePageController;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Faq;
+use App\Models\Page;
 use App\Models\Service;
 use App\Models\Solution;
 use App\Support\Seo;
@@ -102,6 +104,21 @@ class PageController extends Controller
                 'Tell us what you are trying to build, or which programme you want to join. We reply within one working day.',
                 '/contact',
             ),
+        ]);
+    }
+
+    /** A page written in the admin panel. Only published ones exist as far as visitors know. */
+    public function page(string $slug): Response
+    {
+        $page = Page::query()->published()->where('slug', $slug)->firstOrFail();
+
+        return Inertia::render('marketing/CmsPage', [
+            'page' => SitePageController::publicArray($page),
+            'preview' => false,
+            'seo' => [
+                ...Seo::for(($page->seo_title ?: $page->title).' — Unboundbyte Solutions', $page->description(), $page->path()),
+                'noindex' => ! $page->is_indexable,
+            ],
         ]);
     }
 

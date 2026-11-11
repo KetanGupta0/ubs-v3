@@ -47,6 +47,9 @@ class PermissionSeeder extends Seeder
             'Chat' => [
                 'chat.reply' => 'Read and reply in client and batch conversations',
             ],
+            'Public site' => [
+                'content.manage' => 'Write and publish pages on the public site',
+            ],
             'Catalogue' => [
                 'catalogue.view' => 'View the catalogue',
                 'catalogue.manage' => 'Edit solutions, services and courses',

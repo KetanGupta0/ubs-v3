@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SitePageController;
 use App\Http\Controllers\Admin\SolutionController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\StudentNoticeController;
@@ -327,6 +328,19 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::get('marking/submissions/{submission}/files/{index}', [AssessmentController::class, 'downloadSubmissionFile'])->name('marking.submission.file');
             Route::get('marking/attempts/{attempt}', [AssessmentController::class, 'attempt'])->name('marking.attempt');
             Route::post('marking/attempts/{attempt}/answers/{answer}', [AssessmentController::class, 'markAnswer'])->name('marking.answer');
+        });
+
+        /* ----------------------------------------------- public site pages */
+        Route::middleware('permission:content.manage')->group(function () {
+            Route::get('pages', [SitePageController::class, 'index'])->name('pages.index');
+            Route::get('pages/new', [SitePageController::class, 'create'])->name('pages.create');
+            Route::post('pages', [SitePageController::class, 'store'])->name('pages.store');
+            Route::get('pages/{page}/edit', [SitePageController::class, 'edit'])->name('pages.edit');
+            // POST so pictures can travel with the form.
+            Route::post('pages/{page}', [SitePageController::class, 'update'])->name('pages.update');
+            Route::post('pages/{page}/unpublish', [SitePageController::class, 'unpublish'])->name('pages.unpublish');
+            Route::delete('pages/{page}', [SitePageController::class, 'destroy'])->name('pages.destroy');
+            Route::get('pages/{page}/preview', [SitePageController::class, 'preview'])->name('pages.preview');
         });
 
         /* --------------------------------------------- certificate templates */

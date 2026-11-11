@@ -22,6 +22,8 @@ const structuredData = computed(() =>
     <Head :title="seo.title">
         <meta name="description" :content="seo.description">
         <link rel="canonical" :href="seo.url">
+        <!-- Drafts in preview, and pages an editor kept out of search. -->
+        <meta v-if="seo.noindex" name="robots" content="noindex, nofollow">
 
         <meta property="og:type" content="website">
         <meta property="og:site_name" content="Unboundbyte Solutions">

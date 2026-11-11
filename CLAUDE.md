@@ -156,6 +156,14 @@ Rules for the marketing pages:
   first and lands there afterwards. One way into an account, one way onto a
   course, one place the fee is priced. It 404s for anything the public site does
   not list, and sends people back to the course page while enrolment is closed.
+- **A page written in the admin panel is blocks, never HTML.** `Page` holds an
+  ordered list of heading, text, picture, call to action and questions blocks;
+  `SitePageController` keeps only the fields each type allows. Text is Markdown,
+  turned into HTML on the server with typed HTML stripped and unsafe links
+  refused, and buttons go to a path on this site or an `https://` address only.
+  Pages live at `/pages/{slug}` (v2's path too), 404 until published, can be
+  previewed by staff with `noindex`, and published indexable ones are in the
+  sitemap. `content.manage` is the permission.
 - **Scarcity has to be real.** Seeded batch fill levels vary per offering. A
   "only 4 seats left" badge on every card reads as a sales trick, which is the
   opposite of what the rest of the site is doing.

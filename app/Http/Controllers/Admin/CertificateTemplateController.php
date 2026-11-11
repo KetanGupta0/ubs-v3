@@ -8,14 +8,12 @@ use App\Models\CertificateTemplate;
 use App\Models\Course;
 use App\Services\Admin\Auditor;
 use App\Services\Lms\Credentials;
+use App\Support\ImageUpload;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
 use App\Support\Table\Table;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -173,49 +171,13 @@ class CertificateTemplateController extends Controller
         }
 
         if ($file = $request->file('background')) {
-            $template->background_path = $this->storeImage($file, 'jpg', 3508);
+            // Capped at A4 landscape at 300 dpi.
+            $template->background_path = ImageUpload::store($file, 'private', 'certificate-templates', 3508, 'jpg', 'background');
         }
 
         if ($file = $request->file('signature')) {
-            $template->signature_path = $this->storeImage($file, 'png', 900);
+            $template->signature_path = ImageUpload::store($file, 'private', 'certificate-templates', 900, 'png', 'signature');
         }
-    }
-
-    /**
-     * Re-encode an uploaded image through GD and keep it on the private disk.
-     *
-     * Re-encoding drops whatever metadata came with the file and caps its
-     * size, so a 40 MB photo does not end up inside every certificate. A
-     * background is capped at A4 landscape at 300 dpi.
-     */
-    protected function storeImage(UploadedFile $file, string $as, int $maxWidth): string
-    {
-        $image = match ($file->getMimeType()) {
-            'image/png' => @imagecreatefrompng($file->getRealPath()),
-            'image/jpeg' => @imagecreatefromjpeg($file->getRealPath()),
-            default => false,
-        };
-
-        abort_unless($image, 422, 'That image could not be read.');
-
-        if (imagesx($image) > $maxWidth) {
-            $image = imagescale($image, $maxWidth);
-        }
-
-        ob_start();
-        if ($as === 'png') {
-            imagesavealpha($image, true);
-            imagepng($image, null, 7);
-        } else {
-            imagejpeg($image, null, 85);
-        }
-        $bytes = (string) ob_get_clean();
-        imagedestroy($image);
-
-        $path = 'certificate-templates/'.Str::uuid().'.'.$as;
-        Storage::disk('private')->put($path, $bytes);
-
-        return $path;
     }
 
     /** @return array<string, mixed> */

@@ -55,6 +55,11 @@ Route::get('/faq', [PageController::class, 'faq'])->name('faq');
 Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 Route::get('/legal/{document}', [PageController::class, 'legal'])->name('legal');
 
+/* Pages written in the admin panel. Also where v2 served its custom pages. */
+Route::get('/pages/{slug}', [PageController::class, 'page'])
+    ->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')
+    ->name('pages.show');
+
 // Tighter than the form needs, because this endpoint writes a row and sends
 // two messages every time it succeeds.
 Route::post('/enquiries', [LeadController::class, 'store'])

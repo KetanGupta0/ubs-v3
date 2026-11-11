@@ -195,7 +195,7 @@ exactly, and every Razorpay payment id must appear exactly once.
 | `services` | `services` | Content reviewed by a person, not copied blind: v3 services are richer and already seeded. |
 | `faqs` | `faqs` | Merged by question text, duplicates listed. |
 | `team_members` | new `team_members` (§6, CMS gap C4) | |
-| `custom_pages` | new `pages` (CMS gap C1) | Body HTML sanitised on import. |
+| `custom_pages` | `pages` (built 2026-11-11) | v2 stored HTML; v3 pages are blocks. Each v2 page is converted to Markdown text blocks (HTML to Markdown, so scripts and inline handlers cannot survive), kept as a draft, and published by a person after a look. |
 | `page_metas` | `seo` json on the page/route it describes (CMS gap C2) | |
 | `settings` (general, appearance) | v3 `settings` | Name, contact details, social links, logo, favicon. **Secrets are excluded** (§2.7). |
 | `email_templates` | `message_templates` | Variables renamed to v3's; anything that would mail a plain password (v2's `account_created` template does) is not carried over, because v3 credential delivery works differently. |
@@ -262,6 +262,9 @@ public site comes from `database/data/*.php` through the seeder. "Full CMS" mean
 | C8 | **Site identity**: name, logo, favicon, contact details, social links, address, GSTIN shown on the site. Still no credentials. |
 | C9 | **Message templates** editor with preview and a variable list. |
 | C10 | **Draft → preview → publish** for every content type, and every change through `Auditor`, so a bad edit can be traced and reverted. |
+
+*Progress:*
+- *C1 built 2026-11-11: pages at `/admin/pages`. Each is written as blocks (heading, text in Markdown, picture, call to action, questions), saved as a draft, previewed, then published to `/pages/{slug}`, with its own search title, description and a switch to keep it out of search. HTML typed into text is stripped and unsafe links are refused. New permission `content.manage`. Menu entries are left to C5.*
 
 All of this follows `CLAUDE.md`: shared `DataTable` for lists, `UiFormField` labels,
 semantic tokens, permissions per screen (`content.pages`, `content.seo`, …).
