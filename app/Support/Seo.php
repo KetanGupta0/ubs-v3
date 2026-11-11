@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use App\Models\SeoOverride;
+use Illuminate\Support\Facades\Storage;
+
 /**
  * Page metadata handed to the client.
  *
@@ -20,7 +23,17 @@ class Seo
     ): array {
         $url = $path ? url($path) : url()->current();
 
+        // Wording set in the admin panel for this page wins over the page's own.
+        $override = SeoOverride::forPath('/'.trim((string) parse_url($url, PHP_URL_PATH), '/'));
+
+        if ($override) {
+            $title = $override['title'] ?: $title;
+            $description = $override['description'] ?: $description;
+            $image = $override['image_path'] ? Storage::disk('public')->url($override['image_path']) : $image;
+        }
+
         return [
+            'noindex' => (bool) ($override['noindex'] ?? false),
             'title' => $title,
             /*
              * Search engines cut a description off around 160 characters.

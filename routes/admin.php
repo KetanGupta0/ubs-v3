@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProposalController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\SeoController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SitePageController;
@@ -341,6 +342,9 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('pages/{page}/unpublish', [SitePageController::class, 'unpublish'])->name('pages.unpublish');
             Route::delete('pages/{page}', [SitePageController::class, 'destroy'])->name('pages.destroy');
             Route::get('pages/{page}/preview', [SitePageController::class, 'preview'])->name('pages.preview');
+
+            Route::get('seo', [SeoController::class, 'index'])->name('seo.index');
+            Route::post('seo/{override}', [SeoController::class, 'update'])->name('seo.update');
         });
 
         /* --------------------------------------------- certificate templates */

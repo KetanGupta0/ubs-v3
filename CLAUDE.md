@@ -170,6 +170,11 @@ Rules for the marketing pages:
 - **Every public page renders `Seo.vue`** with a title, description, canonical
   URL and, where it applies, structured data. Descriptions are capped at 158
   characters counted as characters, not bytes.
+- **Search wording for the fixed pages is set in the panel,** in `seo_overrides`
+  (`/admin/seo`). `Seo::for()` applies it by path, so no controller changes when
+  somebody edits it; empty fields keep the page's own wording. The list of fixed
+  pages is `SeoOverride::PAGES`: add a new fixed page there. The browser title
+  gets the site name once; a title that already has it is left alone.
 - Facet lists are ordered by how many products carry each value, because a
   facet list is a browsing aid rather than an index.
 

@@ -265,6 +265,7 @@ public site comes from `database/data/*.php` through the seeder. "Full CMS" mean
 
 *Progress:*
 - *C1 built 2026-11-11: pages at `/admin/pages`. Each is written as blocks (heading, text in Markdown, picture, call to action, questions), saved as a draft, previewed, then published to `/pages/{slug}`, with its own search title, description and a switch to keep it out of search. HTML typed into text is stripped and unsafe links are refused. New permission `content.manage`. Menu entries are left to C5.*
+- *C2 built 2026-11-11: search wording for the thirteen fixed public pages at `/admin/seo` (title, description, share picture, keep out of search), applied by path in `Seo::for()`. Pages written in the panel and catalogue items keep their own search fields. v2's `page_metas` map onto these rows by path.*
 
 All of this follows `CLAUDE.md`: shared `DataTable` for lists, `UiFormField` labels,
 semantic tokens, permissions per screen (`content.pages`, `content.seo`, …).
