@@ -33,7 +33,8 @@ class Seo
         }
 
         return [
-            'noindex' => (bool) ($override['noindex'] ?? false),
+            // Staff previewing unpublished wording see a page search engines must never keep.
+            'noindex' => (bool) ($override['noindex'] ?? false) || PageCopy::previewing(),
             'title' => $title,
             /*
              * Search engines cut a description off around 160 characters.

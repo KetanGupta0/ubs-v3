@@ -8,6 +8,7 @@ use App\Models\Service;
 use App\Models\Solution;
 use App\Models\SolutionCategory;
 use App\Models\Testimonial;
+use App\Support\PageCopy;
 use App\Support\Seo;
 use Illuminate\Database\Eloquent\Builder;
 use Inertia\Inertia;
@@ -18,6 +19,8 @@ class HomeController extends Controller
     public function __invoke(): Response
     {
         return Inertia::render('marketing/Home', [
+            'copy' => PageCopy::for('home'),
+
             'featuredSolutions' => Solution::query()
                 ->published()
                 ->where('is_featured', true)

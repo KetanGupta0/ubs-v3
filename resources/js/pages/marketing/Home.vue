@@ -20,6 +20,7 @@ import SectionHeading from '@/components/Marketing/SectionHeading.vue';
 import SolutionCard from '@/components/Marketing/SolutionCard.vue';
 import CtaSection from '@/components/Marketing/CtaSection.vue';
 import MockScreen from '@/components/Marketing/MockScreen.vue';
+import HighlightedText from '@/components/Marketing/HighlightedText.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
 import UiCard from '@/components/UI/UiCard.vue';
@@ -32,30 +33,26 @@ const props = defineProps({
     featuredInternships: { type: Array, default: () => [] },
     stats: { type: Object, default: () => ({}) },
     testimonials: { type: Array, default: () => [] },
+    /** The page's wording, as published in the panel (/admin/copy). */
+    copy: { type: Object, required: true },
     seo: { type: Object, required: true },
 });
 
 const categoryIcons = { Building2, ShoppingBag, HeartPulse, Truck, Landmark };
 const serviceIcons = { Code2, ArrowUpRight, LifeBuoy: ShieldCheck };
 
-const pillars = [
-    { icon: GitBranch, title: 'Your code, your repository', body: 'Yours from the first commit. We do not hold source as leverage, and you can replace us without drama.' },
-    { icon: Gauge, title: 'Working software every two weeks', body: 'Deployed somewhere you can open it. No six month silence ending in a surprise.' },
-    { icon: FileCheck2, title: 'Scope written down', body: 'Including what is deliberately out. Most disputes are about the second list, not the first.' },
-    { icon: Smartphone, title: 'Built for the phone first', body: 'Most of your users are on a mid range Android on patchy data. We build for that, not for an office desktop.' },
-];
+// The icons stay with the design; the words come from the panel.
+const pillars = computed(() => [GitBranch, Gauge, FileCheck2, Smartphone].map((icon, index) => ({
+    icon,
+    title: props.copy[`pillars.${index + 1}.title`],
+    body: props.copy[`pillars.${index + 1}.body`],
+})));
 
-const technologies = [
-    'Laravel', 'Vue.js', 'MySQL', 'PostgreSQL', 'Redis', 'Docker', 'Tailwind CSS',
-    'Python', 'Node.js', 'Nginx', 'AWS', 'Inertia.js', 'Pest', 'Git',
-];
+const technologies = computed(() => props.copy['technology.list'] ?? []);
+const trainingPoints = computed(() => props.copy['paths.student_points'] ?? []);
 
-const trainingPoints = [
-    'Internships with the four documents your college asks for',
-    'Live on Google Meet, at a fixed time each week',
-    'A mentor who reviews your code, not a recorded video',
-    'A project you can defend at a viva or an interview',
-];
+/** Live figures for the {tokens} a field may carry, so a count in a sentence never goes stale. */
+const fill = (text) => (text ?? '').replace(/\{(solutions|categories)\}/g, (match, token) => props.stats[token] ?? match);
 
 const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
 </script>
@@ -77,25 +74,21 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
                 <div class="grid items-center gap-12 lg:grid-cols-12">
                     <div class="lg:col-span-6">
                         <UiBadge tone="brand" dot class="animate-fade-up">
-                            Software development · Live training
+                            {{ copy['hero.badge'] }}
                         </UiBadge>
 
                         <h1
                             class="animate-fade-up mt-6 text-4xl font-semibold leading-[1.08] sm:text-5xl lg:text-[3.4rem]"
                             style="animation-delay: 80ms"
                         >
-                            We build the software, and we train
-                            the people who <span class="text-gradient">run it</span>.
+                            <HighlightedText :text="copy['hero.title']" />
                         </h1>
 
                         <p
                             class="animate-fade-up mt-6 max-w-xl text-base leading-relaxed sm:text-lg"
                             style="animation-delay: 160ms; color: var(--text-muted)"
                         >
-                            Unboundbyte Solutions builds custom software, modernises systems you
-                            already run, and maintains them afterwards. We also run internships and
-                            live courses for college students. Two halves of the same problem,
-                            handled by one team.
+                            {{ copy['hero.body'] }}
                         </p>
 
                         <div
@@ -103,11 +96,11 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
                             style="animation-delay: 240ms"
                         >
                             <UiButton size="lg" href="/solutions">
-                                Browse what we build
+                                {{ copy['hero.primary'] }}
                                 <template #trailing><ArrowRight class="h-4 w-4" /></template>
                             </UiButton>
                             <UiButton size="lg" variant="secondary" href="/training">
-                                See training programmes
+                                {{ copy['hero.secondary'] }}
                             </UiButton>
                         </div>
 
@@ -151,9 +144,9 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
         <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <SectionHeading
                 align="center"
-                eyebrow="Two ways we work"
-                title="Which one brought you here?"
-                body="They are genuinely different jobs, so we have kept them apart rather than blurring them into one pitch."
+                :eyebrow="copy['paths.eyebrow']"
+                :title="copy['paths.title']"
+                :body="copy['paths.body']"
             />
 
             <div class="mt-10 grid gap-5 md:grid-cols-2">
@@ -162,10 +155,9 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
                         <Code2 class="h-5 w-5" aria-hidden="true" />
                     </span>
 
-                    <h3 class="mt-5 text-xl font-semibold">I need software built or fixed</h3>
+                    <h3 class="mt-5 text-xl font-semibold">{{ copy['paths.software_title'] }}</h3>
                     <p class="mt-2 text-sm leading-relaxed" style="color: var(--text-muted)">
-                        A new system, an upgrade to one you already run, or a maintenance contract
-                        with someone accountable when it breaks at nine on a Friday night.
+                        {{ copy['paths.software_body'] }}
                     </p>
 
                     <ul class="mt-5 space-y-2">
@@ -182,7 +174,7 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
                     </ul>
 
                     <UiButton class="mt-6" href="/solutions" variant="secondary">
-                        Browse the catalogue
+                        {{ copy['paths.software_button'] }}
                         <template #trailing><ArrowUpRight class="h-3.5 w-3.5" /></template>
                     </UiButton>
                 </UiCard>
@@ -192,10 +184,9 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
                         <GraduationCap class="h-5 w-5" aria-hidden="true" />
                     </span>
 
-                    <h3 class="mt-5 text-xl font-semibold">I am a student, and I want to build</h3>
+                    <h3 class="mt-5 text-xl font-semibold">{{ copy['paths.student_title'] }}</h3>
                     <p class="mt-2 text-sm leading-relaxed" style="color: var(--text-muted)">
-                        Internships that meet your college requirement and leave you with a real
-                        project, plus longer live courses if you want a subject properly.
+                        {{ copy['paths.student_body'] }}
                     </p>
 
                     <ul class="mt-5 space-y-2">
@@ -212,10 +203,10 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
 
                     <div class="mt-6 flex flex-wrap gap-2">
                         <UiButton href="/internships">
-                            See internships
+                            {{ copy['paths.student_button'] }}
                             <template #trailing><ArrowUpRight class="h-3.5 w-3.5" /></template>
                         </UiButton>
-                        <UiButton href="/training" variant="secondary">Courses</UiButton>
+                        <UiButton href="/training" variant="secondary">{{ copy['paths.student_secondary'] }}</UiButton>
                     </div>
                 </UiCard>
             </div>
@@ -226,9 +217,9 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-wrap items-end justify-between gap-6">
                     <SectionHeading
-                        eyebrow="Solutions catalogue"
-                        title="Software we build, by category"
-                        body="Fifteen products across five industries, each with what is in it, what it runs on, an indicative budget and an indicative timeline."
+                        :eyebrow="copy['catalogue.eyebrow']"
+                        :title="copy['catalogue.title']"
+                        :body="fill(copy['catalogue.body'])"
                     />
 
                     <UiButton variant="secondary" href="/solutions">
@@ -272,15 +263,15 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
         <!-- ----------------------------------------------------------- pillars -->
         <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <SectionHeading
-                eyebrow="How we work"
-                title="The parts that decide whether a project goes well"
-                body="None of this is exciting. All of it is what separates software you keep from software you replace in eighteen months."
+                :eyebrow="copy['pillars.eyebrow']"
+                :title="copy['pillars.title']"
+                :body="copy['pillars.body']"
             />
 
             <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
                 <div
                     v-for="(pillar, index) in pillars"
-                    :key="pillar.title"
+                    :key="index"
                     class="animate-fade-up rounded-[var(--radius-card)] border p-5"
                     :style="{ borderColor: 'var(--border-subtle)', animationDelay: `${index * 70}ms` }"
                 >
@@ -291,7 +282,7 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
             </div>
 
             <UiButton class="mt-8" variant="ghost" href="/process">
-                Read how a project actually runs
+                {{ copy['pillars.link'] }}
                 <template #trailing><ArrowRight class="h-4 w-4" /></template>
             </UiButton>
         </section>
@@ -299,7 +290,7 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
         <!-- -------------------------------------------------------- technology -->
         <section class="border-y py-10" style="border-color: var(--border-subtle)">
             <p class="mb-6 text-center text-xs font-semibold uppercase tracking-[0.18em]" style="color: var(--text-muted)">
-                Built on tools chosen to be maintainable by someone other than us
+                {{ copy['technology.caption'] }}
             </p>
 
             <div class="ub-marquee flex gap-3 overflow-hidden" aria-hidden="true">
@@ -323,9 +314,9 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-wrap items-end justify-between gap-6">
                     <SectionHeading
-                        eyebrow="For college students"
-                        title="Internships that produce something you can show"
-                        body="Remote, with a brief instead of a tutorial and a mentor who reviews your code every week. Every one ends with the four documents your college asks for."
+                        :eyebrow="copy['internships.eyebrow']"
+                        :title="copy['internships.title']"
+                        :body="copy['internships.body']"
                     />
 
                     <UiButton variant="secondary" href="/internships">
@@ -380,9 +371,9 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
                 </div>
 
                 <p class="mt-6 text-sm" style="color: var(--text-muted)">
-                    Sending a whole batch from your college?
+                    {{ copy['internships.colleges'] }}
                     <Link href="/for-colleges" class="font-semibold text-brand-600 hover:underline dark:text-brand-400">
-                        See how a tie-up works
+                        {{ copy['internships.colleges_link'] }}
                     </Link>
                 </p>
             </div>
@@ -392,9 +383,9 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
         <section class="mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
             <div class="flex flex-wrap items-end justify-between gap-6">
                 <SectionHeading
-                    eyebrow="Live courses"
-                    title="Go deeper on one subject"
-                    body="Longer programmes for students and working developers who want a technology properly rather than a taste of it. Live on Google Meet, with assessment and a reviewed project."
+                    :eyebrow="copy['courses.eyebrow']"
+                    :title="copy['courses.title']"
+                    :body="copy['courses.body']"
                 />
 
                 <UiButton variant="secondary" href="/training">
@@ -456,7 +447,7 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
         <!-- Testimonials render only when there is a real one to show. -->
         <section v-if="testimonials.length" class="py-16 sm:py-20" style="background: var(--surface-sunken)">
             <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                <SectionHeading align="center" eyebrow="In their words" title="What clients and students say" />
+                <SectionHeading align="center" :eyebrow="copy['testimonials.eyebrow']" :title="copy['testimonials.title']" />
 
                 <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                     <figure
@@ -488,7 +479,10 @@ const heroSolution = computed(() => props.featuredSolutions[0] ?? null);
         </section>
 
         <CtaSection
-            secondary-label="Browse the catalogue"
+            :title="copy['cta.title']"
+            :body="copy['cta.body']"
+            :primary-label="copy['cta.primary']"
+            :secondary-label="copy['cta.secondary']"
             secondary-href="/solutions"
         />
     </PublicLayout>

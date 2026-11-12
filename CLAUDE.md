@@ -204,6 +204,12 @@ Rules for the marketing pages:
   as `site` only what the Settings "Public site" tab switched on; the same data feeds
   `Seo::organisation()`, so structured data never says more than the page. The PAN is
   never shown. Profile links must be on their own network's host.
+- **The words on a fixed page come from `PageCopy::for('page')`,** never from the
+  Vue file. Each field is declared, with its starting wording and limits, in
+  `database/data/page_copy.php`; edits are drafts in `page_copy` until published, and
+  staff preview them with `?preview=copy`. Only words are editable: layout, icons,
+  links and list lengths stay in code. Write a number inside a sentence as a
+  `{token}` filled from live figures, never as a word.
 - **Search wording for the fixed pages is set in the panel,** in `seo_overrides`
   (`/admin/seo`). `Seo::for()` applies it by path, so no controller changes when
   somebody edits it; empty fields keep the page's own wording. The list of fixed

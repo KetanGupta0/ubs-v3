@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\LegalDocument;
 use App\Models\SiteMenu;
 use App\Services\Auth\Impersonation;
+use App\Support\PageCopy;
 use App\Support\SiteIdentity;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -54,6 +55,9 @@ class HandleInertiaRequests extends Middleware
              * the public site. Built from the cached settings map.
              */
             'site' => fn () => SiteIdentity::forPublic(),
+
+            /* Staff looking at a fixed page's unpublished wording, so the page can say so. */
+            'copyPreview' => fn () => PageCopy::previewing(),
 
             /*
              * Legal documents with a published version, for the footer of the
