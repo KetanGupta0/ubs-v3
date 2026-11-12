@@ -1,14 +1,15 @@
 <script setup>
-import { computed } from 'vue';
-import { Head, Link, router } from '@inertiajs/vue3';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import {
-    ArrowLeft, ArrowRight, CheckCircle2, Circle, Clock, Download,
-    ExternalLink, FileText, Film, File, FileSpreadsheet, Presentation,
+    ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, CheckCircle2, Circle, Clock, Download,
+    ExternalLink, FileText, Film, File, FileSpreadsheet, Lock, NotebookPen, Presentation,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import UiCard from '@/components/UI/UiCard.vue';
 import UiButton from '@/components/UI/UiButton.vue';
+import UiTextarea from '@/components/UI/UiTextarea.vue';
 
 const props = defineProps({
     course: { type: Object, required: true },
@@ -17,6 +18,8 @@ const props = defineProps({
     materials: { type: Array, default: () => [] },
     previous: { type: Object, default: null },
     next: { type: Object, default: null },
+    note: { type: Object, default: () => ({ body: '', bookmarked: false, private: true }) },
+    timeSpent: { type: String, default: null },
 });
 
 const icons = {
@@ -42,6 +45,87 @@ const embedUrl = computed(() => {
     if (vimeo) return `https://player.vimeo.com/video/${vimeo[1]}`;
 
     return null;
+});
+
+/* ------------------------------------------------ note and bookmark */
+const base = computed(() => `/student/courses/${props.course.id}/lessons/${props.lesson.id}`);
+const noteForm = useForm({ body: props.note.body, bookmarked: props.note.bookmarked });
+const saved = ref(false);
+
+function saveNote() {
+    noteForm.put(`${base.value}/note`, {
+        preserveScroll: true,
+        preserveState: true,
+        only: ['note'],
+        onSuccess: () => {
+            noteForm.defaults();
+            saved.value = true;
+            setTimeout(() => { saved.value = false; }, 2500);
+        },
+    });
+}
+
+function toggleBookmark() {
+    noteForm.bookmarked = !noteForm.bookmarked;
+    saveNote();
+}
+
+/*
+ * Time on the lesson, counted only while the page is visible and sent every
+ * two minutes, plus whatever is left when the page is hidden or left. The
+ * server caps each beat and the total; it is an indication, not a stopwatch.
+ */
+let visibleSince = null;
+let pending = 0;
+let timer = null;
+
+function accumulate() {
+    if (visibleSince !== null) {
+        pending += Date.now() - visibleSince;
+        visibleSince = Date.now();
+    }
+}
+
+function flush() {
+    accumulate();
+    const seconds = Math.round(pending / 1000);
+    if (seconds < 5) return;
+    pending = 0;
+
+    fetch(`${base.value}/time`, {
+        method: 'POST',
+        keepalive: true,
+        credentials: 'same-origin',
+        headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
+        },
+        body: JSON.stringify({ seconds }),
+    }).catch(() => {});
+}
+
+function onVisibility() {
+    if (document.visibilityState === 'visible') {
+        visibleSince = Date.now();
+    } else {
+        flush();
+        visibleSince = null;
+    }
+}
+
+onMounted(() => {
+    visibleSince = document.visibilityState === 'visible' ? Date.now() : null;
+    timer = setInterval(flush, 120000);
+    document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', flush);
+});
+
+onBeforeUnmount(() => {
+    flush();
+    clearInterval(timer);
+    document.removeEventListener('visibilitychange', onVisibility);
+    window.removeEventListener('pagehide', flush);
 });
 
 function toggleComplete() {
@@ -71,15 +155,30 @@ function toggleComplete() {
                         {{ module.title }}
                     </p>
                     <h1 class="mt-1 text-xl font-semibold sm:text-2xl">{{ lesson.title }}</h1>
-                    <p v-if="lesson.duration" class="mt-1 flex items-center gap-1.5 text-sm" style="color: var(--text-muted)">
-                        <Clock class="h-3.5 w-3.5" />{{ lesson.duration }}
+                    <p v-if="lesson.duration || timeSpent" class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm" style="color: var(--text-muted)">
+                        <span v-if="lesson.duration" class="flex items-center gap-1.5"><Clock class="h-3.5 w-3.5" />{{ lesson.duration }}</span>
+                        <span v-if="timeSpent">You have spent {{ timeSpent.toLowerCase() }} here</span>
                     </p>
                 </div>
 
-                <UiButton :href="`/student/courses/${course.id}`" variant="ghost" size="sm">
-                    <template #leading><ArrowLeft class="h-3.5 w-3.5" /></template>
-                    All lessons
-                </UiButton>
+                <div class="flex gap-2">
+                    <UiButton
+                        v-if="note.private"
+                        variant="ghost"
+                        size="sm"
+                        :aria-pressed="noteForm.bookmarked"
+                        @click="toggleBookmark"
+                    >
+                        <template #leading>
+                            <component :is="noteForm.bookmarked ? BookmarkCheck : Bookmark" class="h-3.5 w-3.5" :class="noteForm.bookmarked ? 'text-brand-500' : ''" />
+                        </template>
+                        {{ noteForm.bookmarked ? 'Bookmarked' : 'Bookmark' }}
+                    </UiButton>
+                    <UiButton :href="`/student/courses/${course.id}`" variant="ghost" size="sm">
+                        <template #leading><ArrowLeft class="h-3.5 w-3.5" /></template>
+                        All lessons
+                    </UiButton>
+                </div>
             </div>
 
             <!-- ------------------------------------------------- the video -->
@@ -155,6 +254,41 @@ function toggleComplete() {
                         <span v-else class="text-xs" style="color: var(--text-muted)">view only</span>
                     </li>
                 </ul>
+            </UiCard>
+
+            <!-- ---------------------------------------------- my own note -->
+            <UiCard>
+                <template #header>
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 class="flex items-center gap-2 text-base font-semibold">
+                            <NotebookPen class="h-4 w-4" style="color: var(--text-muted)" />
+                            Your notes
+                        </h2>
+                        <span class="flex items-center gap-1 text-xs" style="color: var(--text-muted)">
+                            <Lock class="h-3 w-3" /> Only you can read these
+                        </span>
+                    </div>
+                </template>
+
+                <p v-if="!note.private" class="text-sm" style="color: var(--text-muted)">
+                    A student's notes are private, so they are not shown while viewing as them.
+                </p>
+                <form v-else class="space-y-3" @submit.prevent="saveNote">
+                    <UiTextarea
+                        v-model="noteForm.body"
+                        :rows="5"
+                        aria-label="Your notes on this lesson"
+                        placeholder="What to remember, what to ask, what to try again."
+                    />
+                    <p v-if="noteForm.errors.body" class="text-sm text-danger-600">{{ noteForm.errors.body }}</p>
+                    <div class="flex items-center justify-between gap-3">
+                        <Link href="/student/notes" class="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400">All your notes</Link>
+                        <div class="flex items-center gap-3">
+                            <span v-if="saved" class="text-xs" style="color: var(--text-muted)" role="status">Saved</span>
+                            <UiButton type="submit" variant="secondary" size="sm" :loading="noteForm.processing" :disabled="!noteForm.isDirty">Save note</UiButton>
+                        </div>
+                    </div>
+                </form>
             </UiCard>
 
             <!-- ------------------------------------------------ navigation -->

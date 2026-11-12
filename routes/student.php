@@ -9,6 +9,7 @@ use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\ProgressController;
 use App\Http\Controllers\Student\QuizController;
 use App\Http\Controllers\Student\RegistrationController;
+use App\Http\Controllers\Student\StudyController;
 use App\Http\Controllers\Student\SupportController;
 use Illuminate\Support\Facades\Route;
 
@@ -53,6 +54,17 @@ Route::middleware(['auth', 'password.owned', 'role:student'])
             ->whereNumber('course')
             ->whereNumber('lesson')
             ->name('lessons.complete');
+        Route::post('courses/{course}/lessons/{lesson}/time', [StudyController::class, 'time'])
+            ->whereNumber('course')
+            ->whereNumber('lesson')
+            ->middleware('throttle:20,1')
+            ->name('lessons.time');
+        Route::put('courses/{course}/lessons/{lesson}/note', [StudyController::class, 'note'])
+            ->whereNumber('course')
+            ->whereNumber('lesson')
+            ->middleware('throttle:60,1')
+            ->name('lessons.note');
+        Route::get('notes', [StudyController::class, 'notes'])->name('notes');
 
         /* ----------------------------------------------------- live classes */
         Route::get('classes', [ClassController::class, 'index'])->name('classes.index');

@@ -8,7 +8,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import {
     Video, ClipboardList, FileText, ArrowRight, Flame, Trophy, Award,
-    Megaphone, AlertTriangle, CheckCircle2, BookOpen, ClipboardPen,
+    Megaphone, AlertTriangle, CheckCircle2, BookOpen, ClipboardPen, PlayCircle,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -22,6 +22,8 @@ import UiEmptyState from '@/components/UI/UiEmptyState.vue';
 defineProps({
     courses: { type: Array, default: () => [] },
     nextClass: { type: Object, default: null },
+    /** The lesson to go back to, or the next one to start. */
+    continue: { type: Object, default: null },
     dueSoon: { type: Array, default: () => [] },
     announcements: { type: Array, default: () => [] },
     stats: { type: Object, default: () => ({}) },
@@ -71,6 +73,28 @@ const icons = { quiz: ClipboardList, assignment: FileText };
                         {{ registrations.review === 1 ? 'Your registration is' : `${registrations.review} of your registrations are` }}
                         waiting for the team to review.
                     </template>
+                </span>
+                <ArrowRight class="h-4 w-4 shrink-0" style="color: var(--text-muted)" />
+            </Link>
+
+            <!-- -------------------------------- where they left off -->
+            <Link
+                v-if="$props.continue"
+                :href="$props.continue.href"
+                class="flex items-center gap-4 rounded-[var(--radius-card)] border bg-[var(--surface)] p-5 transition hover:shadow-[var(--shadow-card)]"
+                style="border-color: var(--border-subtle)"
+            >
+                <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-950 dark:text-brand-300">
+                    <PlayCircle class="h-5 w-5" />
+                </span>
+                <span class="min-w-0 flex-1">
+                    <span class="block text-xs font-semibold uppercase tracking-wide" style="color: var(--text-muted)">
+                        {{ $props.continue.kind === 'continue' ? 'Pick up where you left off' : 'Up next' }}
+                    </span>
+                    <span class="mt-1 block truncate text-lg font-semibold">{{ $props.continue.lesson }}</span>
+                    <span class="block truncate text-sm" style="color: var(--text-muted)">
+                        {{ $props.continue.course }}{{ $props.continue.module ? ` · ${$props.continue.module}` : '' }}{{ $props.continue.lastOpened ? ` · opened ${$props.continue.lastOpened}` : '' }}
+                    </span>
                 </span>
                 <ArrowRight class="h-4 w-4 shrink-0" style="color: var(--text-muted)" />
             </Link>

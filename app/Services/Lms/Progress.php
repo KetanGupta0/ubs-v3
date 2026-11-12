@@ -5,6 +5,7 @@ namespace App\Services\Lms;
 use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\LessonCompletion;
+use App\Models\LessonVisit;
 use App\Models\User;
 
 /**
@@ -22,7 +23,15 @@ class Progress
     {
         $completion = LessonCompletion::query()->firstOrCreate(
             ['lesson_id' => $lesson->id, 'user_id' => $student->id],
-            ['completed_at' => now()],
+            [
+                'completed_at' => now(),
+                // The time on the page up to finishing it, which is what the
+                // completion is worth knowing about later.
+                'seconds_spent' => min((int) LessonVisit::query()
+                    ->where('user_id', $student->id)
+                    ->where('lesson_id', $lesson->id)
+                    ->value('seconds_spent'), 65535) ?: null,
+            ],
         );
 
         if ($completion->wasRecentlyCreated) {

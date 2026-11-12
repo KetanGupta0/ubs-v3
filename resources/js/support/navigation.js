@@ -22,7 +22,7 @@ import {
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
     UserPlus, Package, ShieldCheck, Building2, Wrench, HelpCircle, UserCog,
     ScrollText, FileSignature, Files, LifeBuoy as LifeBuoyIcon, Banknote,
-    ShieldAlert, ClipboardPen,
+    ShieldAlert, ClipboardPen, NotebookPen,
 } from 'lucide-vue-next';
 
 export const navigation = {
@@ -96,6 +96,7 @@ export const navigation = {
     student: [
         { label: 'Dashboard', icon: LayoutDashboard, href: '/student', primary: true },
         { label: 'My courses', icon: BookOpen, href: '/student/courses', primary: true },
+        { label: 'My notes', icon: NotebookPen, href: '/student/notes' },
         { label: 'Live classes', icon: CalendarCheck, href: '/student/classes', primary: true },
         { label: 'Assignments', icon: FileText, href: '/student/assignments' },
         { label: 'Attendance', icon: CalendarCheck, href: '/student/attendance' },

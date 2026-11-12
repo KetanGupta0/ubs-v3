@@ -5,16 +5,21 @@ namespace App\Http\Controllers\Student;
 use App\Models\Announcement;
 use App\Models\Assignment;
 use App\Models\Enrollment;
+use App\Models\Lesson;
+use App\Models\LessonVisit;
 use App\Models\LiveSession;
 use App\Models\PaymentRequest;
 use App\Models\Quiz;
 use App\Models\Registration;
 use App\Models\StudentWarning;
 use App\Models\Submission;
+use App\Models\User;
 use App\Services\Lms\Activity;
+use App\Services\Lms\ContentGate;
 use App\Services\Lms\Leaderboard;
 use App\Support\Money;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -68,6 +73,8 @@ class DashboardController extends StudentController
                 'live' => $nextSession->isLive(),
                 'link' => $nextSession->isJoinable() ? $nextSession->link() : null,
             ] : null,
+
+            'continue' => $this->continueLearning($student, $enrolments),
 
             'dueSoon' => $this->dueSoon($request),
 
@@ -194,5 +201,81 @@ class DashboardController extends StudentController
         usort($items, fn ($a, $b) => $a['sortAt'] <=> $b['sortAt']);
 
         return array_slice($items, 0, 6);
+    }
+
+    /**
+     * The lesson to go back to: the last one they had open, if it is not done
+     * and is still open to them; otherwise the first lesson not yet done on the
+     * course they touched most recently.
+     *
+     * @return array<string, mixed>|null
+     */
+    protected function continueLearning(User $student, Collection $enrolments): ?array
+    {
+        $active = $enrolments->where('status', 'active')->keyBy('course_id');
+
+        if ($active->isEmpty()) {
+            return null;
+        }
+
+        $gates = [];
+        $gate = function (int $courseId) use (&$gates, $student, $active) {
+            return $gates[$courseId] ??= ContentGate::for($student, $active[$courseId]->fresh(['course', 'batch']));
+        };
+
+        $visits = LessonVisit::query()
+            ->where('user_id', $student->id)
+            ->whereIn('course_id', $active->keys())
+            ->latest('last_opened_at')
+            ->with('lesson.module')
+            ->limit(5)
+            ->get();
+
+        foreach ($visits as $visit) {
+            $lesson = $visit->lesson;
+
+            if ($lesson?->is_published && ! $gate($lesson->course_id)->hasCompleted($lesson) && $gate($lesson->course_id)->isOpen($lesson)) {
+                return $this->nextStep('continue', $lesson, $active[$lesson->course_id], $visit);
+            }
+        }
+
+        // Courses in the order they were last studied, then newest enrolment.
+        $order = $visits->pluck('course_id')->unique()->concat($active->keys())->unique();
+
+        foreach ($order as $courseId) {
+            $candidates = Lesson::query()
+                ->select('lessons.*')
+                ->join('course_modules', 'course_modules.id', '=', 'lessons.course_module_id')
+                ->where('lessons.course_id', $courseId)
+                ->where('lessons.is_published', true)
+                ->where('course_modules.is_published', true)
+                ->orderBy('course_modules.sort_order')
+                ->orderBy('lessons.sort_order')
+                ->with('module')
+                ->limit(200)
+                ->get();
+
+            $lesson = $candidates->first(fn (Lesson $lesson) => ! $gate($courseId)->hasCompleted($lesson));
+
+            if ($lesson && $gate($courseId)->isOpen($lesson)) {
+                return $this->nextStep('start', $lesson, $active[$courseId]);
+            }
+        }
+
+        return null;
+    }
+
+    /** @return array<string, mixed> */
+    protected function nextStep(string $kind, Lesson $lesson, Enrollment $enrolment, ?LessonVisit $visit = null): array
+    {
+        return [
+            'kind' => $kind,
+            'lesson' => $lesson->title,
+            'module' => $lesson->module?->title,
+            'course' => $enrolment->course->title,
+            'href' => "/student/courses/{$lesson->course_id}/lessons/{$lesson->id}",
+            'lastOpened' => $visit?->last_opened_at->diffForHumans(),
+            'progress' => $enrolment->progress_percent,
+        ];
     }
 }

@@ -8,7 +8,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import {
     Lock, CheckCircle2, Circle, PlayCircle, Clock, Calendar, CreditCard,
-    ClipboardList, FileText, FolderOpen, ArrowRight, AlertTriangle,
+    ClipboardList, FileText, FolderOpen, ArrowRight, AlertTriangle, BookmarkCheck,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -19,6 +19,13 @@ import UiButton from '@/components/UI/UiButton.vue';
 import UiProgress from '@/components/UI/UiProgress.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
 import CourseReviewCard from '@/components/Student/CourseReviewCard.vue';
+
+/** Progress per module, counted from the lessons finished, never typed in. */
+const moduleProgress = (module) => {
+    const total = module.lessons.length;
+    const done = module.lessons.filter((lesson) => lesson.completed).length;
+    return { total, done, percent: total ? Math.round((done / total) * 100) : 0 };
+};
 
 const props = defineProps({
     course: { type: Object, required: true },
@@ -88,11 +95,19 @@ const lockIcons = {
             <!-- ------------------------------------------------- modules -->
             <UiCard v-for="module in modules" :key="module.id">
                 <template #header>
-                    <div>
-                        <h2 class="text-base font-semibold">{{ module.title }}</h2>
-                        <p v-if="module.summary" class="mt-0.5 text-sm" style="color: var(--text-muted)">
-                            {{ module.summary }}
-                        </p>
+                    <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <h2 class="text-base font-semibold">{{ module.title }}</h2>
+                            <p v-if="module.summary" class="mt-0.5 text-sm" style="color: var(--text-muted)">
+                                {{ module.summary }}
+                            </p>
+                        </div>
+                        <div v-if="module.lessons.length" class="w-32 shrink-0 text-right">
+                            <p class="text-xs" style="color: var(--text-muted)">
+                                {{ moduleProgress(module).done }} of {{ moduleProgress(module).total }} done
+                            </p>
+                            <UiProgress class="mt-1" :value="moduleProgress(module).percent" size="sm" :show-value="false" :aria-label="`${module.title}: ${moduleProgress(module).percent}% done`" />
+                        </div>
                     </div>
                 </template>
 
@@ -125,6 +140,7 @@ const lockIcons = {
                                 >
                                     {{ lesson.title }}
                                     <UiBadge v-if="lesson.isPreview" size="sm">preview</UiBadge>
+                                    <BookmarkCheck v-if="lesson.bookmarked" class="h-3.5 w-3.5 text-brand-500" aria-label="Bookmarked" />
                                 </span>
 
                                 <span v-if="lesson.summary && lesson.lock.open" class="mt-0.5 block text-xs"

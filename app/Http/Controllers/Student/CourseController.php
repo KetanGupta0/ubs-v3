@@ -7,8 +7,11 @@ use App\Models\CourseModule;
 use App\Models\CourseReview;
 use App\Models\Enrollment;
 use App\Models\Lesson;
+use App\Models\LessonNote;
+use App\Models\LessonVisit;
 use App\Models\Material;
 use App\Models\Quiz;
+use App\Services\Auth\Impersonation;
 use App\Services\Lms\Activity;
 use App\Services\Lms\ContentGate;
 use App\Services\Lms\Progress;
@@ -72,6 +75,13 @@ class CourseController extends StudentController
             ->orderBy('sort_order')
             ->get();
 
+        $bookmarked = app(Impersonation::class)->active() ? [] : LessonNote::query()
+            ->ownedBy($this->student($request))
+            ->where('course_id', $course)
+            ->where('is_bookmarked', true)
+            ->pluck('lesson_id')
+            ->all();
+
         return Inertia::render('student/courses/Show', [
             'course' => [
                 'id' => $enrolment->course_id,
@@ -104,7 +114,7 @@ class CourseController extends StudentController
                 'id' => $module->id,
                 'title' => $module->title,
                 'summary' => $module->summary,
-                'lessons' => $module->lessons->map(function (Lesson $lesson) use ($gate) {
+                'lessons' => $module->lessons->map(function (Lesson $lesson) use ($gate, $bookmarked) {
                     $lock = $gate->check($lesson);
 
                     return [
@@ -114,6 +124,7 @@ class CourseController extends StudentController
                         'duration' => $lesson->durationLabel(),
                         'isPreview' => $lesson->is_preview,
                         'completed' => $gate->hasCompleted($lesson),
+                        'bookmarked' => in_array($lesson->id, $bookmarked, true),
                         'lock' => $lock->toArray(),
                     ];
                 }),
@@ -178,6 +189,16 @@ class CourseController extends StudentController
             ]);
         }
 
+        $student = $this->student($request);
+        $visit = LessonVisit::opened($student, $record, $enrolment->batch_id);
+
+        // Private to the student; staff seeing the platform as them do not
+        // read their notes.
+        $note = app(Impersonation::class)->active() ? null : LessonNote::query()
+            ->ownedBy($student)
+            ->where('lesson_id', $record->id)
+            ->first();
+
         $siblings = Lesson::query()
             ->where('course_module_id', $record->course_module_id)
             ->where('is_published', true)
@@ -198,6 +219,12 @@ class CourseController extends StudentController
                 'duration' => $record->durationLabel(),
                 'completed' => $gate->hasCompleted($record),
             ],
+            'note' => [
+                'body' => $note?->body ?? '',
+                'bookmarked' => (bool) $note?->is_bookmarked,
+                'private' => ! app(Impersonation::class)->active(),
+            ],
+            'timeSpent' => $visit && $visit->seconds_spent >= 60 ? LessonVisit::bucketFor($visit->seconds_spent) : null,
             'materials' => $record->materials->map(fn (Material $material) => $this->materialArray($material)),
             'previous' => $position > 0 ? [
                 'id' => $siblings[$position - 1]->id,
