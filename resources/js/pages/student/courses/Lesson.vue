@@ -1,9 +1,9 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watchEffect } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import {
     ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, CheckCircle2, Circle, Clock, Download,
-    ExternalLink, FileText, Film, File, FileSpreadsheet, Lock, NotebookPen, PlayCircle, Presentation,
+    ExternalLink, FileText, Film, File, FileSpreadsheet, Lock, MessageCircleQuestion, NotebookPen, PlayCircle, Presentation,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -22,6 +22,8 @@ const props = defineProps({
     timeSpent: { type: String, default: null },
     /** Recordings of this batch's classes that taught this lesson. */
     recordings: { type: Array, default: () => [] },
+    /** Questions from this student's batch on this lesson. */
+    doubts: { type: Array, default: () => [] },
 });
 
 const icons = {
@@ -129,6 +131,30 @@ onBeforeUnmount(() => {
     document.removeEventListener('visibilitychange', onVisibility);
     window.removeEventListener('pagehide', flush);
 });
+
+/* ------------------------------------------------------- questions */
+const askForm = useForm({ body: '' });
+// One follow-up form per question of the student's own, made before render.
+const replyForms = reactive({});
+watchEffect(() => {
+    for (const doubt of props.doubts) {
+        if (doubt.mine && !replyForms[doubt.id]) replyForms[doubt.id] = useForm({ body: '' });
+    }
+});
+
+function ask() {
+    askForm.post(`${base.value}/doubts`, {
+        preserveScroll: true,
+        onSuccess: () => askForm.reset(),
+    });
+}
+
+function follow(doubt) {
+    replyForms[doubt.id].post(`${base.value}/doubts/${doubt.id}/reply`, {
+        preserveScroll: true,
+        onSuccess: () => replyForms[doubt.id].reset(),
+    });
+}
 
 function toggleComplete() {
     router.post(
@@ -307,6 +333,54 @@ function toggleComplete() {
                             <span v-if="saved" class="text-xs" style="color: var(--text-muted)" role="status">Saved</span>
                             <UiButton type="submit" variant="secondary" size="sm" :loading="noteForm.processing" :disabled="!noteForm.isDirty">Save note</UiButton>
                         </div>
+                    </div>
+                </form>
+            </UiCard>
+
+            <!-- ------------------------------------------------ questions -->
+            <UiCard id="questions">
+                <template #header>
+                    <div class="flex items-center justify-between gap-3">
+                        <h2 class="flex items-center gap-2 text-base font-semibold">
+                            <MessageCircleQuestion class="h-4 w-4" style="color: var(--text-muted)" />
+                            Questions on this lesson
+                        </h2>
+                        <span class="text-xs" style="color: var(--text-muted)">Shared with your batch</span>
+                    </div>
+                </template>
+
+                <ul v-if="doubts.length" class="mb-5 space-y-4">
+                    <li v-for="doubt in doubts" :id="`doubt-${doubt.id}`" :key="doubt.id" class="rounded-xl border p-4" style="border-color: var(--border-subtle)">
+                        <div class="flex items-center justify-between gap-2 text-xs" style="color: var(--text-muted)">
+                            <span><span class="font-medium" style="color: var(--text-strong)">{{ doubt.asker }}</span> asked {{ doubt.at }}</span>
+                            <span v-if="doubt.status === 'answered'" class="font-medium text-green-700 dark:text-green-300">Answered</span>
+                            <span v-else>Waiting for an answer</span>
+                        </div>
+                        <p class="mt-2 whitespace-pre-line text-sm">{{ doubt.body }}</p>
+
+                        <ul v-if="doubt.replies.length" class="mt-3 space-y-2 border-l-2 pl-3" style="border-color: var(--border-subtle)">
+                            <li v-for="reply in doubt.replies" :key="reply.id">
+                                <p class="text-xs" style="color: var(--text-muted)">
+                                    <span class="font-medium" :class="reply.fromStaff ? 'text-brand-600 dark:text-brand-400' : ''" :style="reply.fromStaff ? {} : { color: 'var(--text-strong)' }">{{ reply.author }}</span>
+                                    <span v-if="reply.fromStaff"> · trainer</span> · {{ reply.at }}
+                                </p>
+                                <p class="mt-0.5 whitespace-pre-line text-sm">{{ reply.body }}</p>
+                            </li>
+                        </ul>
+
+                        <form v-if="doubt.mine && replyForms[doubt.id]" class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start" @submit.prevent="follow(doubt)">
+                            <UiTextarea v-model="replyForms[doubt.id].body" :rows="1" class="flex-1" aria-label="Add to your question" placeholder="Add to your question" />
+                            <UiButton type="submit" variant="secondary" size="sm" :loading="replyForms[doubt.id].processing" :disabled="!replyForms[doubt.id].body.trim()">Add</UiButton>
+                        </form>
+                    </li>
+                </ul>
+                <p v-else class="mb-4 text-sm" style="color: var(--text-muted)">Nobody on your batch has asked anything here yet.</p>
+
+                <form class="space-y-2" @submit.prevent="ask">
+                    <UiTextarea v-model="askForm.body" :rows="3" aria-label="Ask a question" placeholder="Stuck on something in this lesson? Ask it here. Your trainer answers, and your batch can read the answer." />
+                    <p v-if="askForm.errors.body" class="text-sm text-danger-600">{{ askForm.errors.body }}</p>
+                    <div class="flex justify-end">
+                        <UiButton type="submit" size="sm" :loading="askForm.processing" :disabled="!askForm.body.trim()">Ask</UiButton>
                     </div>
                 </form>
             </UiCard>

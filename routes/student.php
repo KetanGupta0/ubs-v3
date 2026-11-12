@@ -6,6 +6,7 @@ use App\Http\Controllers\Student\CatalogueController;
 use App\Http\Controllers\Student\ClassController;
 use App\Http\Controllers\Student\CourseController;
 use App\Http\Controllers\Student\DashboardController;
+use App\Http\Controllers\Student\DoubtController;
 use App\Http\Controllers\Student\ProgressController;
 use App\Http\Controllers\Student\QuizController;
 use App\Http\Controllers\Student\RegistrationController;
@@ -65,6 +66,14 @@ Route::middleware(['auth', 'password.owned', 'role:student'])
             ->middleware('throttle:60,1')
             ->name('lessons.note');
         Route::get('notes', [StudyController::class, 'notes'])->name('notes');
+        Route::post('courses/{course}/lessons/{lesson}/doubts', [DoubtController::class, 'store'])
+            ->whereNumber(['course', 'lesson'])
+            ->middleware('throttle:10,1')
+            ->name('lessons.doubts.store');
+        Route::post('courses/{course}/lessons/{lesson}/doubts/{doubt}/reply', [DoubtController::class, 'reply'])
+            ->whereNumber(['course', 'lesson', 'doubt'])
+            ->middleware('throttle:20,1')
+            ->name('lessons.doubts.reply');
 
         /* ----------------------------------------------------- live classes */
         Route::get('classes', [ClassController::class, 'index'])->name('classes.index');

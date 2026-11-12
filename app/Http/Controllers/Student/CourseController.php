@@ -7,6 +7,8 @@ use App\Models\CourseModule;
 use App\Models\CourseReview;
 use App\Models\Enrollment;
 use App\Models\Lesson;
+use App\Models\LessonDoubt;
+use App\Models\LessonDoubtReply;
 use App\Models\LessonNote;
 use App\Models\LessonVisit;
 use App\Models\LiveSession;
@@ -240,6 +242,30 @@ class CourseController extends StudentController
                     'at' => $session->scheduled_at->format('j M Y'),
                     'url' => $session->recording_url,
                 ]) : [],
+            // Questions from this student's batch on this lesson, newest activity first.
+            'doubts' => LessonDoubt::query()
+                ->visibleOn($enrolment, $record)
+                ->with('asker:id,name', 'replies.author:id,name')
+                ->latest('last_activity_at')
+                ->limit(50)
+                ->get()
+                ->map(fn (LessonDoubt $doubt) => [
+                    'id' => $doubt->id,
+                    'mine' => $doubt->user_id === $student->id,
+                    'asker' => $doubt->user_id === $student->id ? 'You' : LessonDoubt::shortName($doubt->asker),
+                    'body' => $doubt->body,
+                    'status' => $doubt->status,
+                    'at' => $doubt->created_at->diffForHumans(),
+                    'replies' => $doubt->replies->map(fn (LessonDoubtReply $reply) => [
+                        'id' => $reply->id,
+                        'author' => $reply->from_staff
+                            ? ($reply->author?->name ?? 'The team')
+                            : ($reply->user_id === $student->id ? 'You' : LessonDoubt::shortName($reply->author)),
+                        'fromStaff' => $reply->from_staff,
+                        'body' => $reply->body,
+                        'at' => $reply->created_at->diffForHumans(),
+                    ]),
+                ]),
             'materials' => $record->materials->map(fn (Material $material) => $this->materialArray($material)),
             'previous' => $position > 0 ? [
                 'id' => $siblings[$position - 1]->id,

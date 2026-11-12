@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CredentialsController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
+use App\Http\Controllers\Admin\DoubtController;
 use App\Http\Controllers\Admin\EnrolmentController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\LeadController;
@@ -409,6 +410,14 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::put('reviews/{review}/status', [ReviewController::class, 'moderate'])->name('reviews.moderate');
             Route::put('reviews/{review}/reply', [ReviewController::class, 'reply'])->name('reviews.reply');
             Route::post('reviews/{review}/testimonial', [ReviewController::class, 'promote'])->name('reviews.promote');
+        });
+
+        /* ----------------------------------------------- questions on lessons */
+        Route::middleware('permission:lms.doubts')->group(function () {
+            Route::get('doubts', [DoubtController::class, 'index'])->name('doubts.index');
+            Route::get('doubts/{doubt}', [DoubtController::class, 'show'])->whereNumber('doubt')->name('doubts.show');
+            Route::post('doubts/{doubt}/reply', [DoubtController::class, 'reply'])->whereNumber('doubt')->name('doubts.reply');
+            Route::put('doubts/{doubt}/visibility', [DoubtController::class, 'visibility'])->whereNumber('doubt')->name('doubts.visibility');
         });
 
         /* ---------------------------------------------- registration forms */
