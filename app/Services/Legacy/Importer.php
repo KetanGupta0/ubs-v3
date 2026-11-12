@@ -2,12 +2,14 @@
 
 namespace App\Services\Legacy;
 
+use App\Services\Legacy\Steps\AssignmentsStep;
 use App\Services\Legacy\Steps\AttendanceStep;
 use App\Services\Legacy\Steps\BatchesStep;
 use App\Services\Legacy\Steps\CoursesStep;
 use App\Services\Legacy\Steps\EnrolmentsStep;
 use App\Services\Legacy\Steps\MaterialsStep;
 use App\Services\Legacy\Steps\NoticesStep;
+use App\Services\Legacy\Steps\QuizzesStep;
 use App\Services\Legacy\Steps\SessionsStep;
 use App\Services\Legacy\Steps\Step;
 use App\Services\Legacy\Steps\UsersStep;
@@ -40,6 +42,8 @@ class Importer
         AttendanceStep::class,
         MaterialsStep::class,
         NoticesStep::class,
+        QuizzesStep::class,
+        AssignmentsStep::class,
     ];
 
     /** @return array<int, string> */

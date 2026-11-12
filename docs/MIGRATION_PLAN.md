@@ -144,6 +144,17 @@ everybody, one batch or one student; urgent and warning ones stay pinned. Fixed 
 a dry run rolled each step back before the next ran, so later steps could not see earlier
 ones and under-reported; a dry run is now one transaction rolled back at the end.
 
+*Progress (2026-11-12, fourth slice):* **quizzes and assignments** are built. A quiz stays with
+its one batch; questions are rewritten into v3's shape (option text rather than v2's
+`{text, is_correct}`, `multiple` → `multi`, true/false as `True`/`False`), and a written
+question keeps v2's model answer in its explanation for the person marking. A v2 "file"
+question has no v3 equivalent and is listed rather than converted, because turning it into an
+assignment would change the quiz's total. Attempts keep their scores exactly (not regraded),
+answers are stored as the options chosen, and an attempt v2 had not marked waits for a person.
+Extra-attempt overrides become grants. Every version of a submission is kept: the latest is the
+submission, earlier ones its version history with marks and feedback, each file copied and
+verified.
+
 **Generation 1 list.** A real run that imports users needs `--generation-one=FILE` (emails,
 one per line) or `--all-generation-one`. Make the file on the private server, never in a
 repository, from the June seed migration the old repository published, for example

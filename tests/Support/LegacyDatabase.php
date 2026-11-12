@@ -173,6 +173,105 @@ class LegacyDatabase
         });
     }
 
+    /** v2's quizzes and assignments. */
+    public static function createAssessment(): void
+    {
+        $schema = Schema::connection('legacy');
+
+        $schema->create('quizzes', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('batch_id');
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->text('instructions')->nullable();
+            $table->unsignedSmallInteger('time_limit_minutes')->nullable();
+            $table->unsignedTinyInteger('passing_score')->default(75);
+            $table->unsignedTinyInteger('max_attempts')->default(1);
+            $table->dateTime('due_at')->nullable();
+            $table->boolean('show_answers_after')->default(true);
+            $table->boolean('is_published')->default(false);
+            $table->timestamps();
+        });
+
+        $schema->create('quiz_questions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('quiz_id');
+            $table->text('question');
+            $table->string('type')->default('mcq');
+            $table->json('options')->nullable();
+            $table->json('correct_answer')->nullable();
+            $table->unsignedSmallInteger('marks')->default(1);
+            $table->text('explanation')->nullable();
+            $table->integer('sort_order')->default(0);
+        });
+
+        $schema->create('quiz_attempts', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('quiz_id');
+            $table->foreignId('student_id');
+            $table->unsignedTinyInteger('attempt_number')->default(1);
+            $table->timestamp('started_at')->nullable();
+            $table->timestamp('submitted_at')->nullable();
+            $table->decimal('score', 6, 2)->default(0);
+            $table->decimal('total_marks', 6, 2)->default(0);
+            $table->decimal('percentage', 5, 2)->default(0);
+            $table->boolean('is_graded')->default(false);
+            $table->boolean('auto_graded')->default(false);
+            $table->json('question_order')->nullable();
+        });
+
+        $schema->create('quiz_answers', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('attempt_id');
+            $table->foreignId('question_id');
+            $table->json('answer')->nullable();
+            $table->boolean('is_correct')->nullable();
+            $table->decimal('marks_awarded', 5, 2)->default(0);
+            $table->text('grader_note')->nullable();
+        });
+
+        $schema->create('quiz_attempt_overrides', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('quiz_id');
+            $table->foreignId('student_id');
+            $table->unsignedTinyInteger('extra_attempts')->default(1);
+            $table->text('reason')->nullable();
+            $table->foreignId('granted_by')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('assignments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('batch_id');
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->longText('instructions')->nullable();
+            $table->dateTime('due_at')->nullable();
+            $table->unsignedSmallInteger('max_marks')->default(100);
+            $table->boolean('file_required')->default(true);
+            $table->json('allowed_types')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('assignment_submissions', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('assignment_id');
+            $table->foreignId('student_id');
+            $table->unsignedTinyInteger('submission_number')->default(1);
+            $table->boolean('is_latest')->default(true);
+            $table->string('file_path')->nullable();
+            $table->string('original_name')->nullable();
+            $table->text('notes')->nullable();
+            $table->timestamp('submitted_at')->nullable();
+            $table->decimal('marks', 5, 2)->nullable();
+            $table->text('feedback')->nullable();
+            $table->timestamp('graded_at')->nullable();
+            $table->foreignId('graded_by')->nullable();
+            $table->timestamp('resubmission_requested_at')->nullable();
+            $table->boolean('resubmission_allowed')->default(false);
+        });
+    }
+
     /** A made up copy of v2's storage directory, in a temporary folder. */
     public static function storage(array $files): string
     {
