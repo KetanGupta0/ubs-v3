@@ -341,6 +341,105 @@ class LegacyDatabase
         });
     }
 
+    /** v2's reviews, enquiries and site content. */
+    public static function createContentAndFeedback(): void
+    {
+        $schema = Schema::connection('legacy');
+
+        $schema->create('reviews', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('student_id');
+            $table->foreignId('program_id');
+            $table->foreignId('enrollment_id')->nullable();
+            $table->unsignedTinyInteger('rating')->default(5);
+            $table->string('title')->nullable();
+            $table->text('body');
+            $table->string('status')->default('pending');
+            $table->text('admin_reply')->nullable();
+            $table->timestamp('admin_replied_at')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('contact_queries', function (Blueprint $table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email');
+            $table->string('phone', 30)->nullable();
+            $table->string('subject', 200);
+            $table->text('message');
+            $table->string('ip_address', 45)->nullable();
+            $table->text('user_agent')->nullable();
+            $table->string('status')->default('unread');
+            $table->text('admin_note')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('faqs', function (Blueprint $table) {
+            $table->id();
+            $table->string('question', 500);
+            $table->text('answer');
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
+        $schema->create('team_members', function (Blueprint $table) {
+            $table->id();
+            $table->string('name', 150);
+            $table->string('role', 200);
+            $table->text('bio')->nullable();
+            $table->string('initials', 5)->default('');
+            $table->string('avatar_url', 500)->nullable();
+            $table->string('experience', 50)->nullable();
+            $table->string('tech_stack', 300)->nullable();
+            $table->string('type')->default('mentor');
+            $table->unsignedSmallInteger('sort_order')->default(0);
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
+        });
+
+        $schema->create('custom_pages', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->string('slug')->unique();
+            $table->longText('content')->nullable();
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
+            $table->boolean('is_indexable')->default(true);
+            $table->boolean('is_published')->default(false);
+            $table->boolean('show_in_nav')->default(false);
+            $table->integer('sort_order')->default(0);
+            $table->timestamps();
+        });
+
+        $schema->create('page_metas', function (Blueprint $table) {
+            $table->id();
+            $table->string('page_key')->unique();
+            $table->string('page_label');
+            $table->string('page_url');
+            $table->string('meta_title')->nullable();
+            $table->text('meta_description')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('settings', function (Blueprint $table) {
+            $table->id();
+            $table->string('key')->unique();
+            $table->longText('value')->nullable();
+            $table->string('group')->default('general');
+            $table->timestamps();
+        });
+
+        $schema->create('email_templates', function (Blueprint $table) {
+            $table->id();
+            $table->string('key')->unique();
+            $table->string('name');
+            $table->string('subject');
+            $table->longText('html_body');
+            $table->timestamps();
+        });
+    }
+
     /** A made up copy of v2's storage directory, in a temporary folder. */
     public static function storage(array $files): string
     {

@@ -53,7 +53,7 @@ class Files
     }
 
     /** Where a v2 path lives inside the storage copy, if anywhere. */
-    protected static function locate(Context $context, string $disk, ?string $path): ?string
+    public static function locate(Context $context, string $disk, ?string $path): ?string
     {
         if (blank($path) || $context->storagePath === null || str_contains($path, '..')) {
             return null;

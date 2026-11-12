@@ -166,6 +166,18 @@ desk (no contract, so no promised response time), and v2 tickets come across wit
 first message as the body and every reply in order, staff notes still staff-only. Reply
 attachments are copied into the ticket's messages; no screen lists them yet.
 
+*Progress (2026-11-12, sixth slice):* **reviews, enquiries and content** are built, which
+completes the import steps. Reviews keep their status and reply but none is public until the
+student consents (D3). Enquiries become leads with a reference, mapped status and the admin's
+note. Content never overwrites v3's own: FAQs v3 already answers are linked and kept, new ones
+arrive unpublished; team members come across with where they appear and their photo re-encoded
+(from the storage copy or its address); v2 pages are converted from HTML to Markdown
+(`App\Services\Legacy\HtmlToMarkdown`, which keeps text, headings, lists, emphasis and safe
+links only) and arrive as drafts, a page that was in v2's menu says so; v2 search wording fills
+the matching v3 fixed page only where v3 has none; settings fill only empty v3 values and
+credentials are never read into v3 or the report; email templates are listed by key, not
+carried.
+
 **Generation 1 list.** A real run that imports users needs `--generation-one=FILE` (emails,
 one per line) or `--all-generation-one`. Make the file on the private server, never in a
 repository, from the June seed migration the old repository published, for example
