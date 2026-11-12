@@ -121,6 +121,20 @@ production v2 storage/ ──rsync──▶ v3 disks, sha256 verified per file
   exactly what a real run would do.
 - No mail, SMS, broadcast or queued job fires during an import. The importer runs with
   notifications faked and `Activity::did()` bypassed, so the logs say why.
+
+*Progress (2026-11-12):* the framework and the **users** step are built: `legacy` connection,
+`legacy_id_map`, `php artisan legacy:import` with `--dry-run` and `--only`, one transaction
+per step (rolled back on a dry run), notifications, mail and queued jobs faked during the run,
+and a JSON report under `storage/app/legacy-reports/` holding counts and source ids only.
+Tests run against `tests/Support/LegacyDatabase.php`, v2's table shapes with made up rows.
+
+**Generation 1 list.** A real run that imports users needs `--generation-one=FILE` (emails,
+one per line) or `--all-generation-one`. Make the file on the private server, never in a
+repository, from the June seed migration the old repository published, for example
+`grep -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}' seed_legacy_users.php | sort -u > gen1.txt`,
+then read it through once. Every account on it gets a fresh random password and a forced
+change; every other account keeps its v2 password. When in doubt, `--all-generation-one`
+replaces every password, which is safe and costs each student one password reset.
 - Files: copied under v3's own directory layout, renamed to v3's conventions, checksummed.
   A file v2 references but which is missing on disk is listed in the report, never silently
   dropped.
