@@ -65,6 +65,11 @@ class SettingsController extends Controller
                 ['name' => 'SMS', 'configured' => config('services.sms.driver') !== 'log', 'detail' => config('services.sms.driver')],
                 ['name' => 'Google sign in', 'configured' => filled(config('services.google.client_id')), 'detail' => 'Socialite'],
                 ['name' => 'Payments', 'configured' => filled(config('services.razorpay.key_id')), 'detail' => 'Razorpay'],
+                [
+                    'name' => 'Realtime chat',
+                    'configured' => config('broadcasting.default') === 'pusher' && filled(config('broadcasting.connections.pusher.key')),
+                    'detail' => config('broadcasting.default') === 'pusher' ? 'Pusher' : config('broadcasting.default').' (polling on shared hosting)',
+                ],
             ],
         ]);
     }

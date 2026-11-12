@@ -8,6 +8,10 @@ a lot of bandwidth.
 Numbers (memory, processes, mail per hour, storage, inodes) differ by plan and change
 over time. Read them in hPanel for the plan in use, and do not hard-code them here.
 
+**The plan in use (checked by the owner, 2026-11-12):** Business. SSH is enabled (no
+root), PHP and MySQL are configured, cron is available, and Hostinger's own mail is
+capped at **100 emails a day**.
+
 ## What shared hosting does not give us
 
 - **No long-running processes.** There is no `queue:work` worker, no
@@ -29,14 +33,14 @@ over time. Read them in hPanel for the plan in use, and do not hard-code them he
 |---|---|---|
 | Scheduler | One hPanel cron entry: `* * * * * php /home/USER/path/artisan schedule:run >/dev/null 2>&1` | Works as is |
 | Queue (mail, SMS, bulk credentials, notifications) | `QUEUE_CONNECTION=database` and `QUEUE_FROM_SCHEDULER=true`. The scheduler then runs `queue:work --stop-when-empty --max-time=50` every minute (`routes/console.php`). Jobs delayed by a minute go out on the minute they are due. | **Built** |
-| Realtime chat, typing, read receipts, proctor status | Reverb cannot run. Use a hosted service that speaks the Pusher protocol: `BROADCAST_CONNECTION=pusher`, `VITE_BROADCASTER=pusher`, plus `PUSHER_*` values, then rebuild assets. Broadcasting is an HTTPS call from PHP, which shared hosting allows. Without a service, chat falls back to polling every 3 seconds. That works, but with many students online it is the quickest way to run out of entry processes, so production should have the service. | **Client switch built**; which service is still a decision |
+| Realtime chat, typing, read receipts, proctor status | Reverb cannot run. **Pusher Channels** (decided 2026-11-12): `BROADCAST_CONNECTION=pusher`, `VITE_BROADCASTER=pusher`, plus `PUSHER_APP_ID`, `PUSHER_APP_KEY`, `PUSHER_APP_SECRET` and `PUSHER_APP_CLUSTER` (`ap2` is Mumbai), then rebuild assets. Broadcasting is an HTTPS call from PHP, which shared hosting allows. Pusher's free plan caps concurrent connections; past the cap, or with no service at all, chat falls back to polling every 3 seconds. That works, but with many students online it is the quickest way to run out of entry processes, so watch the connection count in Pusher's dashboard during the first live batch. Settings → Providers shows whether it is configured. | **Built**; account and keys to be set up by the owner |
 | Cache, sessions, rate limits | Database (`CACHE_STORE=database`, `SESSION_DRIVER=database`), as today | Works as is |
 | PDFs (invoices, certificates, documents) | dompdf, pure PHP. PDFs are generated once and cached on disk, never rendered per view. | Works; keep PDFs simple |
 | Images | GD re-encoding, as chat already does | Works as is |
 | Voice notes | Stored as uploaded; nothing transcodes them, since there is no ffmpeg | Works as is |
 | Course video | **Not on the hosting.** Lessons link to a video host (YouTube unlisted, Vimeo, Bunny Stream or similar), and recordings are links on the session. | Rule for Phase B and later |
 | Large downloads (source code products) | Small archives can stay on disk behind signed URLs. Anything large goes to S3-compatible object storage with signed URLs. | Decide per product in step F |
-| Bulk and festival mail | Not through Hostinger SMTP (caps). Use a transactional provider over its HTTPS API, with bounce webhooks (X8). Credential sends stay throttled by `CREDENTIALS_BULK_PER_MINUTE`; set it under the mail cap. | Rule for step G |
+| All mail, not only bulk | **Hostinger's 100 a day is not enough for v3 at all.** Cutover alone sends credentials to every generation 1 student (over a hundred), and day to day there are sign in codes, receipts, class reminders and enquiry replies. Every message therefore goes through a transactional provider (for example Brevo, ZeptoMail or Amazon SES) from cutover day, with bounce webhooks (X8); Hostinger SMTP is not used. Credential sends stay throttled by `CREDENTIALS_BULK_PER_MINUTE`; set it under the provider's rate. | **Needed before cutover**; provider to be chosen |
 | Live camera proctoring | Needs a media relay (SFU) and a TURN server, which shared hosting cannot run. Use a managed service (for example LiveKit Cloud) or a separate small VPS. Laravel on the shared plan only issues join tokens. | Changes X12 |
 | AI (quiz review, visitor assistant) | Outbound HTTPS is fine. Quiz review uses the Message Batches API, polled from the scheduler, so no request waits. The visitor assistant should answer per message without holding a stream open, because every open stream holds an entry process. | Rule for step H |
 | Migration importer | Run over SSH from the command line, where web time limits do not apply, or run locally against the dump and upload the result. The data is small. | Rule for step C |

@@ -355,6 +355,8 @@ questions are asked before the phase they belong to starts.
 | D4 | Leaderboard: award points for historic attendance and results? | No. Start everyone at zero on cutover day; history stays visible. |
 | D5 | Attendance: create "absent" for past sessions a student did not join? | No. Unknown is not absent. Only matters for batches running at cutover; mark those by hand. |
 | D6 | Historic payments: receipts only, or retroactive invoices? | Receipts only. Ask the accountant before deciding otherwise. |
-| D7 | What URL do the QR codes on v1 (pre-v2) certificates point to? | If it is a v1 URL, add that pattern to the redirect map too. |
+| D7 | What URL do the QR codes on v1 (pre-v2) certificates point to? | If it is a v1 URL, add that pattern to the redirect map too. **Deferred 2026-11-12:** the owner checks a v1 certificate once the project is complete, before cutover. |
+| D10 | Who handles the real data during import? | **Decided 2026-11-12:** the importer is built and tested only against fake data shaped like v2. The owner runs it on a staging copy of the production dump and shares only the run's report, which holds counts and ids, never names, emails or numbers. Real data never reaches the repository or this conversation. |
+| D11 | Cutover window | **Left to the plan, 2026-11-12:** a late Sunday evening between batches, when no live class is scheduled (the importer can list the next class as a check). v2 is put into maintenance mode, the final dump is taken, the import and reconciliation run, DNS switches, smoke tests pass. Students are told three days ahead. |
 | D8 | Same domain for v3? | Yes, so certificate links and search rankings carry over. |
 | D9 | Certificate templates: build the full visual designer (L6) or a fixed design per course type? | Fixed design with an uploaded background first; designer later. |

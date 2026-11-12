@@ -126,3 +126,12 @@ it('is changed only by staff who may change settings', function () {
         ->assertInertia(fn ($page) => $page->where('site.show_email', false)->has('socialNetworks', 6));
     $this->actingAs($viewer->fresh())->put('/admin/settings/site', siteDetails())->assertForbidden();
 });
+
+it('says whether realtime chat is wired to Pusher, never what the key is', function () {
+    config(['broadcasting.default' => 'pusher', 'broadcasting.connections.pusher.key' => 'pk_live_secret_value']);
+
+    $response = $this->actingAs($this->owner)->get('/admin/settings')
+        ->assertInertia(fn ($page) => $page->where('providers.4', ['name' => 'Realtime chat', 'configured' => true, 'detail' => 'Pusher']));
+
+    $response->assertDontSee('pk_live_secret_value', false);
+});

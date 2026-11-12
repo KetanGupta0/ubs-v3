@@ -803,8 +803,9 @@ the middle of it.
 | X10 | Safe Exam Browser for final assessments, on top of browser lockdown? | Yes for final assessments; plain browser lockdown for regular quizzes. |
 | X11 | Auto-submit after N full-screen or tab exits, or leave it to the reviewer? | Leave it to the reviewer by default; allow the rule per quiz, shown to students before they start. |
 | X12 | Media relay for live proctoring | **Not on the shared plan** (it cannot run an SFU or TURN). A managed service (for example LiveKit Cloud) or a separate small VPS, with recording off in its configuration. Ask before step H. |
-| X13 | Hosted realtime service (Pusher protocol) for chat and proctor status | Needed before cutover, since Reverb cannot run on shared hosting. The client switch is built; choose the service before step C. |
-| X14 | Hostinger plan: SSH access, PHP 8.4, MySQL version, mail and process limits | Check in hPanel before step C; the deploy steps in `docs/HOSTING.md` depend on SSH. |
+| X13 | Hosted realtime service (Pusher protocol) for chat and proctor status | **Decided 2026-11-12: Pusher Channels.** The owner creates the account; keys go in `.env`. |
+| X14 | Hostinger plan: SSH access, PHP 8.4, MySQL version, mail and process limits | **Answered 2026-11-12:** Business plan, SSH without root, PHP and MySQL configured, cron available, 100 emails a day. The mail cap means a transactional mail provider is needed before cutover (`docs/HOSTING.md`). |
+| X15 | Transactional mail provider | Needed before cutover, because of the 100 a day cap. Brevo, ZeptoMail or Amazon SES; ask before the cutover step. |
 | X5 | Registration form with an existing email: confirm first, or add directly? | Confirm first. Otherwise anyone can enrol anyone. |
 | X6 | Credentials vault for client handover: build it? | Only if the team hands over credentials through the platform today; it is a security surface. |
 | X7 | Festival list: which occasions, and do enquiry senders receive greetings? | National days to everyone who has not opted out; festivals switchable by the admin; enquiry senders included, with unsubscribe. |
