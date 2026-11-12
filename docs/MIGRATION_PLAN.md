@@ -136,6 +136,14 @@ LMS. A v2 enrolment still waiting for payment is listed, not enrolled. Seats are
 each batch's group chat put in step, as the Enroller would. A dump missing a table reports it
 and skips that step instead of failing.
 
+*Progress (2026-11-12, third slice):* **materials and notices** are built. Files come from
+`--storage=PATH` (a copy of v2's `storage/`), are copied under v3's layout, verified with
+sha256 after the copy and typed from their bytes; a missing file is listed, and a material
+stays scoped to the one batch it belonged to in v2. Notices reach the same people they did:
+everybody, one batch or one student; urgent and warning ones stay pinned. Fixed on the way:
+a dry run rolled each step back before the next ran, so later steps could not see earlier
+ones and under-reported; a dry run is now one transaction rolled back at the end.
+
 **Generation 1 list.** A real run that imports users needs `--generation-one=FILE` (emails,
 one per line) or `--all-generation-one`. Make the file on the private server, never in a
 repository, from the June seed migration the old repository published, for example

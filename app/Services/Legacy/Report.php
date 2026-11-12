@@ -11,7 +11,7 @@ namespace App\Services\Legacy;
  */
 class Report
 {
-    /** @var array<string, array{read: int, created: int, updated: int, unchanged: int, skipped: int, warnings: array<int, array{code: string, source: string, message: string}>}> */
+    /** @var array<string, array{read: int, created: int, updated: int, unchanged: int, skipped: int, files: int, warnings: array<int, array{code: string, source: string, message: string}>}> */
     protected array $steps = [];
 
     public function __construct(public readonly bool $dryRun) {}
@@ -49,6 +49,6 @@ class Report
 
     protected function ensure(string $step): void
     {
-        $this->steps[$step] ??= ['read' => 0, 'created' => 0, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'warnings' => []];
+        $this->steps[$step] ??= ['read' => 0, 'created' => 0, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'files' => 0, 'warnings' => []];
     }
 }

@@ -141,6 +141,51 @@ class LegacyDatabase
         });
     }
 
+    /** v2's study materials and notices. */
+    public static function createContent(): void
+    {
+        $schema = Schema::connection('legacy');
+
+        $schema->create('study_materials', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('batch_id');
+            $table->string('title');
+            $table->text('description')->nullable();
+            $table->string('type')->default('pdf');
+            $table->string('file_path');
+            $table->string('original_name');
+            $table->unsignedBigInteger('file_size')->default(0);
+            $table->string('mime_type')->nullable();
+            $table->integer('sort_order')->default(0);
+            $table->foreignId('uploaded_by')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('notices', function (Blueprint $table) {
+            $table->id();
+            $table->string('title');
+            $table->longText('body');
+            $table->string('type')->default('info');
+            $table->string('target_type')->default('all');
+            $table->unsignedBigInteger('target_id')->nullable();
+            $table->foreignId('created_by')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    /** A made up copy of v2's storage directory, in a temporary folder. */
+    public static function storage(array $files): string
+    {
+        $root = sys_get_temp_dir().'/legacy-storage-'.uniqid();
+
+        foreach ($files as $path => $contents) {
+            @mkdir(dirname("{$root}/{$path}"), 0777, true);
+            file_put_contents("{$root}/{$path}", $contents);
+        }
+
+        return $root;
+    }
+
     public static function insert(string $table, array $row): int
     {
         return DB::connection('legacy')->table($table)->insertGetId($row);

@@ -6,6 +6,8 @@ use App\Services\Legacy\Steps\AttendanceStep;
 use App\Services\Legacy\Steps\BatchesStep;
 use App\Services\Legacy\Steps\CoursesStep;
 use App\Services\Legacy\Steps\EnrolmentsStep;
+use App\Services\Legacy\Steps\MaterialsStep;
+use App\Services\Legacy\Steps\NoticesStep;
 use App\Services\Legacy\Steps\SessionsStep;
 use App\Services\Legacy\Steps\Step;
 use App\Services\Legacy\Steps\UsersStep;
@@ -16,7 +18,6 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
-use Throwable;
 
 /**
  * Carries the ubs-v2 data into v3, step by step, in dependency order.
@@ -37,6 +38,8 @@ class Importer
         EnrolmentsStep::class,
         SessionsStep::class,
         AttendanceStep::class,
+        MaterialsStep::class,
+        NoticesStep::class,
     ];
 
     /** @return array<int, string> */
@@ -56,36 +59,59 @@ class Importer
 
         $this->silence();
 
-        foreach (self::STEPS as $class) {
-            $step = new $class;
-
-            if ($only && ! in_array($step->name(), $only, true)) {
-                continue;
-            }
-
-            // A dump missing a table is reported, not guessed around.
-            $missing = array_filter($step->sourceTables(), fn (string $table) => ! Schema::connection('legacy')->hasTable($table));
-
-            if ($missing) {
-                $context->report->count($step->name(), 'skipped', 0);
-                $context->report->warn($step->name(), 'source_missing', implode(', ', $missing), 'The dump has no such table, so this step did not run.');
-
-                continue;
-            }
-
+        // A dry run is one transaction rolled back at the very end, so each
+        // step sees what the steps before it would have made. A real run
+        // commits step by step, so a failure keeps what already succeeded
+        // and a re-run carries on from there.
+        if ($context->report->dryRun) {
             DB::beginTransaction();
 
             try {
-                $step->run($context);
-                $context->report->dryRun ? DB::rollBack() : DB::commit();
-            } catch (Throwable $e) {
+                $this->steps($context, $only);
+            } finally {
                 DB::rollBack();
-
-                throw $e;
             }
+
+            return $context->report;
+        }
+
+        foreach ($this->selected($only) as $step) {
+            DB::transaction(fn () => $this->runStep($step, $context));
         }
 
         return $context->report;
+    }
+
+    protected function steps(Context $context, array $only): void
+    {
+        foreach ($this->selected($only) as $step) {
+            $this->runStep($step, $context);
+        }
+    }
+
+    /** @return array<int, Step> */
+    protected function selected(array $only): array
+    {
+        return collect(self::STEPS)
+            ->map(fn (string $class) => new $class)
+            ->filter(fn (Step $step) => ! $only || in_array($step->name(), $only, true))
+            ->values()
+            ->all();
+    }
+
+    protected function runStep(Step $step, Context $context): void
+    {
+        // A dump missing a table is reported, not guessed around.
+        $missing = array_filter($step->sourceTables(), fn (string $table) => ! Schema::connection('legacy')->hasTable($table));
+
+        if ($missing) {
+            $context->report->count($step->name(), 'skipped', 0);
+            $context->report->warn($step->name(), 'source_missing', implode(', ', $missing), 'The dump has no such table, so this step did not run.');
+
+            return;
+        }
+
+        $step->run($context);
     }
 
     protected function silence(): void

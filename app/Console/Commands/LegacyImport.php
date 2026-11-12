@@ -104,10 +104,10 @@ class LegacyImport extends Command
         $report = $importer->run($context, $only);
 
         $rows = collect($report->steps())->map(fn (array $step, string $name) => [
-            $name, $step['read'], $step['created'], $step['updated'], $step['unchanged'], $step['skipped'], count($step['warnings']),
+            $name, $step['read'], $step['created'], $step['updated'], $step['unchanged'], $step['skipped'], $step['files'], count($step['warnings']),
         ])->values()->all();
 
-        $this->table(['Step', 'Read', 'Created', 'Updated', 'Unchanged', 'Skipped', 'Warnings'], $rows);
+        $this->table(['Step', 'Read', 'Created', 'Updated', 'Unchanged', 'Skipped', 'Files', 'Warnings'], $rows);
 
         $file = 'legacy-reports/'.now()->format('Y-m-d-His').($dryRun ? '-dry-run' : '').'.json';
         Storage::disk('local')->put($file, json_encode($report->toArray(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
