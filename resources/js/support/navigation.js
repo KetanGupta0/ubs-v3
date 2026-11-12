@@ -22,7 +22,7 @@ import {
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
     UserPlus, Package, ShieldCheck, Building2, Wrench, HelpCircle, UserCog,
     ScrollText, FileSignature, Files, LifeBuoy as LifeBuoyIcon, Banknote,
-    ShieldAlert, ClipboardPen, NotebookPen, MessageCircleQuestion, BellRing,
+    ShieldAlert, ClipboardPen, NotebookPen, MessageCircleQuestion, BellRing, TrendingUp,
 } from 'lucide-vue-next';
 
 export const navigation = {
@@ -102,6 +102,7 @@ export const navigation = {
         { label: 'Assignments', icon: FileText, href: '/student/assignments' },
         { label: 'Attendance', icon: CalendarCheck, href: '/student/attendance' },
         { label: 'Results', icon: ClipboardList, href: '/student/results' },
+        { label: 'My progress', icon: TrendingUp, href: '/student/performance' },
         { label: 'Leaderboard', icon: Trophy, href: '/student/leaderboard' },
         { label: 'Certificates', icon: Award, href: '/student/certificates' },
         { label: 'Announcements', icon: Megaphone, href: '/student/announcements' },

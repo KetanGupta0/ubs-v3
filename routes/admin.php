@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AssessmentController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BatchController;
+use App\Http\Controllers\Admin\BatchPerformanceController;
 use App\Http\Controllers\Admin\BatchRunController;
 use App\Http\Controllers\Admin\BillingController;
 use App\Http\Controllers\Admin\CertificateTemplateController;
@@ -306,6 +307,7 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
          */
         Route::middleware('permission:students.view')->group(function () {
             Route::get('batches/{batch}/run', [BatchRunController::class, 'show'])->name('batches.run');
+            Route::get('batches/{batch}/performance', BatchPerformanceController::class)->name('batches.performance');
             Route::post('batches/{batch}/sessions', [BatchRunController::class, 'storeSession'])->name('sessions.store');
             Route::put('batches/{batch}/sessions/{session}', [BatchRunController::class, 'updateSession'])->name('sessions.update');
             Route::delete('batches/{batch}/sessions/{session}', [BatchRunController::class, 'destroySession'])->name('sessions.destroy');

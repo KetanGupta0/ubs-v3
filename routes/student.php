@@ -7,6 +7,7 @@ use App\Http\Controllers\Student\ClassController;
 use App\Http\Controllers\Student\CourseController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\DoubtController;
+use App\Http\Controllers\Student\PerformanceController;
 use App\Http\Controllers\Student\PreferencesController;
 use App\Http\Controllers\Student\ProgressController;
 use App\Http\Controllers\Student\QuizController;
@@ -67,6 +68,7 @@ Route::middleware(['auth', 'password.owned', 'role:student'])
             ->middleware('throttle:60,1')
             ->name('lessons.note');
         Route::get('notes', [StudyController::class, 'notes'])->name('notes');
+        Route::get('performance', PerformanceController::class)->name('performance');
         Route::get('preferences', [PreferencesController::class, 'show'])->name('preferences');
         Route::put('preferences', [PreferencesController::class, 'update'])->name('preferences.update');
         Route::post('courses/{course}/lessons/{lesson}/doubts', [DoubtController::class, 'store'])

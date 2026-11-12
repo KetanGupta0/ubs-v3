@@ -20,7 +20,7 @@ use App\Support\Money;
  */
 class StudentRecord
 {
-    public function __construct(protected ResultCard $results) {}
+    public function __construct(protected ResultCard $results, protected Performance $performance) {}
 
     /**
      * @param  bool  $withPayments  Off for staff who may not see billing: the
@@ -37,6 +37,9 @@ class StudentRecord
 
         return [
             'enrolments' => $enrolments->map(fn (Enrollment $enrolment) => $this->enrolment($enrolment))->values(),
+            'performance' => $enrolments->whereIn('status', ['active', 'completed'])
+                ->map(fn (Enrollment $enrolment) => $this->performance->forEnrolment($enrolment))
+                ->values(),
             'payments' => $withPayments ? $this->payments($student) : [],
             'certificates' => $this->certificates($student),
             'warnings' => $this->warnings($student),

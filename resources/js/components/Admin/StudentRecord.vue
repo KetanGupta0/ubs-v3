@@ -14,6 +14,7 @@ import UiFormField from '@/components/UI/UiFormField.vue';
 import UiInput from '@/components/UI/UiInput.vue';
 import UiTextarea from '@/components/UI/UiTextarea.vue';
 import UiCheckbox from '@/components/UI/UiCheckbox.vue';
+import PerformanceCard from '@/components/Student/PerformanceCard.vue';
 
 /**
  * One student's learning, on their admin profile: what they are on and how it
@@ -31,6 +32,7 @@ const tab = ref('enrolments');
 
 const tabs = computed(() => [
     { value: 'enrolments', label: 'Enrolments', count: props.record.enrolments.length },
+    { value: 'performance', label: 'Performance', count: (props.record.performance ?? []).length },
     ...(props.canSeeBilling ? [{ value: 'payments', label: 'Payments', count: props.record.payments.length }] : []),
     { value: 'certificates', label: 'Certificates', count: props.record.certificates.length },
     { value: 'warnings', label: 'Warnings', count: props.record.warnings.length },
@@ -154,6 +156,14 @@ const percent = (value) => (value === null || value === undefined ? '—' : `${M
                         </div>
                     </li>
                 </ul>
+            </template>
+
+            <!-- How each course is going, the same card the student sees -->
+            <template v-else-if="tab === 'performance'">
+                <UiEmptyState v-if="!(record.performance ?? []).length" title="Nothing to show" description="Performance shows for active and finished courses." />
+                <div v-else class="space-y-4">
+                    <PerformanceCard v-for="course in record.performance" :key="course.courseId" :performance="course" audience="staff" />
+                </div>
             </template>
 
             <!-- Payments -->

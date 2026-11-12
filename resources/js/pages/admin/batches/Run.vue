@@ -8,6 +8,7 @@
 import { ref, computed } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
 import {
+    TrendingUp,
     Plus, Pencil, Trash2, Video, Users, Megaphone, ShieldAlert,
     Award, UserPlus, Pin, ExternalLink,
 } from 'lucide-vue-next';
@@ -228,6 +229,10 @@ const attendanceTone = (student) => {
                 :description="[batch.course, batch.code, batch.college].filter(Boolean).join(' · ')"
             >
                 <template #actions>
+                    <UiButton :href="`${base}/performance`" variant="ghost" size="sm">
+                        <template #leading><TrendingUp class="h-3.5 w-3.5" /></template>
+                        Performance
+                    </UiButton>
                     <UiButton :href="`${base}/warnings`" variant="ghost" size="sm">
                         <template #leading><ShieldAlert class="h-3.5 w-3.5" /></template>
                         Notices
