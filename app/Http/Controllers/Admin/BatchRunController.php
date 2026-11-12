@@ -16,6 +16,7 @@ use App\Notifications\RecordingAvailable;
 use App\Services\Admin\Auditor;
 use App\Services\Lms\Activity;
 use App\Services\Lms\Enroller;
+use App\Services\Lms\Reminders;
 use App\Services\Lms\Warnings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -262,7 +263,7 @@ class BatchRunController extends Controller
         ]);
     }
 
-    public function mark(Request $request, Batch $batch, LiveSession $session, Activity $activity): RedirectResponse
+    public function mark(Request $request, Batch $batch, LiveSession $session, Activity $activity, Reminders $reminders): RedirectResponse
     {
         abort_unless($session->batch_id === $batch->id, 404);
 
@@ -305,6 +306,9 @@ class BatchRunController extends Controller
         }
 
         $session->forceFill(['status' => 'held'])->save();
+
+        // Two missed in a row: the student is told, and so is the trainer.
+        $reminders->afterRegister($session);
 
         return back()->with('success', 'Register saved.');
     }

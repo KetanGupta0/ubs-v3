@@ -62,7 +62,14 @@ class User extends Authenticatable implements MustVerifyEmail
             'status' => UserStatus::class,
             'must_change_password' => 'boolean',
             'is_owner' => 'boolean',
+            'reminder_preferences' => 'array',
         ];
+    }
+
+    /** Whether this person wants a kind of reminder. Every kind is on until switched off. */
+    public function wantsReminder(string $kind): bool
+    {
+        return ! in_array($kind, $this->reminder_preferences['off'] ?? [], true);
     }
 
     /* ------------------------------------------------------------ relations */

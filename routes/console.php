@@ -20,6 +20,9 @@ Schedule::command('renewals:remind')->dailyAt('09:00');
  */
 Schedule::command('reports:send')->hourly();
 
+// Class and deadline reminders. Each goes once, whatever the schedule does.
+Schedule::command('lms:remind')->everyFiveMinutes()->withoutOverlapping(10);
+
 /*
  * Shared hosting has no long running worker, so the queue is drained here,
  * from the one-minute cron that runs the scheduler. It stops when the queue
