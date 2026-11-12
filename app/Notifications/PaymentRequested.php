@@ -54,7 +54,7 @@ class PaymentRequested extends Notification implements ShouldQueue
         }
 
         return $message
-            ->action('View and pay', url("/client/payments/{$this->request->id}"))
+            ->action('View and pay', url($this->path($notifiable)))
             ->line('The invoice is on that page and can be downloaded before you pay.');
     }
 
@@ -66,7 +66,7 @@ class PaymentRequested extends Notification implements ShouldQueue
             $this->request->title,
             Money::display($this->request->total),
             $this->request->due_on ? ' by '.$this->request->due_on->format('j M') : '',
-            url("/client/payments/{$this->request->id}"),
+            url($this->path($notifiable)),
         );
     }
 
@@ -77,7 +77,20 @@ class PaymentRequested extends Notification implements ShouldQueue
             'reference' => $this->request->reference,
             'title' => $this->request->title,
             'amount' => Money::display($this->request->total),
-            'url' => "/client/payments/{$this->request->id}",
+            'url' => $this->path($notifiable),
         ];
+    }
+
+    /**
+     * The payment's page in the panel of whoever is asked to pay.
+     *
+     * Until November 2026 this was always the client portal, so a student
+     * asked for a course fee was sent to a page their account cannot open.
+     */
+    protected function path(object $notifiable): string
+    {
+        $panel = method_exists($notifiable, 'isStudent') && $notifiable->isStudent() ? 'student' : 'client';
+
+        return "/{$panel}/payments/{$this->request->id}";
     }
 }

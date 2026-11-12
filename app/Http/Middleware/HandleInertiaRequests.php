@@ -119,6 +119,7 @@ class HandleInertiaRequests extends Middleware
                 'twoFactorSetup' => fn () => $request->session()->get('twoFactorSetup'),
                 'recoveryCodes' => fn () => $request->session()->get('recoveryCodes'),
                 'issuedApiKey' => fn () => $request->session()->get('issuedApiKey'),
+                'registrationSent' => fn () => $request->session()->get('registrationSent'),
             ],
 
             'ziggy' => fn () => [

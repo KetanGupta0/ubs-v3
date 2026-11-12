@@ -8,7 +8,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import {
     Video, ClipboardList, FileText, ArrowRight, Flame, Trophy, Award,
-    Megaphone, AlertTriangle, CheckCircle2, BookOpen,
+    Megaphone, AlertTriangle, CheckCircle2, BookOpen, ClipboardPen,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -26,6 +26,8 @@ defineProps({
     announcements: { type: Array, default: () => [] },
     stats: { type: Object, default: () => ({}) },
     unreadWarnings: { type: Number, default: 0 },
+    /** Registrations from public forms still open: { confirm, review }. */
+    registrations: { type: Object, default: () => ({ confirm: 0, review: 0 }) },
     recentActivity: { type: Array, default: () => [] },
 });
 
@@ -48,6 +50,27 @@ const icons = { quiz: ClipboardList, assignment: FileText };
                 <span class="min-w-0 flex-1 text-sm">
                     There {{ unreadWarnings === 1 ? 'is a message' : `are ${unreadWarnings} messages` }}
                     from your trainer waiting for you.
+                </span>
+                <ArrowRight class="h-4 w-4 shrink-0" style="color: var(--text-muted)" />
+            </Link>
+
+            <!-- ----------------------------- registrations from a form -->
+            <Link
+                v-if="registrations.confirm || registrations.review"
+                href="/student/registrations"
+                class="flex items-center gap-3 rounded-[var(--radius-card)] border px-4 py-3.5 transition hover:shadow-[var(--shadow-card)]"
+                :style="{ borderColor: registrations.confirm ? 'var(--color-brand-500)' : 'var(--border-subtle)', background: 'var(--surface)' }"
+            >
+                <ClipboardPen class="h-5 w-5 shrink-0 text-brand-500" />
+                <span class="min-w-0 flex-1 text-sm">
+                    <template v-if="registrations.confirm">
+                        {{ registrations.confirm === 1 ? 'A registration needs' : `${registrations.confirm} registrations need` }}
+                        you to confirm it was you.
+                    </template>
+                    <template v-else>
+                        {{ registrations.review === 1 ? 'Your registration is' : `${registrations.review} of your registrations are` }}
+                        waiting for the team to review.
+                    </template>
                 </span>
                 <ArrowRight class="h-4 w-4 shrink-0" style="color: var(--text-muted)" />
             </Link>

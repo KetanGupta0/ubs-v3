@@ -6,6 +6,7 @@ use App\Http\Controllers\Marketing\InternshipController;
 use App\Http\Controllers\Marketing\LeadController;
 use App\Http\Controllers\Marketing\LegalController;
 use App\Http\Controllers\Marketing\PageController;
+use App\Http\Controllers\Marketing\RegistrationController;
 use App\Http\Controllers\Marketing\ServiceController;
 use App\Http\Controllers\Marketing\SitemapController;
 use App\Http\Controllers\Marketing\SolutionController;
@@ -48,6 +49,18 @@ Route::get('/for-colleges', [InternshipController::class, 'forColleges'])->name(
  * registration to the student's own confirm step; see EnrolController.
  */
 Route::get('/enrol/{course}', EnrolController::class)->middleware('throttle:30,1')->name('enrol.start');
+
+/*
+ * Registration forms, filled without an account. Kept out of search and the
+ * sitemap; see RegistrationController and Registrar.
+ */
+Route::get('/join/{slug}', [RegistrationController::class, 'show'])
+    ->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')
+    ->name('registration.show');
+Route::post('/join/{slug}', [RegistrationController::class, 'store'])
+    ->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*')
+    ->middleware('throttle:registrations')
+    ->name('registration.store');
 
 Route::get('/about', [PageController::class, 'about'])->name('about');
 Route::get('/process', [PageController::class, 'process'])->name('process');

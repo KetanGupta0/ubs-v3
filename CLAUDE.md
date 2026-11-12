@@ -263,6 +263,11 @@ Rules for the marketing pages:
   elements written inside it. Until November 2026 it had no slot, so every select
   written the second way rendered empty: question types, lesson prerequisites,
   assignment batches, report filters and the student's batch choice on joining.
+- **`UiCheckbox` binds to a boolean or to a list.** With `v-model` on an array
+  and a `:value`, it adds or removes that value. Until November 2026 the list form
+  was declared and never handled, so every box showed ticked and the first click
+  replaced the list with `true` or `false`: the staff screen could not grant a chosen set of
+  permissions at all, inviting or editing.
 - **A label reaches its control through `UiFormField`**, which provides the id and
   `aria-describedby` and the inputs inject it. Do not pass an id into `UiInput`
   by hand, and keep `inheritAttrs: false` on controls that render a wrapper, or
@@ -353,6 +358,15 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   same course, change status, waive a fee. Moving or dropping recounts seats on
   both batches and puts both batch groups in step. A part-paid fee cannot be
   waived; settle or refund it first.
+- **A registration form says the same thing to everybody.** `/join/{slug}` answers
+  every valid submission with one redirect and "check your email", and the matching
+  happens afterwards in `ProcessRegistration`, so a new address and a known one take
+  the same time too. `App\Services\Lms\Registrar` holds the rules: a new address
+  gets an account through `AccountCreator` and counts as confirmed; an existing
+  student must confirm from `/student/registrations` before anything goes on their
+  record, and staff cannot approve it for them (X5); a staff or client address gets
+  nothing sent. Messages to an existing account repeat nothing the sender typed.
+  Forms are `noindex` and out of the sitemap, and an LMS only course may have one.
 - **Warnings climb one rung at a time** — notice, warning, escalation — and the
   student is told every time. The private note is for us and never reaches them.
 - `/verify` answers identically for a code that never existed and one that was

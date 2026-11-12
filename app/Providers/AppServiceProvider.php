@@ -9,7 +9,10 @@ use App\Services\Payments\RazorpayGateway;
 use App\Services\Sms\LogSmsSender;
 use App\Services\Sms\Msg91SmsSender;
 use App\Services\Sms\SmsSender;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -81,5 +84,17 @@ class AppServiceProvider extends ServiceProvider
          * checking", where false would short circuit every other rule.
          */
         Gate::before(fn (User $user) => $user->is_owner ? true : null);
+
+        /*
+         * Registration forms make accounts, so they are limited, but not by
+         * address alone: a college visit puts sixty students on one Wi-Fi
+         * network filling the same form in the same ten minutes. The address
+         * limit is loose; the limit per email is what stops one address being
+         * sent a confirmation over and over.
+         */
+        RateLimiter::for('registrations', fn (Request $request) => [
+            Limit::perMinute(40)->by('ip:'.$request->ip()),
+            Limit::perHour(5)->by('email:'.mb_strtolower(trim((string) $request->input('email')))),
+        ]);
     }
 }

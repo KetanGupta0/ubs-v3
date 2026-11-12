@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\PageCopyController;
 use App\Http\Controllers\Admin\PeopleController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProposalController;
+use App\Http\Controllers\Admin\RegistrationFormController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SeoController;
@@ -408,6 +409,24 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::put('reviews/{review}/status', [ReviewController::class, 'moderate'])->name('reviews.moderate');
             Route::put('reviews/{review}/reply', [ReviewController::class, 'reply'])->name('reviews.reply');
             Route::post('reviews/{review}/testimonial', [ReviewController::class, 'promote'])->name('reviews.promote');
+        });
+
+        /* ---------------------------------------------- registration forms */
+        Route::middleware('permission:students.view')->group(function () {
+            Route::get('registration-forms', [RegistrationFormController::class, 'index'])->name('registration-forms.index');
+            Route::get('registration-forms/{form:id}', [RegistrationFormController::class, 'show'])->whereNumber('form')->name('registration-forms.show');
+            Route::get('registration-forms/{form:id}/qr', [RegistrationFormController::class, 'qrCode'])->whereNumber('form')->name('registration-forms.qr');
+        });
+
+        Route::middleware('permission:students.update')->group(function () {
+            Route::get('registration-forms/new', [RegistrationFormController::class, 'create'])->name('registration-forms.create');
+            Route::post('registration-forms', [RegistrationFormController::class, 'store'])->name('registration-forms.store');
+            Route::get('registration-forms/{form:id}/edit', [RegistrationFormController::class, 'edit'])->whereNumber('form')->name('registration-forms.edit');
+            Route::put('registration-forms/{form:id}', [RegistrationFormController::class, 'update'])->whereNumber('form')->name('registration-forms.update');
+            Route::delete('registration-forms/{form:id}', [RegistrationFormController::class, 'destroy'])->whereNumber('form')->name('registration-forms.destroy');
+            Route::post('registration-forms/{form:id}/registrations/{registration:id}/approve', [RegistrationFormController::class, 'approve'])->whereNumber(['form', 'registration'])->name('registrations.approve');
+            Route::post('registration-forms/{form:id}/registrations/{registration:id}/reject', [RegistrationFormController::class, 'reject'])->whereNumber(['form', 'registration'])->name('registrations.reject');
+            Route::put('registration-forms/{form:id}/registrations/{registration:id}/batch', [RegistrationFormController::class, 'move'])->whereNumber(['form', 'registration'])->name('registrations.move');
         });
 
         /* ------------------------------------------------------ enrolments */

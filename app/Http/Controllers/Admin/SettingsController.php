@@ -7,6 +7,7 @@ use App\Mail\TemplateTest;
 use App\Models\MessageTemplate;
 use App\Models\Setting;
 use App\Services\Admin\Auditor;
+use App\Support\HumanCheck;
 use App\Support\MessageCatalogue;
 use App\Support\SiteIdentity;
 use Illuminate\Http\JsonResponse;
@@ -70,6 +71,7 @@ class SettingsController extends Controller
                     'configured' => config('broadcasting.default') === 'pusher' && filled(config('broadcasting.connections.pusher.key')),
                     'detail' => config('broadcasting.default') === 'pusher' ? 'Pusher' : config('broadcasting.default').' (polling on shared hosting)',
                 ],
+                ['name' => 'Human check on registration forms', 'configured' => HumanCheck::enabled(), 'detail' => 'Cloudflare Turnstile'],
             ],
         ]);
     }

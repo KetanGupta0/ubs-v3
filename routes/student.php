@@ -8,6 +8,7 @@ use App\Http\Controllers\Student\CourseController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\ProgressController;
 use App\Http\Controllers\Student\QuizController;
+use App\Http\Controllers\Student\RegistrationController;
 use App\Http\Controllers\Student\SupportController;
 use Illuminate\Support\Facades\Route;
 
@@ -115,6 +116,11 @@ Route::middleware(['auth', 'password.owned', 'role:student'])
 
         /* --------------------------------------------------- fees and money */
         // Support tickets, on the same desk staff work for clients (decision D2).
+        /* ---------------------------------------- registrations from forms */
+        Route::get('registrations', [RegistrationController::class, 'index'])->name('registrations.index');
+        Route::post('registrations/{registration}/confirm', [RegistrationController::class, 'confirm'])->whereNumber('registration')->name('registrations.confirm');
+        Route::post('registrations/{registration}/decline', [RegistrationController::class, 'decline'])->whereNumber('registration')->name('registrations.decline');
+
         Route::get('support', [SupportController::class, 'index'])->name('support.index');
         Route::get('support/new', [SupportController::class, 'create'])->name('support.create');
         Route::post('support', [SupportController::class, 'store'])->middleware('throttle:10,1')->name('support.store');

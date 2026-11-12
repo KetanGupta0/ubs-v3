@@ -68,4 +68,15 @@ return [
         'webhook_secret' => env('RAZORPAY_WEBHOOK_SECRET'),
     ],
 
+    /*
+     * Cloudflare Turnstile, the "are you a person" check on forms that make
+     * accounts. Off until both keys are set; the honeypot and the rate limit
+     * apply either way. Switching it on sends visitors' addresses to
+     * Cloudflare, which the privacy policy has to say first.
+     */
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
 ];

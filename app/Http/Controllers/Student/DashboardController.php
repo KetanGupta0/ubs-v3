@@ -8,6 +8,7 @@ use App\Models\Enrollment;
 use App\Models\LiveSession;
 use App\Models\PaymentRequest;
 use App\Models\Quiz;
+use App\Models\Registration;
 use App\Models\StudentWarning;
 use App\Models\Submission;
 use App\Services\Lms\Activity;
@@ -69,6 +70,11 @@ class DashboardController extends StudentController
             ] : null,
 
             'dueSoon' => $this->dueSoon($request),
+
+            'registrations' => [
+                'confirm' => Registration::query()->ownedBy($request->user())->where('status', 'awaiting_confirmation')->count(),
+                'review' => Registration::query()->ownedBy($request->user())->where('status', 'awaiting_review')->count(),
+            ],
 
             'announcements' => Announcement::query()
                 ->for($batchIds, $courseIds, $request->user()->id)

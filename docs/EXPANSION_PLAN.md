@@ -340,6 +340,12 @@ without signing in.
 - **Admin side:** submissions go into the shared table with approve, reject and
   move-to-batch actions, and export to CSV/Excel.
 
+*Progress:*
+- *Built 2026-11-12: registration forms at `/admin/registration-forms` (Learning). A form belongs to one course and optionally one batch, with opening and closing times, a number of places, the course fee or free, approval by the team or automatic, optional standard questions (college, course of study, year of graduation, city) and up to fifteen of its own (short answer, paragraph, one of a list, yes or no). Each has an address at `/join/{slug}`, a QR code to print, and its registrations in the shared table with approve, reject and move to a batch, exportable with every answer.*
+- *The visitor always sees "Thanks. Check your email." A new address gets an account and its sign in details, with a line saying what the registration did, so one message carries both; an existing student is asked to confirm from their own account first, and staff cannot approve it until they do (X5); a staff or client address is held for the team with nothing sent. The fee, when there is one, is raised by `Enroller` as for any other enrolment.*
+- *Spam: a hidden field, 40 submissions a minute per network address (a college visit shares one) and 5 an hour per email. Cloudflare Turnstile switches on when its two keys are in `.env`; it is off until the privacy policy mentions it.*
+- *Building it found two bugs. Course fee messages sent students to `/client/payments/…`, a page their account cannot open; they now go to the student's own payments page. And `UiCheckbox` did not work bound to a list, which had left the staff screen unable to grant a chosen set of permissions, inviting or editing.*
+
 ---
 
 ## 6. LMS: every v2 module, plus improvements
