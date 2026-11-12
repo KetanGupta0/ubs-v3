@@ -26,11 +26,12 @@ class VerificationController extends Controller
 {
     public function __invoke(Request $request, ?string $code = null): Response
     {
-        $code = str($code ?? $request->string('code'))->upper()->trim()->toString();
+        $raw = trim((string) ($code ?? $request->string('code')));
+        $code = strtoupper($raw);
 
         return Inertia::render('Verify', [
             'code' => $code,
-            'result' => $code === '' ? null : $this->look($code),
+            'result' => $code === '' ? null : $this->look($code, $raw),
             'seo' => Seo::for(
                 'Verify a certificate',
                 'Check a certificate or internship document issued by Unboundbyte Solutions using the code printed on it.',
@@ -40,12 +41,13 @@ class VerificationController extends Controller
     }
 
     /** @return array<string, mixed> */
-    protected function look(string $code): array
+    protected function look(string $code, string $raw): array
     {
         $certificate = Certificate::query()
             ->where('verification_code', $code)
             ->with(['user:id,name', 'course:id,title', 'batch:id,name,starts_on,ends_on'])
-            ->first();
+            ->first()
+            ?? $this->legacy($raw);
 
         if ($certificate) {
             return [
@@ -92,5 +94,24 @@ class VerificationController extends Controller
         // Identical for a code that never existed and one that was mistyped.
         // Distinguishing them would hand somebody a way to probe for real ones.
         return ['found' => false];
+    }
+
+    /**
+     * A certificate the old site issued, found by the token its QR code
+     * carries. Compared exactly, case and all, because the token is
+     * mixed-case and the database may compare without case.
+     */
+    protected function legacy(string $raw): ?Certificate
+    {
+        if (strlen($raw) < 32) {
+            return null;
+        }
+
+        $certificate = Certificate::query()
+            ->where('legacy_token', $raw)
+            ->with(['user:id,name', 'course:id,title', 'batch:id,name,starts_on,ends_on'])
+            ->first();
+
+        return $certificate && hash_equals((string) $certificate->legacy_token, $raw) ? $certificate : null;
     }
 }

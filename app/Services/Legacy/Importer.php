@@ -5,6 +5,7 @@ namespace App\Services\Legacy;
 use App\Services\Legacy\Steps\AssignmentsStep;
 use App\Services\Legacy\Steps\AttendanceStep;
 use App\Services\Legacy\Steps\BatchesStep;
+use App\Services\Legacy\Steps\CertificatesStep;
 use App\Services\Legacy\Steps\CoursesStep;
 use App\Services\Legacy\Steps\EnrolmentsStep;
 use App\Services\Legacy\Steps\MaterialsStep;
@@ -44,6 +45,7 @@ class Importer
         NoticesStep::class,
         QuizzesStep::class,
         AssignmentsStep::class,
+        CertificatesStep::class,
     ];
 
     /** @return array<int, string> */

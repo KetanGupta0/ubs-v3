@@ -272,6 +272,26 @@ class LegacyDatabase
         });
     }
 
+    /** v2's certificates. */
+    public static function createCertificates(): void
+    {
+        Schema::connection('legacy')->create('certificates', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('student_id');
+            $table->foreignId('batch_id')->nullable();
+            $table->foreignId('program_id');
+            $table->foreignId('template_id')->nullable();
+            $table->string('certificate_number')->unique();
+            $table->string('token', 128)->unique();
+            $table->timestamp('issued_at')->nullable();
+            $table->timestamp('revoked_at')->nullable();
+            $table->text('revocation_reason')->nullable();
+            $table->boolean('is_legacy')->default(false);
+            $table->string('pdf_path', 500)->nullable();
+            $table->timestamps();
+        });
+    }
+
     /** A made up copy of v2's storage directory, in a temporary folder. */
     public static function storage(array $files): string
     {

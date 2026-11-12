@@ -17,7 +17,7 @@ use Illuminate\Support\Str;
 class Files
 {
     /**
-     * @param  string  $sourceDisk  'public' or 'local', as v2 stored it
+     * @param  string  $sourceDisk  'public' or 'local', as v2 stored it, or 'any' to look in both
      * @return array{path: string, mime: string, size: int, sha256: string}|null
      */
     public static function copy(Context $context, string $step, string $source, string $sourceDisk, ?string $path, string $targetDisk, string $targetDirectory): ?array
@@ -59,9 +59,12 @@ class Files
             return null;
         }
 
-        $roots = $disk === 'public'
-            ? ['app/public']
-            : ['app/private', 'app'];
+        $roots = match ($disk) {
+            'public' => ['app/public'],
+            'local' => ['app/private', 'app'],
+            // Where v2 was not consistent about which disk it used.
+            default => ['app/public', 'app/private', 'app'],
+        };
 
         foreach ($roots as $root) {
             $candidate = rtrim($context->storagePath, '/')."/{$root}/".ltrim($path, '/');
