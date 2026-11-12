@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { Code2, GraduationCap, Handshake, Eye, Scale } from 'lucide-vue-next';
 
@@ -7,29 +8,18 @@ import Seo from '@/components/Seo.vue';
 import SectionHeading from '@/components/Marketing/SectionHeading.vue';
 import CtaSection from '@/components/Marketing/CtaSection.vue';
 import PeopleGrid from '@/components/Marketing/PeopleGrid.vue';
+import { fill, numbered, paragraphs } from '@/support/copy';
 
-defineProps({
+const props = defineProps({
     team: { type: Array, default: () => [] },
+    /** The page's wording, as published in the panel (/admin/copy). */
+    copy: { type: Object, required: true },
+    figures: { type: Object, default: () => ({}) },
     seo: { type: Object, required: true },
 });
 
-const principles = [
-    {
-        icon: Eye,
-        title: 'Say the inconvenient thing',
-        body: 'If a rewrite is cheaper than the work you asked us to quote, we say so, even though it is the smaller job for us. The alternative is being paid to do something we know will not work.',
-    },
-    {
-        icon: Handshake,
-        title: 'You should be able to leave',
-        body: 'Your code sits in your repository from the first commit, with documentation and a recorded handover. Being hard to replace is not a business model we want.',
-    },
-    {
-        icon: Scale,
-        title: 'Scope includes what is out',
-        body: 'Every proposal states what is deliberately not included. Nearly every dispute we have seen came from the second list being unwritten rather than the first being wrong.',
-    },
-];
+// The icons stay with the design; the words come from the panel.
+const principles = computed(() => numbered(props.copy, 'principles', [Eye, Handshake, Scale]));
 </script>
 
 <template>
@@ -47,56 +37,38 @@ const principles = [
                 </nav>
 
                 <h1 class="text-3xl font-semibold leading-tight sm:text-4xl">
-                    A software company that also teaches
+                    {{ copy['intro.title'] }}
                 </h1>
 
                 <div class="mt-6 space-y-4 text-base leading-relaxed" style="color: var(--text-muted)">
-                    <p>
-                        Unboundbyte Solutions Private Limited builds custom software, modernises
-                        systems that companies already depend on, and maintains them afterwards. We
-                        also run live technical training, taught by the same people who write the
-                        software.
-                    </p>
-                    <p>
-                        Those two things are not separate businesses that happen to share an office.
-                        Most software fails after delivery, not during it, and it usually fails
-                        because the people who inherited it were never taught to run it. Teaching is
-                        the other half of building.
-                    </p>
-                    <p>
-                        It works the other way too. Teaching something forces you to understand it
-                        well enough to explain it, which is a higher standard than understanding it
-                        well enough to make it work.
-                    </p>
+                    <p v-for="(paragraph, index) in paragraphs(copy['intro.body'])" :key="index">{{ paragraph }}</p>
                 </div>
             </div>
         </section>
 
         <section class="mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:px-8">
-            <SectionHeading eyebrow="What we do" title="Two lines of work" />
+            <SectionHeading :eyebrow="copy['work.eyebrow']" :title="copy['work.title']" />
 
             <div class="mt-8 grid gap-5 sm:grid-cols-2">
                 <div class="rounded-[var(--radius-card)] border p-6" style="border-color: var(--border-subtle)">
                     <Code2 class="h-5 w-5 text-brand-600 dark:text-brand-400" aria-hidden="true" />
-                    <h3 class="mt-4 text-lg font-semibold">Software development and maintenance</h3>
+                    <h3 class="mt-4 text-lg font-semibold">{{ copy['work.software_title'] }}</h3>
                     <p class="mt-2 text-sm leading-relaxed" style="color: var(--text-muted)">
-                        New systems, upgrades to existing ones, and annual contracts covering
-                        monitoring, patching, backups and a response time we can be held to.
+                        {{ copy['work.software_body'] }}
                     </p>
                     <Link href="/services" class="mt-4 inline-block text-sm font-semibold text-brand-600 hover:underline dark:text-brand-400">
-                        See what that involves
+                        {{ copy['work.software_link'] }}
                     </Link>
                 </div>
 
                 <div class="rounded-[var(--radius-card)] border p-6" style="border-color: var(--border-subtle)">
                     <GraduationCap class="h-5 w-5 text-accent-600 dark:text-accent-400" aria-hidden="true" />
-                    <h3 class="mt-4 text-lg font-semibold">Live technical training</h3>
+                    <h3 class="mt-4 text-lg font-semibold">{{ copy['work.training_title'] }}</h3>
                     <p class="mt-2 text-sm leading-relaxed" style="color: var(--text-muted)">
-                        Programmes taught live on Google Meet, with attendance, assessment, a
-                        reviewed project and a certificate that can be verified online.
+                        {{ copy['work.training_body'] }}
                     </p>
                     <Link href="/training" class="mt-4 inline-block text-sm font-semibold text-brand-600 hover:underline dark:text-brand-400">
-                        See the programmes
+                        {{ copy['work.training_link'] }}
                     </Link>
                 </div>
             </div>
@@ -105,15 +77,15 @@ const principles = [
         <section class="py-14" style="background: var(--surface-sunken)">
             <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                 <SectionHeading
-                    eyebrow="How we operate"
-                    title="Three things we hold to"
-                    body="Not values on a wall. Each one costs us something, which is the only reason they are worth stating."
+                    :eyebrow="copy['principles.eyebrow']"
+                    :title="copy['principles.title']"
+                    :body="copy['principles.body']"
                 />
 
                 <div class="mt-8 space-y-4">
                     <div
                         v-for="(principle, index) in principles"
-                        :key="principle.title"
+                        :key="index"
                         class="animate-fade-up flex gap-4 rounded-[var(--radius-card)] border bg-[var(--surface)] p-5 sm:p-6"
                         :style="{ borderColor: 'var(--border-subtle)', animationDelay: `${index * 80}ms` }"
                     >
@@ -133,9 +105,9 @@ const principles = [
         <PeopleGrid
             :people="team"
             width="max-w-4xl"
-            eyebrow="The people"
-            title="Who you will work with"
-            body="The people who answer your messages, write your code and teach your classes."
+            :eyebrow="copy['team.eyebrow']"
+            :title="copy['team.title']"
+            :body="copy['team.body']"
         />
 
         <section class="mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:px-8">
@@ -143,20 +115,24 @@ const principles = [
                 class="rounded-[var(--radius-card)] border p-6 sm:p-8"
                 style="border-color: var(--border-subtle)"
             >
-                <h2 class="text-lg font-semibold">Where we are today</h2>
-                <p class="mt-3 text-sm leading-relaxed" style="color: var(--text-muted)">
-                    We are early. Rather than decorate this site with logos and quotes we have not
-                    earned, we have put the work into the catalogue: fifteen products described in
-                    enough detail that you can judge whether we understand the problem. That
-                    seemed more useful, and more honest, than a wall of stock photographs.
-                </p>
-                <p class="mt-3 text-sm leading-relaxed" style="color: var(--text-muted)">
-                    If you want to know whether we can build something, the fastest route is to
-                    describe it and let us answer specifically.
+                <h2 class="text-lg font-semibold">{{ copy['today.title'] }}</h2>
+                <p
+                    v-for="(paragraph, index) in paragraphs(fill(copy['today.body'], figures))"
+                    :key="index"
+                    class="mt-3 text-sm leading-relaxed"
+                    style="color: var(--text-muted)"
+                >
+                    {{ paragraph }}
                 </p>
             </div>
         </section>
 
-        <CtaSection secondary-label="Browse the catalogue" secondary-href="/solutions" />
+        <CtaSection
+            :title="copy['cta.title']"
+            :body="copy['cta.body']"
+            :primary-label="copy['cta.primary']"
+            :secondary-label="copy['cta.secondary']"
+            secondary-href="/solutions"
+        />
     </PublicLayout>
 </template>

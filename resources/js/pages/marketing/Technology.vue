@@ -1,4 +1,5 @@
 <script setup>
+import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import { Server, Layout, Database, Cloud, ShieldCheck, TestTube2 } from 'lucide-vue-next';
 
@@ -7,17 +8,16 @@ import Seo from '@/components/Seo.vue';
 import SectionHeading from '@/components/Marketing/SectionHeading.vue';
 import CtaSection from '@/components/Marketing/CtaSection.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
+import { numbered, paragraphs } from '@/support/copy';
 
-defineProps({ seo: { type: Object, required: true } });
+const props = defineProps({
+    /** The page's wording, as published in the panel (/admin/copy). */
+    copy: { type: Object, required: true },
+    seo: { type: Object, required: true },
+});
 
-const stacks = [
-    { icon: Server, title: 'Backend', items: ['Laravel', 'PHP 8.4', 'Node.js', 'Python'], body: 'Laravel for almost everything. Mature, extremely well documented, and easy to hire for in India.' },
-    { icon: Layout, title: 'Frontend', items: ['Vue.js', 'Inertia.js', 'Tailwind CSS', 'Vite'], body: 'Server driven routing with a single page feel, which keeps authorisation on the server where it belongs.' },
-    { icon: Database, title: 'Data', items: ['MySQL', 'PostgreSQL', 'Redis', 'Meilisearch'], body: 'Relational by default. We reach for something exotic only when the problem genuinely demands it.' },
-    { icon: Cloud, title: 'Infrastructure', items: ['Docker', 'Nginx', 'AWS', 'Cloudflare'], body: 'Repeatable deployments and infrastructure described in files, so a server can be rebuilt rather than remembered.' },
-    { icon: TestTube2, title: 'Quality', items: ['Pest', 'Pint', 'GitHub Actions', 'Playwright'], body: 'Tests, style checks and a production build on every push, so a regression is caught before a customer finds it.' },
-    { icon: ShieldCheck, title: 'Security', items: ['OWASP practices', 'Dependency audits', 'Signed URLs', 'Two factor'], body: 'Authorisation policies on every model, rate limits on anything that costs money to call.' },
-];
+// Six cards, each with its icon from the design and its words and tools from the panel.
+const stacks = computed(() => numbered(props.copy, 'stacks', [Server, Layout, Database, Cloud, TestTube2, ShieldCheck], ['title', 'body', 'items']));
 </script>
 
 <template>
@@ -35,21 +35,11 @@ const stacks = [
                 </nav>
 
                 <h1 class="text-3xl font-semibold leading-tight sm:text-4xl">
-                    Boring technology, chosen on purpose
+                    {{ copy['intro.title'] }}
                 </h1>
 
                 <div class="mt-6 space-y-4 text-base leading-relaxed" style="color: var(--text-muted)">
-                    <p>
-                        The most expensive decision in a software project is usually a framework
-                        chosen because it was interesting. Three years later it is unmaintained,
-                        nobody local knows it, and replacing the original team means replacing the
-                        system.
-                    </p>
-                    <p>
-                        So we build on tools that are well understood, actively maintained, and easy
-                        to hire for. The constraint is deliberate: you should be able to hand your
-                        system to another competent team without it being an archaeology project.
-                    </p>
+                    <p v-for="(paragraph, index) in paragraphs(copy['intro.body'])" :key="index">{{ paragraph }}</p>
                 </div>
             </div>
         </section>
@@ -58,7 +48,7 @@ const stacks = [
             <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 <div
                     v-for="(stack, index) in stacks"
-                    :key="stack.title"
+                    :key="index"
                     class="animate-fade-up rounded-[var(--radius-card)] border p-5"
                     :style="{ borderColor: 'var(--border-subtle)', animationDelay: `${index * 70}ms` }"
                 >
@@ -76,13 +66,19 @@ const stacks = [
         <section class="py-14" style="background: var(--surface-sunken)">
             <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                 <SectionHeading
-                    eyebrow="Worth saying plainly"
-                    title="This site runs on the same stack"
-                    body="The platform you are reading, and the dashboards behind it, are built with exactly what is listed above. If the stack could not carry a real application we would be the first to know."
+                    :eyebrow="copy['plainly.eyebrow']"
+                    :title="copy['plainly.title']"
+                    :body="copy['plainly.body']"
                 />
             </div>
         </section>
 
-        <CtaSection secondary-label="See what we build with it" secondary-href="/solutions" />
+        <CtaSection
+            :title="copy['cta.title']"
+            :body="copy['cta.body']"
+            :primary-label="copy['cta.primary']"
+            :secondary-label="copy['cta.secondary']"
+            secondary-href="/solutions"
+        />
     </PublicLayout>
 </template>

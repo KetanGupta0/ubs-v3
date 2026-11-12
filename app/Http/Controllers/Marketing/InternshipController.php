@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Marketing;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseReview;
+use App\Support\PageCopy;
 use App\Support\Seo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -110,6 +111,7 @@ class InternshipController extends Controller
     public function forColleges(): Response
     {
         return Inertia::render('marketing/ForColleges', [
+            'copy' => PageCopy::for('colleges'),
             'internships' => Course::query()
                 ->publiclyVisible()
                 ->internships()

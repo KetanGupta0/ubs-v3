@@ -199,9 +199,12 @@ class PageCopyController extends Controller
     {
         $value = str_replace("\r\n", "\n", $value);
 
-        return $field['type'] === 'list'
-            ? implode("\n", PageCopy::lines($value))
-            : trim(preg_replace('/[ \t]+/', ' ', $value));
+        return match ($field['type']) {
+            'list' => implode("\n", PageCopy::lines($value)),
+            // Paragraphs keep one blank line between them, however many were typed.
+            'paragraphs' => trim(preg_replace(["/[ \t]+/", "/ ?\n ?/", "/\n{3,}/"], [' ', "\n", "\n\n"], $value)),
+            default => trim(preg_replace('/[ \t]+/', ' ', $value)),
+        };
     }
 
     protected function problemWith(array $field, string $value): ?string
@@ -226,7 +229,7 @@ class PageCopyController extends Controller
             return null;
         }
 
-        if ($field['type'] !== 'text' && str_contains($value, "\n")) {
+        if (! in_array($field['type'], ['text', 'paragraphs'], true) && str_contains($value, "\n")) {
             return 'Keep this on one line.';
         }
 

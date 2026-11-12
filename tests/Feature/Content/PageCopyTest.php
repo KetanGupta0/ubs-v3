@@ -144,3 +144,28 @@ it('is only for staff who may write the public site', function () {
     saveCopy($this, 'home', ['hero.badge' => 'Secret draft']);
     expect(copyOn($this->actingAs($billing->fresh())->get('/?preview=copy'))['hero.badge'])->toBe('Software development · Live training');
 });
+
+it('gives every fixed page all of its wording, live and in preview', function () {
+    foreach (PageCopy::pages() as $page => $definition) {
+        $keys = array_keys(PageCopy::fields($page));
+
+        expect(array_keys(copyOn($this->get($definition['path'])->assertOk())))->toBe($keys, "{$page} is missing wording");
+        $this->actingAs($this->owner)->get($definition['path'].'?preview=copy')->assertOk()
+            ->assertInertia(fn ($inertia) => $inertia->where('copyPreview', true));
+        $this->app['auth']->forgetGuards();
+    }
+});
+
+it('keeps paragraphs apart, and the About page fills in the live product count', function () {
+    saveCopy($this, 'about', ['intro.body' => "First paragraph.\n\n\n\nSecond   paragraph."])->assertSessionHasNoErrors();
+    $this->actingAs($this->owner)->post('/admin/copy/about/publish');
+
+    $this->app['auth']->forgetGuards();
+    $response = $this->get('/about');
+
+    expect(copyOn($response)['intro.body'])->toBe("First paragraph.\n\nSecond paragraph.")
+        ->and(copyOn($response)['today.body'])->toContain('{solutions} products');
+    $response->assertInertia(fn ($page) => $page->has('figures.solutions'));
+
+    saveCopy($this, 'about', ['intro.title' => "Two\n\nlines"])->assertSessionHasErrors('values.intro.title');
+});

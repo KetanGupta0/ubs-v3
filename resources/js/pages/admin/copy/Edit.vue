@@ -36,6 +36,7 @@ function hint(field) {
     const notes = [];
     if (field.type === 'title') notes.push('Put *asterisks* around the words to highlight.');
     if (field.type === 'list') notes.push(`One per line, up to ${field.items}.`);
+    if (field.type === 'paragraphs') notes.push('A blank line starts a new paragraph.');
     if (field.tokens.length) notes.push(`${field.tokens.map((token) => `{${token}}`).join(' and ')} ${field.tokens.length === 1 ? 'is' : 'are'} filled in with the live figure.`);
     notes.push(field.type === 'list' ? `Each line up to ${field.max} characters.` : `Up to ${field.max} characters.`);
 
@@ -97,9 +98,9 @@ function discard() {
                     <div v-for="field in section.fields" :key="field.key">
                         <UiFormField :label="field.label" :hint="hint(field)" :error="form.errors[`values.${field.key}`]">
                             <UiTextarea
-                                v-if="field.type === 'text' || field.type === 'list'"
+                                v-if="['text', 'paragraphs', 'list'].includes(field.type)"
                                 v-model="form.values[field.key]"
-                                :rows="field.type === 'list' ? Math.min(field.items, 8) : 3"
+                                :rows="field.type === 'list' ? Math.min(field.items, 8) : field.type === 'paragraphs' ? 7 : 3"
                             />
                             <UiInput v-else v-model="form.values[field.key]" />
                         </UiFormField>

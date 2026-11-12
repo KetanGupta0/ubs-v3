@@ -6,6 +6,7 @@
  * need to know is what paperwork arrives, what reporting they get, and what
  * happens when a student stops turning up.
  */
+import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import {
     FileSignature, Users, ClipboardList, FileCheck2, CalendarCheck,
@@ -17,50 +18,17 @@ import Seo from '@/components/Seo.vue';
 import SectionHeading from '@/components/Marketing/SectionHeading.vue';
 import EnquiryForm from '@/components/Marketing/EnquiryForm.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
+import { numbered } from '@/support/copy';
 
-defineProps({
+const props = defineProps({
     internships: { type: Array, default: () => [] },
+    /** The page's wording, as published in the panel (/admin/copy). */
+    copy: { type: Object, required: true },
     seo: { type: Object, required: true },
 });
 
-const offer = [
-    {
-        icon: FileSignature,
-        title: 'A signed memorandum',
-        body: 'Scope, duration, fees, what we deliver and what happens if a student withdraws, written down before anyone enrols.',
-    },
-    {
-        icon: Users,
-        title: 'Batch enrolment',
-        body: 'Send us the list. Accounts are created in bulk and credentials go to each student by email and SMS.',
-    },
-    {
-        icon: CalendarCheck,
-        title: 'Attendance you can see',
-        body: 'Session by session, per student, visible to your coordinator rather than requested by email at the end.',
-    },
-    {
-        icon: ClipboardList,
-        title: 'Progress reports',
-        body: 'Monthly, per student, covering attendance, submissions and mentor assessment, in a form your department can file.',
-    },
-    {
-        icon: FileCheck2,
-        title: 'The four documents',
-        body: 'Offer letter, completion certificate with online verification, project report and a signed mentor evaluation, for every student.',
-    },
-    {
-        icon: MessageSquare,
-        title: 'A named coordinator',
-        body: 'One person on our side who knows your batch, rather than a support address.',
-    },
-];
-
-const honesty = [
-    'We do not promise placements, and we would be careful with anyone who does.',
-    'We tell you when a student stops attending, early, while it can still be fixed.',
-    'A student who does not do the work does not get a completion certificate. That is what makes the certificate worth anything.',
-];
+// Six cards, each with its icon from the design and its words from the panel.
+const offer = computed(() => numbered(props.copy, 'offer', [FileSignature, Users, CalendarCheck, ClipboardList, FileCheck2, MessageSquare]));
 </script>
 
 <template>
@@ -82,28 +50,25 @@ const honesty = [
                     <span>For colleges</span>
                 </nav>
 
-                <UiBadge tone="brand" dot>For training and placement officers</UiBadge>
+                <UiBadge tone="brand" dot>{{ copy['intro.badge'] }}</UiBadge>
 
                 <h1 class="mt-5 text-3xl font-semibold leading-tight sm:text-4xl">
-                    Send a batch on an internship that produces something
+                    {{ copy['intro.title'] }}
                 </h1>
 
                 <p class="mt-5 text-base leading-relaxed" style="color: var(--text-muted)">
-                    You need students placed somewhere that meets the curriculum requirement and
-                    gives back paperwork your department can file. We need students who will
-                    actually do the work. Those are compatible, and this page sets out exactly
-                    what each side gets.
+                    {{ copy['intro.body'] }}
                 </p>
             </div>
         </section>
 
         <section class="mx-auto max-w-5xl px-4 py-14 sm:px-6 lg:px-8">
-            <SectionHeading eyebrow="What a tie-up includes" title="What your department gets" />
+            <SectionHeading :eyebrow="copy['offer.eyebrow']" :title="copy['offer.title']" />
 
             <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div
                     v-for="(item, index) in offer"
-                    :key="item.title"
+                    :key="index"
                     class="animate-fade-up rounded-[var(--radius-card)] border p-5"
                     :style="{ borderColor: 'var(--border-subtle)', animationDelay: `${index * 60}ms` }"
                 >
@@ -117,14 +82,14 @@ const honesty = [
         <section class="py-14" style="background: var(--surface-sunken)">
             <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
                 <SectionHeading
-                    eyebrow="Worth saying before you ask"
-                    title="Three things we will not pretend about"
-                    body="Each of these costs us something, which is the only reason they are worth stating."
+                    :eyebrow="copy['honesty.eyebrow']"
+                    :title="copy['honesty.title']"
+                    :body="copy['honesty.body']"
                 />
 
                 <ul class="mt-7 space-y-3">
                     <li
-                        v-for="(point, index) in honesty"
+                        v-for="(point, index) in copy['honesty.items']"
                         :key="point"
                         class="animate-fade-up rounded-xl border bg-[var(--surface)] p-4 text-sm leading-relaxed"
                         :style="{ borderColor: 'var(--border-subtle)', color: 'var(--text-base)', animationDelay: `${index * 70}ms` }"
@@ -137,9 +102,9 @@ const honesty = [
 
         <section v-if="internships.length" class="mx-auto max-w-4xl px-4 py-14 sm:px-6 lg:px-8">
             <SectionHeading
-                eyebrow="Available tracks"
-                title="What a batch can be placed on"
-                body="Students in one batch can be split across tracks if your department prefers that."
+                :eyebrow="copy['tracks.eyebrow']"
+                :title="copy['tracks.title']"
+                :body="copy['tracks.body']"
             />
 
             <ul class="mt-7 grid gap-3 sm:grid-cols-2">
@@ -166,9 +131,9 @@ const honesty = [
             <div class="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
                 <SectionHeading
                     align="center"
-                    eyebrow="Start a conversation"
-                    title="Tell us about your batch"
-                    body="Which course and year, roughly how many students, and what your curriculum requires. We will send back what a tie-up would look like."
+                    :eyebrow="copy['enquiry.eyebrow']"
+                    :title="copy['enquiry.title']"
+                    :body="copy['enquiry.body']"
                 />
 
                 <div class="mt-8">

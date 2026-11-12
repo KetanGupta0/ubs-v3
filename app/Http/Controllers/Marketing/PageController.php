@@ -10,6 +10,7 @@ use App\Models\Page;
 use App\Models\Service;
 use App\Models\Solution;
 use App\Models\TeamMember;
+use App\Support\PageCopy;
 use App\Support\Seo;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -19,6 +20,8 @@ class PageController extends Controller
     public function about(): Response
     {
         return Inertia::render('marketing/About', [
+            'copy' => PageCopy::for('about'),
+            'figures' => ['solutions' => Solution::query()->published()->count()],
             'team' => TeamMember::query()->forAbout()->get()->map->toPublicArray()->values(),
             'seo' => Seo::for(
                 'About Unboundbyte Solutions',
@@ -31,6 +34,7 @@ class PageController extends Controller
     public function process(): Response
     {
         return Inertia::render('marketing/Process', [
+            'copy' => PageCopy::for('process'),
             'seo' => Seo::for(
                 'How we work',
                 'Discovery, a clickable prototype, two week increments you can open, hardening, and a handover that leaves you able to replace us.',
@@ -42,6 +46,7 @@ class PageController extends Controller
     public function technology(): Response
     {
         return Inertia::render('marketing/Technology', [
+            'copy' => PageCopy::for('technology'),
             'seo' => Seo::for(
                 'Technology we build on',
                 'Laravel, Vue.js, MySQL, Redis and the infrastructure around them. Boring, well understood tools chosen so your system can be maintained by someone other than us.',
