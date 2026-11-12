@@ -24,6 +24,8 @@ defineProps({
     nextClass: { type: Object, default: null },
     /** The lesson to go back to, or the next one to start. */
     continue: { type: Object, default: null },
+    /** Recent classes they were not at, with the recording up. */
+    missedRecordings: { type: Array, default: () => [] },
     dueSoon: { type: Array, default: () => [] },
     announcements: { type: Array, default: () => [] },
     stats: { type: Object, default: () => ({}) },
@@ -130,6 +132,30 @@ const icons = { quiz: ClipboardList, assignment: FileText };
                     </UiButton>
                 </div>
             </UiCard>
+
+            <!-- ------------------------------- recordings to catch up -->
+            <section v-if="missedRecordings.length">
+                <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide" style="color: var(--text-muted)">
+                    Catch up on what you missed
+                </h2>
+                <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <li v-for="session in missedRecordings" :key="session.id">
+                        <a
+                            :href="session.url"
+                            target="_blank"
+                            rel="noopener"
+                            class="flex h-full items-start gap-3 rounded-[var(--radius-card)] border bg-[var(--surface)] p-4 transition hover:shadow-[var(--shadow-card)]"
+                            style="border-color: var(--border-subtle)"
+                        >
+                            <PlayCircle class="mt-0.5 h-5 w-5 shrink-0 text-brand-500" />
+                            <span class="min-w-0">
+                                <span class="block text-sm font-semibold">{{ session.title }}</span>
+                                <span class="block text-xs" style="color: var(--text-muted)">{{ session.course }} · {{ session.at }} · recording</span>
+                            </span>
+                        </a>
+                    </li>
+                </ul>
+            </section>
 
             <!-- ------------------------------------------------ due soon -->
             <section v-if="dueSoon.length">

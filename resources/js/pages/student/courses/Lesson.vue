@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { Head, Link, router, useForm } from '@inertiajs/vue3';
 import {
     ArrowLeft, ArrowRight, Bookmark, BookmarkCheck, CheckCircle2, Circle, Clock, Download,
-    ExternalLink, FileText, Film, File, FileSpreadsheet, Lock, NotebookPen, Presentation,
+    ExternalLink, FileText, Film, File, FileSpreadsheet, Lock, NotebookPen, PlayCircle, Presentation,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -20,6 +20,8 @@ const props = defineProps({
     next: { type: Object, default: null },
     note: { type: Object, default: () => ({ body: '', bookmarked: false, private: true }) },
     timeSpent: { type: String, default: null },
+    /** Recordings of this batch's classes that taught this lesson. */
+    recordings: { type: Array, default: () => [] },
 });
 
 const icons = {
@@ -203,6 +205,24 @@ function toggleComplete() {
                     <template #leading><Film class="h-4 w-4" /></template>
                     Watch the recording
                 </UiButton>
+            </UiCard>
+
+            <!-- ------------------------------------- class recordings -->
+            <UiCard v-if="recordings.length">
+                <template #header><h2 class="text-base font-semibold">Your batch's class on this</h2></template>
+                <ul class="divide-y" style="border-color: var(--border-subtle)">
+                    <li v-for="recording in recordings" :key="recording.id" class="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                        <PlayCircle class="h-4 w-4 shrink-0 text-brand-500" />
+                        <span class="min-w-0 flex-1">
+                            <span class="block truncate text-sm">{{ recording.title }}</span>
+                            <span class="block text-xs" style="color: var(--text-muted)">{{ recording.at }}</span>
+                        </span>
+                        <UiButton :href="recording.url" :inertia="false" target="_blank" variant="ghost" size="xs">
+                            <template #leading><ExternalLink class="h-3 w-3" /></template>
+                            Watch
+                        </UiButton>
+                    </li>
+                </ul>
             </UiCard>
 
             <!-- ----------------------------------------------- the content -->

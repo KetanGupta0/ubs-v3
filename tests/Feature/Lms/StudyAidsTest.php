@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\ActivityLog;
+use App\Models\Attendance;
+use App\Models\AuditLog;
 use App\Models\Batch;
 use App\Models\Course;
 use App\Models\CourseModule;
@@ -9,8 +11,11 @@ use App\Models\Lesson;
 use App\Models\LessonCompletion;
 use App\Models\LessonNote;
 use App\Models\LessonVisit;
+use App\Models\LiveSession;
 use App\Models\User;
+use App\Notifications\RecordingAvailable;
 use Database\Seeders\PermissionSeeder;
+use Illuminate\Support\Facades\Notification;
 
 beforeEach(function () {
     $this->seed(PermissionSeeder::class);
@@ -162,4 +167,71 @@ it('offers the last lesson opened and not finished, then the first not done', fu
 
     $this->actingAs($this->student)->post(($this->lessonPath)($this->three).'/complete');
     $this->actingAs($this->student)->get('/student')->assertInertia(fn ($page) => $page->where('continue', null));
+});
+
+/* ------------------------------------------------------------ recordings */
+
+it('tells the batch once when a recording goes up, and keeps a class to its own course', function () {
+    Notification::fake();
+    $classmate = User::factory()->student()->create();
+    Enrollment::query()->create([
+        'user_id' => $classmate->id, 'course_id' => $this->course->id, 'batch_id' => $this->batch->id,
+        'enrolled_at' => now(), 'has_paid' => true,
+    ]);
+    $dropped = User::factory()->student()->create();
+    Enrollment::query()->create([
+        'user_id' => $dropped->id, 'course_id' => $this->course->id, 'batch_id' => $this->batch->id,
+        'enrolled_at' => now(), 'has_paid' => true, 'status' => 'dropped',
+    ]);
+
+    $session = LiveSession::query()->create([
+        'batch_id' => $this->batch->id, 'title' => 'Loops, live', 'scheduled_at' => now()->subDay(), 'duration_minutes' => 60,
+    ]);
+    $path = "/admin/batches/{$this->batch->getRouteKey()}/sessions/{$session->id}";
+    $payload = ['title' => 'Loops, live', 'scheduled_at' => now()->subDay()->toDateTimeString(), 'duration_minutes' => 60, 'lesson_id' => $this->two->id];
+
+    $other = Course::query()->create(['title' => 'Other', 'slug' => 'other-'.uniqid(), 'tagline' => 'x', 'summary' => 'x']);
+    $otherModule = CourseModule::query()->create(['course_id' => $other->id, 'title' => 'X']);
+    $foreign = Lesson::query()->create(['course_id' => $other->id, 'course_module_id' => $otherModule->id, 'title' => 'Foreign', 'slug' => 'foreign-'.uniqid()]);
+
+    $this->actingAs($this->owner)->put($path, [...$payload, 'lesson_id' => $foreign->id])->assertSessionHasErrors('lesson_id');
+    $this->actingAs($this->owner)->put($path, [...$payload, 'recording_url' => 'javascript:alert(1)'])->assertSessionHasErrors('recording_url');
+
+    $this->actingAs($this->owner)->put($path, [...$payload, 'recording_url' => 'https://youtu.be/abcdefghijk'])->assertSessionHas('success');
+    $this->actingAs($this->owner)->put($path, [...$payload, 'recording_url' => 'https://youtu.be/abcdefghijz'])->assertSessionHas('success');
+
+    Notification::assertSentToTimes($this->student, RecordingAvailable::class, 1);
+    Notification::assertSentToTimes($classmate, RecordingAvailable::class, 1);
+    Notification::assertNotSentTo($dropped, RecordingAvailable::class);
+    expect(AuditLog::query()->where('subject_type', LiveSession::class)->where('subject_id', $session->id)->count())->toBe(2);
+
+    // On the lesson it taught, and on the dashboard of somebody not marked present.
+    $this->actingAs($this->student)->get(($this->lessonPath)($this->two))
+        ->assertInertia(fn ($page) => $page->has('recordings', 1)->where('recordings.0.url', 'https://youtu.be/abcdefghijz'));
+    $this->actingAs($this->student)->get('/student')
+        ->assertInertia(fn ($page) => $page->has('missedRecordings', 1)->where('missedRecordings.0.title', 'Loops, live'));
+
+    Attendance::query()->create(['live_session_id' => $session->id, 'user_id' => $this->student->id, 'status' => 'present']);
+    $this->actingAs($this->student)->get('/student')->assertInertia(fn ($page) => $page->has('missedRecordings', 0));
+});
+
+it('keeps a class\'s lesson and status when an edit does not mention them', function () {
+    $session = LiveSession::query()->create([
+        'batch_id' => $this->batch->id, 'title' => 'Loops, live', 'scheduled_at' => now()->subDay(),
+        'duration_minutes' => 60, 'lesson_id' => $this->two->id, 'status' => 'held',
+    ]);
+
+    $this->actingAs($this->owner)->put("/admin/batches/{$this->batch->getRouteKey()}/sessions/{$session->id}", [
+        'title' => 'Loops, live (renamed)', 'scheduled_at' => now()->subDay()->toDateTimeString(), 'duration_minutes' => 60,
+    ])->assertSessionHas('success');
+
+    expect($session->fresh())
+        ->title->toBe('Loops, live (renamed)')
+        ->lesson_id->toBe($this->two->id)
+        ->status->toBe('held');
+
+    $this->actingAs($this->owner)->put("/admin/batches/{$this->batch->getRouteKey()}/sessions/{$session->id}", [
+        'title' => 'Loops, live', 'scheduled_at' => now()->subDay()->toDateTimeString(), 'duration_minutes' => 60, 'lesson_id' => null,
+    ]);
+    expect($session->fresh()->lesson_id)->toBeNull();
 });

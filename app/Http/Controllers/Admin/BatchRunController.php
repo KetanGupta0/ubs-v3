@@ -8,15 +8,18 @@ use App\Models\Announcement;
 use App\Models\Attendance;
 use App\Models\Batch;
 use App\Models\Enrollment;
+use App\Models\Lesson;
 use App\Models\LiveSession;
 use App\Models\StudentWarning;
 use App\Models\User;
+use App\Notifications\RecordingAvailable;
 use App\Services\Admin\Auditor;
 use App\Services\Lms\Activity;
 use App\Services\Lms\Enroller;
 use App\Services\Lms\Warnings;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -114,8 +117,19 @@ class BatchRunController extends Controller
                     'present' => $session->present_count,
                     'meetLink' => $session->meet_link,
                     'recordingUrl' => $session->recording_url,
+                    'lessonId' => $session->lesson_id,
                     'marked' => $session->attendances()->exists(),
                 ]),
+
+            // What a class can be about: the lessons of this batch's course.
+            'lessons' => Lesson::query()
+                ->select('lessons.id', 'lessons.title', 'course_modules.title as module_title')
+                ->join('course_modules', 'course_modules.id', '=', 'lessons.course_module_id')
+                ->where('lessons.course_id', $batch->course_id)
+                ->orderBy('course_modules.sort_order')
+                ->orderBy('lessons.sort_order')
+                ->get()
+                ->map(fn (Lesson $lesson) => ['value' => $lesson->id, 'label' => "{$lesson->module_title}: {$lesson->title}"]),
 
             'announcements' => $batch->announcements()
                 ->with('author:id,name')
@@ -153,22 +167,48 @@ class BatchRunController extends Controller
 
     /* --------------------------------------------------------- sessions */
 
-    public function storeSession(Request $request, Batch $batch): RedirectResponse
+    public function storeSession(Request $request, Batch $batch, Auditor $auditor): RedirectResponse
     {
-        $batch->sessions()->create($this->sessionRules($request) + [
+        $session = $batch->sessions()->create($this->sessionRules($request, $batch) + [
             'trainer_id' => $batch->trainer_id,
         ]);
+        $auditor->created($session, "{$session->title} ({$batch->name})");
+
+        if (filled($session->recording_url)) {
+            $this->announceRecording($session);
+        }
 
         return back()->with('success', 'Class scheduled.');
     }
 
-    public function updateSession(Request $request, Batch $batch, LiveSession $session): RedirectResponse
+    public function updateSession(Request $request, Batch $batch, LiveSession $session, Auditor $auditor): RedirectResponse
     {
         abort_unless($session->batch_id === $batch->id, 404);
 
-        $session->fill($this->sessionRules($request))->save();
+        $hadRecording = filled($session->recording_url);
+
+        $session->fill($this->sessionRules($request, $batch));
+        $auditor->updated($session, label: "{$session->title} ({$batch->name})");
+        $session->save();
+
+        // The first time a recording goes up, the batch hears about it: that
+        // is the moment somebody who missed the class can catch up.
+        if (! $hadRecording && filled($session->recording_url)) {
+            $this->announceRecording($session);
+
+            return back()->with('success', 'Class updated. The batch has been told the recording is up.');
+        }
 
         return back()->with('success', 'Class updated.');
+    }
+
+    protected function announceRecording(LiveSession $session): void
+    {
+        $students = User::query()
+            ->whereIn('id', Enrollment::query()->where('batch_id', $session->batch_id)->active()->select('user_id'))
+            ->get();
+
+        Notification::send($students, new RecordingAvailable($session));
     }
 
     public function destroySession(Batch $batch, LiveSession $session): RedirectResponse
@@ -434,17 +474,36 @@ class BatchRunController extends Controller
     }
 
     /** @return array<string, mixed> */
-    protected function sessionRules(Request $request): array
+    protected function sessionRules(Request $request, Batch $batch): array
     {
-        return $this->validatedInput($request, [
+        $validated = $this->validatedInput($request, [
             'title' => ['required', 'string', 'max:160'],
             'agenda' => ['nullable', 'string', 'max:2000'],
             'scheduled_at' => ['required', 'date'],
             'duration_minutes' => ['required', 'integer', 'min:15', 'max:600'],
-            'meet_link' => ['nullable', 'url', 'max:255'],
-            'recording_url' => ['nullable', 'url', 'max:255'],
-            'lesson_id' => ['nullable', 'integer'],
+            'meet_link' => ['nullable', 'url:https', 'max:255'],
+            'recording_url' => ['nullable', 'url:https', 'max:255'],
+            // A lesson of this batch's own course, or the class would show its
+            // recording on a lesson of a course these students are not on.
+            'lesson_id' => ['nullable', 'integer', Rule::exists('lessons', 'id')->where('course_id', $batch->course_id)],
             'status' => ['nullable', Rule::in(['scheduled', 'held', 'cancelled'])],
+        ], [
+            'recording_url.url' => 'Use the full address of the recording, starting with https://.',
+            'meet_link.url' => 'Use the full address of the meeting, starting with https://.',
+            'lesson_id.exists' => 'Choose a lesson of this course.',
         ]);
+
+        // A status left out keeps the one the class has (or the column's
+        // default for a new one); written as null it was a 500.
+        if ($validated['status'] === null) {
+            unset($validated['status']);
+        }
+
+        // Likewise a lesson the request did not mention is left as it was.
+        if (! $request->exists('lesson_id')) {
+            unset($validated['lesson_id']);
+        }
+
+        return $validated;
     }
 }

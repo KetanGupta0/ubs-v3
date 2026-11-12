@@ -76,6 +76,28 @@ class DashboardController extends StudentController
 
             'continue' => $this->continueLearning($student, $enrolments),
 
+            // Classes from the last fortnight they were not at, whose recording is up.
+            'missedRecordings' => LiveSession::query()
+                ->whereIn('batch_id', $batchIds)
+                ->where('scheduled_at', '<', now())
+                ->where('scheduled_at', '>=', now()->subDays(14))
+                ->where('status', '!=', 'cancelled')
+                ->whereNotNull('recording_url')
+                ->whereDoesntHave('attendances', fn ($query) => $query
+                    ->where('user_id', $student->id)
+                    ->whereIn('status', ['present', 'late', 'excused']))
+                ->with('batch.course:id,title')
+                ->latest('scheduled_at')
+                ->limit(3)
+                ->get()
+                ->map(fn (LiveSession $session) => [
+                    'id' => $session->id,
+                    'title' => $session->title,
+                    'course' => $session->batch?->course?->title,
+                    'at' => $session->scheduled_at->format('D j M'),
+                    'url' => $session->recording_url,
+                ]),
+
             'dueSoon' => $this->dueSoon($request),
 
             'registrations' => [

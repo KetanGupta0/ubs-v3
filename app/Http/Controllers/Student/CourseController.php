@@ -9,6 +9,7 @@ use App\Models\Enrollment;
 use App\Models\Lesson;
 use App\Models\LessonNote;
 use App\Models\LessonVisit;
+use App\Models\LiveSession;
 use App\Models\Material;
 use App\Models\Quiz;
 use App\Services\Auth\Impersonation;
@@ -225,6 +226,20 @@ class CourseController extends StudentController
                 'private' => ! app(Impersonation::class)->active(),
             ],
             'timeSpent' => $visit && $visit->seconds_spent >= 60 ? LessonVisit::bucketFor($visit->seconds_spent) : null,
+            // Classes of this student's batch that taught this lesson, with a recording.
+            'recordings' => $enrolment->batch_id ? LiveSession::query()
+                ->where('batch_id', $enrolment->batch_id)
+                ->where('lesson_id', $record->id)
+                ->whereNotNull('recording_url')
+                ->where('status', '!=', 'cancelled')
+                ->orderBy('scheduled_at')
+                ->get(['id', 'title', 'scheduled_at', 'recording_url'])
+                ->map(fn (LiveSession $session) => [
+                    'id' => $session->id,
+                    'title' => $session->title,
+                    'at' => $session->scheduled_at->format('j M Y'),
+                    'url' => $session->recording_url,
+                ]) : [],
             'materials' => $record->materials->map(fn (Material $material) => $this->materialArray($material)),
             'previous' => $position > 0 ? [
                 'id' => $siblings[$position - 1]->id,

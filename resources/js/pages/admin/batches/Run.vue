@@ -36,6 +36,7 @@ const props = defineProps({
     announcements: { type: Array, default: () => [] },
     candidates: { type: Array, default: () => [] },
     trainers: { type: Array, default: () => [] },
+    lessons: { type: Array, default: () => [] },
 });
 
 const base = computed(() => `/admin/batches/${props.batch.id}`);
@@ -62,8 +63,12 @@ const sessionForm = useForm({
     duration_minutes: 90,
     meet_link: props.batch.meetLink ?? '',
     recording_url: '',
+    lesson_id: '',
     status: 'scheduled',
 });
+
+// Without this, saving a class sent no lesson and wiped the one it had.
+const lessonOptions = computed(() => [{ value: '', label: 'Not tied to a lesson' }, ...props.lessons]);
 
 function openSession(session = null) {
     editingSession.value = session;
@@ -74,6 +79,7 @@ function openSession(session = null) {
     sessionForm.duration_minutes = session?.duration ?? 90;
     sessionForm.meet_link = session?.meetLink ?? props.batch.meetLink ?? '';
     sessionForm.recording_url = session?.recordingUrl ?? '';
+    sessionForm.lesson_id = session?.lessonId ?? '';
     sessionForm.status = session?.status ?? 'scheduled';
     sessionOpen.value = true;
 }
@@ -87,6 +93,8 @@ function saveSession() {
             sessionForm.reset();
         },
     };
+
+    sessionForm.transform((data) => ({ ...data, lesson_id: data.lesson_id || null }));
 
     editingSession.value
         ? sessionForm.put(`${base.value}/sessions/${editingSession.value.id}`, done)
@@ -360,6 +368,7 @@ const attendanceTone = (student) => {
                                     rel="noopener"
                                     variant="ghost"
                                     size="xs"
+                                    :aria-label="`Open the meeting for ${session.title}`"
                                 >
                                     <ExternalLink class="h-3.5 w-3.5" />
                                 </UiButton>
@@ -370,10 +379,10 @@ const attendanceTone = (student) => {
                                 >
                                     Register
                                 </UiButton>
-                                <UiButton variant="ghost" size="xs" @click="openSession(session)">
+                                <UiButton variant="ghost" size="xs" :aria-label="`Edit ${session.title}`" @click="openSession(session)">
                                     <Pencil class="h-3.5 w-3.5" />
                                 </UiButton>
-                                <UiButton variant="ghost" size="xs" @click="removeSession(session)">
+                                <UiButton variant="ghost" size="xs" :aria-label="`Remove ${session.title}`" @click="removeSession(session)">
                                     <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
                                 </UiButton>
                             </span>
@@ -455,6 +464,9 @@ const attendanceTone = (student) => {
                     <UiInput v-model="sessionForm.meet_link" placeholder="https://meet.google.com/…" />
                 </UiFormField>
 
+                <UiFormField label="Lesson" hint="The lesson this class teaches. Its recording then shows on that lesson's page." :error="sessionForm.errors.lesson_id">
+                    <UiSelect v-model="sessionForm.lesson_id" :options="lessonOptions" />
+                </UiFormField>
                 <UiFormField label="Recording link" :error="sessionForm.errors.recording_url">
                     <UiInput v-model="sessionForm.recording_url" placeholder="https://" />
                 </UiFormField>
