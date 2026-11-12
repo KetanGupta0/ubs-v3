@@ -214,6 +214,9 @@ Rules for the marketing pages:
   else.** `App\Support\Preview::unpublished()` opens it for `catalogue.view`, shares a
   banner and `Preview::seo()` adds `noindex`. Visibility rules that are not about
   publishing (`lms_only`, an internship under `/training`) stay 404 for everybody.
+- **Old addresses live in `redirects`**, consulted by the 404 handler only
+  (`Redirect::forMissing()` from `bootstrap/app.php`), so a redirect never hides a real
+  page and only GET is sent on. Add one there rather than a route.
 - **Search wording for the fixed pages is set in the panel,** in `seo_overrides`
   (`/admin/seo`). `Seo::for()` applies it by path, so no controller changes when
   somebody edits it; empty fields keep the page's own wording. The list of fixed
@@ -419,6 +422,25 @@ group), `resources/js/pages/admin/reports`, `resources/js/components/Charts`.
   because a 404 from the search box is worse than no search.
 - **A saved view stores the query, not the rows**, and `screen` is checked to be
   a path on this platform before it is stored.
+
+## Migration from v2
+
+`php artisan legacy:import` and `legacy:reconcile`, `App\Services\Legacy`, tests in
+`tests/Feature/Legacy` against `tests/Support/LegacyDatabase.php`. See
+`docs/MIGRATION_PLAN.md` (§3 and §9).
+
+- **Real data never reaches the repository or this codebase's tests.** The importer is
+  tested only against made up rows shaped like v2; the owner runs it on a copy of the
+  production dump and shares only the report, which holds counts and source ids.
+- **A step reads only the `legacy` connection and records every row in `legacy_id_map`,**
+  so a re-run updates instead of duplicating. A dry run is one transaction rolled back at
+  the end; a real run commits step by step. Nothing is sent while it runs.
+- **A password is set only when an account is created,** and generation 1 accounts (whose
+  hashes the old repository published) get a random one. A real run refuses to guess which
+  accounts those are.
+- **Anything printed keeps working:** certificate numbers, v2 QR tokens (`legacy_token`),
+  Razorpay ids, login emails, old addresses (`redirects`).
+- **`legacy:reconcile` must pass before cutover.** Money is compared to the paisa.
 
 ## Not yet built
 

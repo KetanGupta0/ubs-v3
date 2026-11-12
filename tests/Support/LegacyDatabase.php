@@ -56,6 +56,19 @@ class LegacyDatabase
         });
     }
 
+    /** Every v2 table the importer reads. */
+    public static function createAll(): void
+    {
+        self::create();
+        self::createDelivery();
+        self::createContent();
+        self::createAssessment();
+        self::createCertificates();
+        self::createPayments();
+        self::createSupport();
+        self::createContentAndFeedback();
+    }
+
     /** v2's programs, batches, enrolments, classes and attendance. */
     public static function createDelivery(): void
     {

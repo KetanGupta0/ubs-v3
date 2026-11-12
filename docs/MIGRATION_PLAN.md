@@ -178,6 +178,15 @@ the matching v3 fixed page only where v3 has none; settings fill only empty v3 v
 credentials are never read into v3 or the report; email templates are listed by key, not
 carried.
 
+*Progress (2026-11-12, last slice):* **`legacy:reconcile`** is built and fails the run on any
+difference in the strict checks: every account once by email, every non-pending enrolment,
+every payment, paid totals in paise overall, per student and per month, every Razorpay id
+once, every certificate number, every old QR token resolving to the right certificate,
+revocations, attendance per class and quiz scores per quiz; other tables are counted for
+information with the source ids that did not come across. **Old addresses** are a `redirects`
+table consulted by the 404 handler only, so a redirect can never hide a real page and only GET
+is redirected; the importer adds one per course whose address changed.
+
 **Generation 1 list.** A real run that imports users needs `--generation-one=FILE` (emails,
 one per line) or `--all-generation-one`. Make the file on the private server, never in a
 repository, from the June seed migration the old repository published, for example
@@ -381,25 +390,58 @@ Run after every import, printed and saved:
 
 ---
 
-## 9. Cutover runbook (outline)
+## 9. Cutover runbook
 
-1. Announce a window to students two days ahead (email + notice on v2).
-2. Put v2 in maintenance mode; disable its cron entries in hPanel (shared hosting has no worker to stop). Disable the Razorpay webhook
-   to v2, note the time.
-3. Final dump + `storage/` sync.
-4. `legacy:import` (real) → `legacy:reconcile`, over SSH from the command line (web time limits on shared hosting would cut it off). Stop if any difference is unexplained.
-5. Point Razorpay webhooks at v3; fetch any payments captured during the window from the
-   Razorpay dashboard and reconcile by hand.
-6. Switch DNS / vhost. Enable the v2 → v3 redirect map:
-   `/training/{slug}` (by the explicit course map), `/enroll/{slug}` → course page,
-   `/privacy-policy` → `/legal/privacy`, `/terms` → `/legal/terms`, `/refund-policy` →
-   `/legal/refunds` (publish the refund policy first), `/pages/{slug}` → CMS page,
-   `/verify/{token}` served directly, `/dashboard` → role dashboard. All 301s.
-7. Smoke test: sign in as each role, open a course, verify three certificates (one revoked),
-   make a ₹1 test payment and refund it.
-8. Email students: new site, password change on first sign in, how to set up 2FA again.
+*Written 2026-11-12, once the importer, `legacy:reconcile` and the redirects were built.*
 
-**Rollback:** until step 6 nothing is visible. After it, v2 is untouched and only in
+### Before the day (each a must)
+
+1. **Mail provider configured** (X15): Hostinger's 100 a day cannot carry cutover's credential
+   sends. Set `MAIL_*` for the provider and send one test from Settings → Messages.
+2. **Pusher keys** in production `.env` (`BROADCAST_CONNECTION=pusher`, `VITE_BROADCASTER=pusher`,
+   `PUSHER_*`), assets rebuilt; Settings → Providers shows "Realtime chat: Pusher".
+3. **Razorpay keys** in `.env`, never imported (§2.7).
+4. **Private files on the server, never in a repository:** the generation 1 list
+   (`gen1.txt`, see §3) and the course map (`course-map.json`: v2 slug → v3 slug, or
+   `{"type": "internship"}`). Decide D7 (v1 certificate QR addresses).
+5. **At least two rehearsals on staging** with a fresh dump each time:
+   `legacy:import --dry-run`, then a real `legacy:import`, then `legacy:reconcile`, all
+   passing; the import report's warnings read through and each one either fixed in v2's copy
+   or accepted. Sign in on staging as a generation 2 student (old password works) and a
+   generation 1 student (forced change after a credential is sent).
+6. **Content reviewed:** imported courses, FAQs and pages are drafts; read and publish what is
+   wanted, and publish the refund policy (`/refund-policy` redirects to it).
+7. **Announce** the window to students three days ahead (D11: a late Sunday evening between
+   batches, no live class scheduled).
+
+### On the day
+
+1. v2 into maintenance mode; disable its cron entries in hPanel; point Razorpay's webhook away
+   from v2 and note the time.
+2. Final `mysqldump` of v2, restored into the read-only copy the `legacy` connection points at;
+   copy v2's `storage/` to the server.
+3. Over SSH, on v3:
+   ```
+   php artisan migrate --force
+   php artisan db:seed --class=PermissionSeeder --force
+   php artisan legacy:import --dry-run --generation-one=/private/gen1.txt --course-map=/private/course-map.json --storage=/private/v2-storage
+   php artisan legacy:import --generation-one=/private/gen1.txt --course-map=/private/course-map.json --storage=/private/v2-storage
+   php artisan legacy:reconcile
+   ```
+   Stop if `legacy:reconcile` fails. Nothing is visible to anybody yet.
+4. Point Razorpay's webhook at v3; fetch payments captured during the window from the Razorpay
+   dashboard and record them by hand (offline payment), which opens the course as any payment does.
+5. Switch DNS / document root to v3. Old addresses are handled by v3 itself (`redirects` table,
+   consulted only where v3 would answer 404): `/privacy-policy`, `/terms`, `/refund-policy`,
+   every mapped `/training/{old-slug}`, and `/enroll/{slug}` → `/enrol/{slug}`. `/verify/{token}`
+   answers v2's QR tokens directly. `/pages/{slug}` is the same path in both.
+6. Smoke test: sign in as each role; open a course; verify three certificates by their old QR
+   links (one revoked); make a ₹1 test payment and refund it; send yourself a chat message.
+7. From the Students list, send credentials to everybody on a temporary password (the bulk send
+   skips generation 2, who keep theirs). Then email everybody: new site, sign in as before or
+   with the credentials just sent, set up two factor again.
+
+**Rollback:** until step 5 nothing is visible. After it, v2 is untouched and only in
 maintenance mode, so rollback is DNS + webhook back to v2 + maintenance off. Anything done
 on v3 in between (payments especially) is exported from v3 and replayed into v2 by hand,
 which is why the window should be short and announced.

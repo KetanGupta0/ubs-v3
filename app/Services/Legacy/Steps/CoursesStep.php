@@ -3,6 +3,7 @@
 namespace App\Services\Legacy\Steps;
 
 use App\Models\Course;
+use App\Models\Redirect;
 use App\Services\Legacy\Context;
 use App\Services\Legacy\Ledger;
 use App\Support\Money;
@@ -58,6 +59,7 @@ class CoursesStep extends Step
                 }
 
                 $context->ledger->record('training_programs', (int) $row->id, $course, $checksum);
+                $this->redirect($row->slug, $course);
                 $report->count('courses', 'updated');
 
                 return;
@@ -108,9 +110,25 @@ class CoursesStep extends Step
             }
 
             $course->save();
+            $this->redirect($row->slug, $course);
             $context->ledger->record('training_programs', (int) $row->id, $course, $checksum);
             $report->count('courses', $isNew ? 'created' : 'updated');
         });
+    }
+
+    /**
+     * The old site served every program at /training/{slug}. Where the course
+     * now lives somewhere else, that address is sent on, so old links and
+     * search results keep working.
+     */
+    protected function redirect(string $oldSlug, Course $course): void
+    {
+        $from = '/training/'.$oldSlug;
+        $to = ($course->isInternship() ? '/internships/' : '/training/').$course->slug;
+
+        if ($from !== $to) {
+            Redirect::query()->updateOrCreate(['from_path' => $from], ['to_path' => $to, 'reason' => 'Old site course address']);
+        }
     }
 
     /** v2's slug if v3 does not use it, otherwise the same with -v2. */
