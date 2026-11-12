@@ -292,6 +292,26 @@ class LegacyDatabase
         });
     }
 
+    /** v2's payments. */
+    public static function createPayments(): void
+    {
+        Schema::connection('legacy')->create('payments', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('student_id');
+            $table->foreignId('enrollment_id')->nullable();
+            $table->decimal('amount', 10, 2);
+            $table->string('currency', 10)->default('INR');
+            $table->string('method')->default('razorpay');
+            $table->string('razorpay_order_id')->nullable();
+            $table->string('razorpay_payment_id')->nullable();
+            $table->string('razorpay_signature')->nullable();
+            $table->string('status')->default('pending');
+            $table->text('notes')->nullable();
+            $table->foreignId('recorded_by')->nullable();
+            $table->timestamps();
+        });
+    }
+
     /** A made up copy of v2's storage directory, in a temporary folder. */
     public static function storage(array $files): string
     {

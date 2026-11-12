@@ -10,6 +10,7 @@ use App\Services\Legacy\Steps\CoursesStep;
 use App\Services\Legacy\Steps\EnrolmentsStep;
 use App\Services\Legacy\Steps\MaterialsStep;
 use App\Services\Legacy\Steps\NoticesStep;
+use App\Services\Legacy\Steps\PaymentsStep;
 use App\Services\Legacy\Steps\QuizzesStep;
 use App\Services\Legacy\Steps\SessionsStep;
 use App\Services\Legacy\Steps\Step;
@@ -46,6 +47,7 @@ class Importer
         QuizzesStep::class,
         AssignmentsStep::class,
         CertificatesStep::class,
+        PaymentsStep::class,
     ];
 
     /** @return array<int, string> */
