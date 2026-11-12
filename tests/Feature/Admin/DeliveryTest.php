@@ -232,7 +232,7 @@ it('does not store a document under a name the uploader chose', function () {
 
 it('starts the response clock only on a reply the client can read', function () {
     $ticket = SupportTicket::query()->create([
-        'client_id' => $this->client->id,
+        'requester_id' => $this->client->id,
         'subject' => 'Something broke',
         'body' => 'It is broken.',
         'response_due_at' => now()->addHours(8),
@@ -254,7 +254,7 @@ it('starts the response clock only on a reply the client can read', function () 
 
 it('keeps an internal note out of what the client sees', function () {
     $ticket = SupportTicket::query()->create([
-        'client_id' => $this->client->id,
+        'requester_id' => $this->client->id,
         'subject' => 'Something broke',
         'body' => 'It is broken.',
     ]);
@@ -278,7 +278,7 @@ it('will not delete a contract that has tickets against it', function () {
     ]);
 
     SupportTicket::query()->create([
-        'client_id' => $this->client->id,
+        'requester_id' => $this->client->id,
         'contract_id' => $contract->id,
         'subject' => 'Raised against it',
         'body' => 'Body.',
@@ -446,7 +446,7 @@ it('renders every admin delivery screen, with rows in each', function () {
     ]);
 
     $ticket = SupportTicket::query()->create([
-        'client_id' => $this->client->id,
+        'requester_id' => $this->client->id,
         'contract_id' => $contract->id,
         'subject' => 'Something broke',
         'body' => 'It is broken.',

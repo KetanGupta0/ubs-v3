@@ -115,7 +115,7 @@ class SupportController extends ClientController
             : null;
 
         $ticket = SupportTicket::query()->create([
-            'client_id' => $client->id,
+            'requester_id' => $client->id,
             'contract_id' => $contract?->id,
             'project_id' => $project?->id ?? $contract?->project_id,
             'subject' => $validated['subject'],

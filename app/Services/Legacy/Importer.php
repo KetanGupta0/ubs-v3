@@ -14,6 +14,7 @@ use App\Services\Legacy\Steps\PaymentsStep;
 use App\Services\Legacy\Steps\QuizzesStep;
 use App\Services\Legacy\Steps\SessionsStep;
 use App\Services\Legacy\Steps\Step;
+use App\Services\Legacy\Steps\SupportStep;
 use App\Services\Legacy\Steps\UsersStep;
 use App\Services\Lms\Activity;
 use Illuminate\Support\Facades\DB;
@@ -48,6 +49,7 @@ class Importer
         AssignmentsStep::class,
         CertificatesStep::class,
         PaymentsStep::class,
+        SupportStep::class,
     ];
 
     /** @return array<int, string> */

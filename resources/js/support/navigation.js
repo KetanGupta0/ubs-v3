@@ -105,6 +105,7 @@ export const navigation = {
         { label: 'Notices', icon: ShieldAlert, href: '/student/warnings' },
         { label: 'Join a course', icon: GraduationCap, href: '/student/catalogue' },
         { label: 'Fees', icon: Receipt, href: '/student/payments' },
+        { label: 'Support', icon: LifeBuoy, href: '/student/support' },
         { label: 'Chat', icon: MessagesSquare, href: '/chat', primary: true },
         { label: 'Security', icon: ShieldCheck, href: '/settings/security' },
     ],

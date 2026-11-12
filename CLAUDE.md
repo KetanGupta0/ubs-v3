@@ -283,6 +283,9 @@ plus `App\Services\Billing` and `App\Services\Payments`.
 - **An invoice freezes who was billed and by whom.** It is issued when the request
   is raised, not when it is paid, and re-rendering it from live settings is never
   correct. The PDF is cached on disk for the same reason.
+- **A ticket belongs to whoever raised it** (`support_tickets.requester_id`): a client,
+  or a student at `/student/support`. A student's ticket has no contract and so no
+  response clock. `client()` on the model is the same relation, kept for the client code.
 - **The SLA clock is copied onto the ticket** when it is raised. Reading it back
   off the contract later would let an edit rewrite whether we met the promise.
 - **A sent proposal is immutable.** Revise it into a new version instead; the old

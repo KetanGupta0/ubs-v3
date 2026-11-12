@@ -40,9 +40,16 @@ class SupportTicket extends Model
         ];
     }
 
+    /** Whoever raised it: a client, or a student. */
+    public function requester(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'requester_id');
+    }
+
+    /** The requester, by the name the client side has always used. */
     public function client(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'client_id');
+        return $this->requester();
     }
 
     public function contract(): BelongsTo
@@ -72,7 +79,13 @@ class SupportTicket extends Model
 
     public function scopeForClient(Builder $query, User|int $client): Builder
     {
-        return $query->where('client_id', $client instanceof User ? $client->id : $client);
+        return $query->where('requester_id', $client instanceof User ? $client->id : $client);
+    }
+
+    /** Tickets this person raised, client or student. */
+    public function scopeRaisedBy(Builder $query, User|int $user): Builder
+    {
+        return $query->where('requester_id', $user instanceof User ? $user->id : $user);
     }
 
     public function isOpen(): bool

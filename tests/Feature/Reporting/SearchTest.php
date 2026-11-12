@@ -165,7 +165,7 @@ it('produces links that actually open', function () {
     ]);
 
     SupportTicket::query()->create([
-        'client_id' => $this->client->id,
+        'requester_id' => $this->client->id,
         'project_id' => $this->project->id,
         'subject' => 'Warehouse scanner bug',
         'body' => 'It beeps twice.',

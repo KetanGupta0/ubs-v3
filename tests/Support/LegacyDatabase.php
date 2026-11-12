@@ -312,6 +312,35 @@ class LegacyDatabase
         });
     }
 
+    /** v2's support tickets. */
+    public static function createSupport(): void
+    {
+        $schema = Schema::connection('legacy');
+
+        $schema->create('support_tickets', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('student_id');
+            $table->string('subject');
+            $table->string('status')->default('open');
+            $table->string('priority')->default('medium');
+            $table->string('category')->nullable();
+            $table->timestamp('last_replied_at')->nullable();
+            $table->timestamps();
+        });
+
+        $schema->create('ticket_replies', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('ticket_id');
+            $table->foreignId('sender_id');
+            $table->string('sender_type')->default('student');
+            $table->longText('body');
+            $table->string('attachment_path')->nullable();
+            $table->string('attachment_name')->nullable();
+            $table->boolean('is_internal')->default(false);
+            $table->timestamps();
+        });
+    }
+
     /** A made up copy of v2's storage directory, in a temporary folder. */
     public static function storage(array $files): string
     {

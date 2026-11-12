@@ -60,7 +60,7 @@ class SupportController extends Controller
 
     public function show(SupportTicket $ticket): Response
     {
-        $ticket->load(['client:id,name,email', 'project:id,name', 'contract:id,reference,plan,response_hours', 'assignee:id,name']);
+        $ticket->load(['client:id,name,email,role', 'project:id,name', 'contract:id,reference,plan,response_hours', 'assignee:id,name']);
 
         return Inertia::render('admin/support/Show', [
             'ticket' => [
@@ -71,7 +71,14 @@ class SupportController extends Controller
                 'status' => $ticket->status,
                 'priority' => $ticket->priority,
                 'category' => $ticket->category,
-                'client' => ['id' => $ticket->client_id, 'name' => $ticket->client->name, 'email' => $ticket->client->email],
+                // Whoever raised it: a client, or a student (whose tickets have no contract).
+                'client' => [
+                    'id' => $ticket->requester_id,
+                    'name' => $ticket->client->name,
+                    'email' => $ticket->client->email,
+                    'role' => $ticket->client->role->value,
+                    'href' => $ticket->client->role === Role::Student ? "/admin/students/{$ticket->requester_id}" : "/admin/clients/{$ticket->requester_id}",
+                ],
                 'project' => $ticket->project?->name,
                 'contract' => $ticket->contract?->reference,
                 'assignedTo' => $ticket->assigned_to,
@@ -311,7 +318,7 @@ class SupportController extends Controller
 
     protected function ticketsTable(): Table
     {
-        return Table::for(SupportTicket::query()->with(['client:id,name', 'assignee:id,name', 'project:id,name']))
+        return Table::for(SupportTicket::query()->with(['client:id,name,role', 'assignee:id,name', 'project:id,name']))
             ->searchable(['reference', 'subject', 'body'])
             ->sortable(['created_at'])
             ->defaultSort('-created_at')
@@ -319,7 +326,7 @@ class SupportController extends Controller
             ->columns([
                 Column::make('reference', 'Reference'),
                 Column::make('subject', 'Subject'),
-                Column::make('client', 'Client'),
+                Column::make('client', 'Raised by'),
                 Column::make('priority', 'Priority'),
                 Column::make('status', 'Status'),
                 Column::make('sla', 'SLA'),
@@ -343,7 +350,7 @@ class SupportController extends Controller
                 'id' => $ticket->id,
                 'reference' => $ticket->reference,
                 'subject' => $ticket->subject,
-                'client' => $ticket->client?->name ?? '—',
+                'client' => $ticket->client ? $ticket->client->name.($ticket->client->role === Role::Student ? ' (student)' : '') : '—',
                 'priority' => $ticket->priority,
                 'status' => $ticket->status,
                 'statusLabel' => str($ticket->status)->replace('_', ' ')->title()->toString(),
@@ -363,7 +370,7 @@ class SupportController extends Controller
             ->exportName('contracts')
             ->columns([
                 Column::make('reference', 'Reference'),
-                Column::make('client', 'Client'),
+                Column::make('client', 'Raised by'),
                 Column::make('plan', 'Plan'),
                 Column::make('project', 'Project'),
                 Column::make('ends_on', 'Ends')->sortable(),

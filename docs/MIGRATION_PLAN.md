@@ -155,6 +155,17 @@ Extra-attempt overrides become grants. Every version of a submission is kept: th
 submission, earlier ones its version history with marks and feedback, each file copied and
 verified.
 
+*Progress (2026-11-12, fifth slice):* **certificates, payments and support** are built.
+Certificates keep their printed number, and v2's QR token is kept as `legacy_token`, which
+`/verify` answers to exactly (case and all); the old PDF is copied where the storage copy has
+it. Payments become transactions in paise; offline ones keep who recorded them in the audit
+log; a Razorpay id comes in once; a paid payment marks its enrolment paid; no invoices are
+made after the fact (D6). Decision D2 is built: `support_tickets.client_id` is now
+`requester_id`, students raise and follow tickets at `/student/support` on the same staff
+desk (no contract, so no promised response time), and v2 tickets come across with their
+first message as the body and every reply in order, staff notes still staff-only. Reply
+attachments are copied into the ticket's messages; no screen lists them yet.
+
 **Generation 1 list.** A real run that imports users needs `--generation-one=FILE` (emails,
 one per line) or `--all-generation-one`. Make the file on the private server, never in a
 repository, from the June seed migration the old repository published, for example
@@ -391,7 +402,7 @@ questions are asked before the phase they belong to starts.
 | # | Question | Recommendation |
 |---|---|---|
 | D1 | Legacy passwords | **Decided 2026-11-10:** random password for generation 1, credentials sent from the admin panel or forgot password; generation 2 keeps its hashes (see `EXPANSION_PLAN.md` X1). |
-| D2 | Student support tickets: extend v3 tickets to students, or move them into chat? | Extend tickets; chat has no status or priority, and staff already work tickets. |
+| D2 | Student support tickets: extend v3 tickets to students, or move them into chat? | Extend tickets; chat has no status or priority, and staff already work tickets. **Built 2026-11-12.** |
 | D3 | v2 reviews: may approved ones appear on the public site? | Import all; show on course pages only with the student's consent, recorded. |
 | D4 | Leaderboard: award points for historic attendance and results? | No. Start everyone at zero on cutover day; history stays visible. |
 | D5 | Attendance: create "absent" for past sessions a student did not join? | No. Unknown is not absent. Only matters for batches running at cutover; mark those by hand. |

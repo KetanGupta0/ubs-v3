@@ -152,7 +152,7 @@ class ClientApiController extends Controller
         $contract = $client->maintenanceContracts()->active()->first();
 
         $ticket = SupportTicket::query()->create([
-            'client_id' => $client->id,
+            'requester_id' => $client->id,
             'contract_id' => $contract?->id,
             'project_id' => $validated['project_id']
                 ? Project::query()->forClient($client)->find($validated['project_id'])?->id

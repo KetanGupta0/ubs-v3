@@ -24,7 +24,7 @@ const priorityTones = { urgent: 'danger', high: 'warning', normal: 'neutral', lo
         <div class="mx-auto max-w-7xl">
             <PageHeader
                 title="Support tickets"
-                description="Everything clients have raised against their maintenance cover."
+                description="Everything clients and students have raised. Client tickets run against their maintenance cover; student tickets have no promised response time."
             >
                 <template #actions>
                     <UiButton href="/admin/contracts" variant="secondary" size="sm">

@@ -213,9 +213,9 @@ const priorityTones = { urgent: 'danger', high: 'warning', normal: 'neutral', lo
 
                         <dl class="space-y-3 text-sm">
                             <div>
-                                <dt class="text-xs" style="color: var(--text-muted)">Client</dt>
+                                <dt class="text-xs" style="color: var(--text-muted)">{{ ticket.client.role === 'student' ? 'Student' : 'Client' }}</dt>
                                 <dd>
-                                    <Link :href="`/admin/clients/${ticket.client.id}`" class="hover:underline"
+                                    <Link :href="ticket.client.href" class="hover:underline"
                                           style="color: var(--color-brand-600)">
                                         {{ ticket.client.name }}
                                     </Link>

@@ -194,7 +194,7 @@ it('will not attach a ticket to another client’s contract', function () {
 
 it('counts an unanswered ticket as breached the moment it is late', function () {
     $ticket = SupportTicket::query()->create([
-        'client_id' => $this->client->id,
+        'requester_id' => $this->client->id,
         'subject' => 'Late',
         'body' => 'Nobody has answered.',
         'response_due_at' => now()->subHour(),
@@ -260,7 +260,7 @@ it('renders every client screen, with rows in each', function () {
     ]);
 
     $ticket = SupportTicket::query()->create([
-        'client_id' => $this->client->id,
+        'requester_id' => $this->client->id,
         'contract_id' => $contract->id,
         'subject' => 'Something broke',
         'body' => 'It is broken.',

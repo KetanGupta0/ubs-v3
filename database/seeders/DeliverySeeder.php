@@ -211,12 +211,12 @@ class DeliverySeeder extends Seeder
 
     protected function seedTicket(User $client, MaintenanceContract $contract, Project $project): void
     {
-        if (SupportTicket::query()->where('client_id', $client->id)->exists()) {
+        if (SupportTicket::query()->where('requester_id', $client->id)->exists()) {
             return;
         }
 
         $ticket = SupportTicket::query()->create([
-            'client_id' => $client->id,
+            'requester_id' => $client->id,
             'contract_id' => $contract->id,
             'project_id' => $project->id,
             'subject' => 'Despatch note prints without the batch number',

@@ -8,6 +8,7 @@ use App\Http\Controllers\Student\CourseController;
 use App\Http\Controllers\Student\DashboardController;
 use App\Http\Controllers\Student\ProgressController;
 use App\Http\Controllers\Student\QuizController;
+use App\Http\Controllers\Student\SupportController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -113,6 +114,14 @@ Route::middleware(['auth', 'password.owned', 'role:student'])
         Route::post('enrol', [CatalogueController::class, 'enrol'])->name('enrol');
 
         /* --------------------------------------------------- fees and money */
+        // Support tickets, on the same desk staff work for clients (decision D2).
+        Route::get('support', [SupportController::class, 'index'])->name('support.index');
+        Route::get('support/new', [SupportController::class, 'create'])->name('support.create');
+        Route::post('support', [SupportController::class, 'store'])->middleware('throttle:10,1')->name('support.store');
+        Route::get('support/{ticket}', [SupportController::class, 'show'])->whereNumber('ticket')->name('support.show');
+        Route::post('support/{ticket}/reply', [SupportController::class, 'reply'])->whereNumber('ticket')->name('support.reply');
+        Route::post('support/{ticket}/close', [SupportController::class, 'close'])->whereNumber('ticket')->name('support.close');
+
         Route::get('payments', [BillingController::class, 'index'])->name('payments.index');
         Route::get('payments/{payment}', [BillingController::class, 'show'])
             ->whereNumber('payment')
