@@ -51,13 +51,13 @@ defineProps({ services: { type: Array, default: () => [] } });
 
                         <div class="flex shrink-0 gap-2">
                             <UiButton
-                                v-if="service.isPublished"
                                 :href="`/services/${service.slug}`"
                                 :inertia="false"
                                 variant="ghost"
                                 size="xs"
                                 icon
-                                aria-label="View on the site"
+                                :aria-label="service.isPublished ? 'View on the site' : 'Preview on the site'"
+                                :title="service.isPublished ? 'View on the site' : 'Preview: not published yet'"
                             >
                                 <ExternalLink class="h-3.5 w-3.5" />
                             </UiButton>

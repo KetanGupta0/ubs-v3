@@ -269,6 +269,8 @@ class CourseController extends Controller
                 },
                 'enrolmentOpen' => $course->is_enrollment_open,
                 'published' => $course->is_published,
+                // Unpublished but meant for the public site: staff can preview it there.
+                'previewable' => ! $course->is_published && $course->visibility === 'public',
                 'batches' => $course->batches_count,
                 'updated_at' => $course->updated_at?->diffForHumans(),
             ]);

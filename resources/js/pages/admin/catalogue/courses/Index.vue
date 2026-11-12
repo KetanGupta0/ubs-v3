@@ -112,8 +112,8 @@ function publicPath(row) {
                         <UiDropdownItem :href="`/admin/batches/new?course=${row.id}`">
                             <CalendarPlus class="h-4 w-4" /> Add a batch
                         </UiDropdownItem>
-                        <UiDropdownItem v-if="row.state === 'Live'" :href="publicPath(row)" :inertia="false">
-                            <ExternalLink class="h-4 w-4" /> View on the site
+                        <UiDropdownItem v-if="row.state === 'Live' || row.previewable" :href="publicPath(row)" :inertia="false">
+                            <ExternalLink class="h-4 w-4" /> {{ row.state === 'Live' ? 'View on the site' : 'Preview' }}
                         </UiDropdownItem>
                         <UiDropdownItem @click="toggleEnrolment(row.id)">
                             <component :is="row.enrolmentOpen ? DoorClosed : DoorOpen" class="h-4 w-4" />

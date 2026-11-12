@@ -78,7 +78,7 @@ class PageCopyController extends Controller
     }
 
     /** Keep the wording as typed as a draft. Visitors see no change. */
-    public function save(Request $request, string $page): RedirectResponse
+    public function save(Request $request, string $page, Auditor $auditor): RedirectResponse
     {
         abort_unless(PageCopy::exists($page), 404);
 
@@ -109,7 +109,9 @@ class PageCopyController extends Controller
         $entries = PageCopyEntry::query()->where('page', $page)->get()->keyBy('key');
         $changed = 0;
 
-        DB::transaction(function () use ($clean, $fields, $entries, $page, $request, &$changed) {
+        $drafted = [];
+
+        DB::transaction(function () use ($clean, $fields, $entries, $page, $request, &$changed, &$drafted) {
             foreach ($clean as $key => $value) {
                 $entry = $entries[$key] ?? new PageCopyEntry(['page' => $page, 'key' => $key]);
                 $default = $fields[$key]['default'];
@@ -128,6 +130,7 @@ class PageCopyController extends Controller
                 $draft = $value === $default ? null : $value;
 
                 if (! $entry->has_draft || $entry->draft !== $draft) {
+                    $drafted[$key] = ['from' => $entry->has_draft ? ($entry->draft ?? $default) : $published, 'to' => $value];
                     $entry->forceFill(['has_draft' => true, 'draft' => $draft, 'updated_by' => $request->user()->id])->save();
                     $changed++;
                 }
@@ -135,6 +138,10 @@ class PageCopyController extends Controller
         });
 
         $label = PageCopy::pages()[$page]['label'];
+
+        if ($drafted) {
+            $auditor->action('copy.drafted', null, $drafted, "Wording of the {$label} page (draft)");
+        }
 
         return back()->with('success', $changed
             ? "Draft saved. Preview it on the {$label} page, then publish when it reads right."
@@ -185,9 +192,15 @@ class PageCopyController extends Controller
     }
 
     /** Throw away every draft on the page. What is live stays. */
-    public function discard(string $page): RedirectResponse
+    public function discard(string $page, Auditor $auditor): RedirectResponse
     {
         abort_unless(PageCopy::exists($page), 404);
+
+        $keys = PageCopyEntry::query()->where('page', $page)->where('has_draft', true)->pluck('key');
+
+        if ($keys->isNotEmpty()) {
+            $auditor->action('copy.discarded', null, ['fields' => ['from' => $keys->implode(', '), 'to' => null]], 'Wording of the '.PageCopy::pages()[$page]['label'].' page');
+        }
 
         PageCopyEntry::query()->where('page', $page)->where('has_draft', true)->whereNull('live')->delete();
         PageCopyEntry::query()->where('page', $page)->where('has_draft', true)->update(['has_draft' => false, 'draft' => null]);

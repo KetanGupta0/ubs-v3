@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
 use App\Models\Service;
+use App\Support\Preview;
 use App\Support\Seo;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -41,7 +42,7 @@ class ServiceController extends Controller
 
     public function show(Service $service): Response
     {
-        abort_unless($service->is_published, 404);
+        $previewing = Preview::unpublished($service->is_published);
 
         return Inertia::render('marketing/services/Show', [
             'service' => [
@@ -68,11 +69,11 @@ class ServiceController extends Controller
                     'tagline' => $other->tagline,
                     'icon' => $other->icon,
                 ]),
-            'seo' => Seo::for(
+            'seo' => Preview::seo(Seo::for(
                 $service->seo['title'] ?? $service->title,
                 $service->seo['description'] ?? $service->summary,
                 "/services/{$service->slug}",
-            ),
+            ), $previewing),
         ]);
     }
 }

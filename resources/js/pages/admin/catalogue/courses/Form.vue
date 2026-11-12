@@ -103,9 +103,9 @@ function addStandardDocuments() {
                         <template #leading><ArrowLeft class="h-3.5 w-3.5" /></template>
                         Back
                     </UiButton>
-                    <UiButton v-if="isEdit && course.publicUrl" :href="course.publicUrl" :inertia="false" variant="ghost" size="sm">
+                    <UiButton v-if="isEdit && course.publicUrl" :href="course.publicUrl" :inertia="false" target="_blank" rel="noopener" variant="ghost" size="sm">
                         <template #leading><ExternalLink class="h-3.5 w-3.5" /></template>
-                        View live
+                        {{ course.is_published ? 'View live' : 'Preview' }}
                     </UiButton>
                     <UiButton type="submit" size="sm" :loading="form.processing">{{ isEdit ? 'Save' : 'Create' }}</UiButton>
                 </template>

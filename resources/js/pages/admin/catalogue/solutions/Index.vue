@@ -79,8 +79,8 @@ function togglePublished(id) {
                         <UiDropdownItem :href="`/admin/solutions/${row.id}/edit`">
                             <Pencil class="h-4 w-4" /> Edit
                         </UiDropdownItem>
-                        <UiDropdownItem v-if="row.published" :href="`/solutions/${row.slug}`" :inertia="false">
-                            <ExternalLink class="h-4 w-4" /> View on the site
+                        <UiDropdownItem :href="`/solutions/${row.slug}`" :inertia="false">
+                            <ExternalLink class="h-4 w-4" /> {{ row.published ? 'View on the site' : 'Preview' }}
                         </UiDropdownItem>
                         <UiDropdownItem @click="togglePublished(row.id)">
                             <component :is="row.published ? EyeOff : Eye" class="h-4 w-4" />

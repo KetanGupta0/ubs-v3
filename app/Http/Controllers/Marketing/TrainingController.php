@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\CourseReview;
 use App\Models\TeamMember;
+use App\Support\Preview;
 use App\Support\Seo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -58,10 +59,10 @@ class TrainingController extends Controller
     {
         // Not publicly visible, or an internship, must not resolve here. An
         // internship has its own page, and the two listings must not bleed.
-        abort_unless(
-            $course->is_published && $course->visibility === 'public' && ! $course->isInternship(),
-            404,
-        );
+        // A course kept inside the LMS has no public page for anybody;
+        // an unpublished one opens only as a preview for staff.
+        abort_unless($course->visibility === 'public' && ! $course->isInternship(), 404);
+        $previewing = Preview::unpublished($course->is_published);
 
         $batches = $course->batches()
             ->where('is_published', true)
@@ -91,7 +92,7 @@ class TrainingController extends Controller
                 ->get()
                 ->map->toCardArray()
                 ->values(),
-            'seo' => Seo::for(
+            'seo' => Preview::seo(Seo::for(
                 $course->seo['title'] ?? $course->title,
                 $course->seo['description'] ?? $course->summary,
                 "/training/{$course->slug}",
@@ -102,7 +103,7 @@ class TrainingController extends Controller
                     'description' => $course->summary,
                     'provider' => ['@type' => 'Organization', 'name' => 'Unboundbyte Solutions Private Limited', 'sameAs' => url('/')],
                 ],
-            ),
+            ), $previewing),
         ]);
     }
 

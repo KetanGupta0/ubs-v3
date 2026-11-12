@@ -69,9 +69,9 @@ function destroy() {
                         <template #leading><ArrowLeft class="h-3.5 w-3.5" /></template>
                         Back
                     </UiButton>
-                    <UiButton v-if="isEdit && service.is_published" :href="service.publicUrl" :inertia="false" variant="ghost" size="sm">
+                    <UiButton v-if="isEdit" :href="service.publicUrl" :inertia="false" target="_blank" rel="noopener" variant="ghost" size="sm">
                         <template #leading><ExternalLink class="h-3.5 w-3.5" /></template>
-                        View live
+                        {{ service.is_published ? 'View live' : 'Preview' }}
                     </UiButton>
                 </template>
             </PageHeader>

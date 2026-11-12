@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Marketing;
 use App\Http\Controllers\Controller;
 use App\Models\Solution;
 use App\Models\SolutionCategory;
+use App\Support\Preview;
 use App\Support\Seo;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -72,7 +73,7 @@ class SolutionController extends Controller
 
     public function show(Solution $solution): Response
     {
-        abort_unless($solution->is_published, 404);
+        $previewing = Preview::unpublished($solution->is_published);
 
         $solution->load('category');
 
@@ -100,7 +101,7 @@ class SolutionController extends Controller
                 ->get()
                 ->map->toCardArray()
                 ->values(),
-            'seo' => Seo::for(
+            'seo' => Preview::seo(Seo::for(
                 $solution->seo['title'] ?? $solution->title,
                 $solution->seo['description'] ?? $solution->summary,
                 "/solutions/{$solution->slug}",
@@ -113,7 +114,7 @@ class SolutionController extends Controller
                     'areaServed' => 'IN',
                     'serviceType' => $solution->category?->name,
                 ],
-            ),
+            ), $previewing),
         ]);
     }
 

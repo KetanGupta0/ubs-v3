@@ -92,20 +92,23 @@ class CourseBuilderController extends Controller
 
     /* ---------------------------------------------------------- modules */
 
-    public function storeModule(Request $request, Course $course): RedirectResponse
+    public function storeModule(Request $request, Course $course, Auditor $auditor): RedirectResponse
     {
-        $course->modules()->create($this->moduleRules($request) + [
+        $module = $course->modules()->create($this->moduleRules($request) + [
             'sort_order' => ($course->modules()->max('sort_order') ?? -1) + 1,
         ]);
+        $auditor->created($module, "{$course->title}: {$module->title}");
 
         return back()->with('success', 'Module added.');
     }
 
-    public function updateModule(Request $request, Course $course, CourseModule $module): RedirectResponse
+    public function updateModule(Request $request, Course $course, CourseModule $module, Auditor $auditor): RedirectResponse
     {
         abort_unless($module->course_id === $course->id, 404);
 
-        $module->fill($this->moduleRules($request))->save();
+        $module->fill($this->moduleRules($request));
+        $auditor->updated($module, label: "{$course->title}: {$module->title}");
+        $module->save();
 
         return back()->with('success', 'Module saved.');
     }
@@ -120,7 +123,7 @@ class CourseBuilderController extends Controller
         return back()->with('success', 'Module removed, along with its lessons.');
     }
 
-    public function reorderModules(Request $request, Course $course): RedirectResponse
+    public function reorderModules(Request $request, Course $course, Auditor $auditor): RedirectResponse
     {
         $validated = $this->validatedInput($request, [
             'order' => ['required', 'array'],
@@ -134,30 +137,35 @@ class CourseBuilderController extends Controller
                 ->update(['sort_order' => $position]);
         }
 
+        $auditor->action('course.modules_reordered', $course, ['order' => ['from' => null, 'to' => implode(', ', $validated['order'])]], $course->title);
+
         return back();
     }
 
     /* ---------------------------------------------------------- lessons */
 
-    public function storeLesson(Request $request, Course $course, CourseModule $module): RedirectResponse
+    public function storeLesson(Request $request, Course $course, CourseModule $module, Auditor $auditor): RedirectResponse
     {
         abort_unless($module->course_id === $course->id, 404);
 
         $validated = $this->lessonRules($request, $course);
 
-        $module->lessons()->create($validated + [
+        $lesson = $module->lessons()->create($validated + [
             'course_id' => $course->id,
             'sort_order' => ($module->lessons()->max('sort_order') ?? -1) + 1,
         ]);
+        $auditor->created($lesson, "{$course->title}: {$lesson->title}");
 
         return back()->with('success', 'Lesson added.');
     }
 
-    public function updateLesson(Request $request, Course $course, Lesson $lesson): RedirectResponse
+    public function updateLesson(Request $request, Course $course, Lesson $lesson, Auditor $auditor): RedirectResponse
     {
         abort_unless($lesson->course_id === $course->id, 404);
 
-        $lesson->fill($this->lessonRules($request, $course, $lesson))->save();
+        $lesson->fill($this->lessonRules($request, $course, $lesson));
+        $auditor->updated($lesson, label: "{$course->title}: {$lesson->title}");
+        $lesson->save();
 
         return back()->with('success', 'Lesson saved.');
     }
@@ -172,7 +180,7 @@ class CourseBuilderController extends Controller
         return back()->with('success', 'Lesson removed.');
     }
 
-    public function reorderLessons(Request $request, Course $course, CourseModule $module): RedirectResponse
+    public function reorderLessons(Request $request, Course $course, CourseModule $module, Auditor $auditor): RedirectResponse
     {
         abort_unless($module->course_id === $course->id, 404);
 
@@ -188,12 +196,14 @@ class CourseBuilderController extends Controller
                 ->update(['sort_order' => $position]);
         }
 
+        $auditor->action('course.lessons_reordered', $module, ['order' => ['from' => null, 'to' => implode(', ', $validated['order'])]], "{$course->title}: {$module->title}");
+
         return back();
     }
 
     /* -------------------------------------------------------- materials */
 
-    public function storeMaterial(Request $request, Course $course): RedirectResponse
+    public function storeMaterial(Request $request, Course $course, Auditor $auditor): RedirectResponse
     {
         $validated = $this->validatedInput($request, [
             'lesson_id' => ['nullable', 'integer'],
@@ -230,18 +240,28 @@ class CourseBuilderController extends Controller
 
         if ($file = $request->file('file')) {
             $attributes['path'] = $file->store("courses/{$course->id}", 'private');
-            $attributes['mime'] = $file->getClientMimeType();
+            // Read from the file's bytes, not from the name the browser sent.
+            $attributes['mime'] = $file->getMimeType();
             $attributes['size'] = $file->getSize();
         }
 
-        Material::query()->create($attributes);
+        $material = Material::query()->create($attributes);
+        $auditor->created($material, "{$course->title}: {$material->title}");
 
         return back()->with('success', 'Material added.');
     }
 
-    public function destroyMaterial(Course $course, Material $material): RedirectResponse
+    public function destroyMaterial(Course $course, Material $material, Auditor $auditor): RedirectResponse
     {
         abort_unless($material->course_id === $course->id, 404);
+
+        $auditor->deleted($material, "{$course->title}: {$material->title}");
+
+        // The file goes too. Until November 2026 a removed handout stayed on
+        // disk for good, still on the server after nobody could see it.
+        if ($material->path) {
+            Storage::disk('private')->delete($material->path);
+        }
 
         $material->delete();
 

@@ -138,14 +138,14 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
             </div>
         </header>
 
-        <!-- Staff looking at wording that is not published yet. -->
+        <!-- Staff looking at something visitors cannot see yet: unpublished wording, or an unpublished item. -->
         <div
-            v-if="page.props.copyPreview"
+            v-if="page.props.copyPreview || page.props.previewNotice"
             class="border-b px-4 py-2 text-center text-sm"
             style="background: color-mix(in oklab, var(--color-warn-500) 14%, var(--surface)); border-color: var(--border-subtle)"
             role="status"
         >
-            Preview of unpublished wording. Visitors still see the published page, and search engines are told not to index this copy.
+            {{ page.props.previewNotice ?? 'Preview of unpublished wording. Visitors still see the published page, and search engines are told not to index this copy.' }}
         </div>
 
         <main class="flex-1">

@@ -210,6 +210,10 @@ Rules for the marketing pages:
   staff preview them with `?preview=copy`. Only words are editable: layout, icons,
   links and list lengths stay in code. Write a number inside a sentence as a
   `{token}` filled from live figures, never as a word.
+- **An unpublished catalogue item is a preview for staff and a 404 for everyone
+  else.** `App\Support\Preview::unpublished()` opens it for `catalogue.view`, shares a
+  banner and `Preview::seo()` adds `noindex`. Visibility rules that are not about
+  publishing (`lms_only`, an internship under `/training`) stay 404 for everybody.
 - **Search wording for the fixed pages is set in the panel,** in `seo_overrides`
   (`/admin/seo`). `Seo::for()` applies it by path, so no controller changes when
   somebody edits it; empty fields keep the page's own wording. The list of fixed

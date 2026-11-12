@@ -86,14 +86,16 @@ function destroy() {
                         Back
                     </UiButton>
                     <UiButton
-                        v-if="isEdit && solution.is_published"
+                        v-if="isEdit"
                         :href="solution.publicUrl"
                         :inertia="false"
+                        target="_blank"
+                        rel="noopener"
                         variant="ghost"
                         size="sm"
                     >
                         <template #leading><ExternalLink class="h-3.5 w-3.5" /></template>
-                        View live
+                        {{ solution.is_published ? 'View live' : 'Preview' }}
                     </UiButton>
                     <UiButton type="submit" size="sm" :loading="form.processing">
                         {{ isEdit ? 'Save' : 'Create' }}
