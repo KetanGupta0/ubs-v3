@@ -15,5 +15,8 @@ abstract class Step
     /** The name used in --only and in the report. */
     abstract public function name(): string;
 
+    /** @return array<int, string> the v2 tables this step reads */
+    abstract public function sourceTables(): array;
+
     abstract public function run(Context $context): void;
 }

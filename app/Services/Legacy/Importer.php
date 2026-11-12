@@ -2,6 +2,11 @@
 
 namespace App\Services\Legacy;
 
+use App\Services\Legacy\Steps\AttendanceStep;
+use App\Services\Legacy\Steps\BatchesStep;
+use App\Services\Legacy\Steps\CoursesStep;
+use App\Services\Legacy\Steps\EnrolmentsStep;
+use App\Services\Legacy\Steps\SessionsStep;
 use App\Services\Legacy\Steps\Step;
 use App\Services\Legacy\Steps\UsersStep;
 use App\Services\Lms\Activity;
@@ -9,6 +14,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
 use Throwable;
 
@@ -26,6 +32,11 @@ class Importer
     /** @var array<int, class-string<Step>> in the order they must run */
     public const STEPS = [
         UsersStep::class,
+        CoursesStep::class,
+        BatchesStep::class,
+        EnrolmentsStep::class,
+        SessionsStep::class,
+        AttendanceStep::class,
     ];
 
     /** @return array<int, string> */
@@ -49,6 +60,16 @@ class Importer
             $step = new $class;
 
             if ($only && ! in_array($step->name(), $only, true)) {
+                continue;
+            }
+
+            // A dump missing a table is reported, not guessed around.
+            $missing = array_filter($step->sourceTables(), fn (string $table) => ! Schema::connection('legacy')->hasTable($table));
+
+            if ($missing) {
+                $context->report->count($step->name(), 'skipped', 0);
+                $context->report->warn($step->name(), 'source_missing', implode(', ', $missing), 'The dump has no such table, so this step did not run.');
+
                 continue;
             }
 

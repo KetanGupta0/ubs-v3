@@ -25,7 +25,8 @@ class LegacyImport extends Command
         {--only= : Comma separated steps to run, e.g. users}
         {--generation-one= : Path to a private file of emails, one per line, of accounts carried into v2 from the first site}
         {--all-generation-one : Treat every account as generation 1: every imported password is replaced}
-        {--storage= : Path to a copy of v2\'s storage directory, for the files steps}';
+        {--storage= : Path to a copy of v2\'s storage directory, for the files steps}
+        {--course-map= : Path to a JSON file mapping v2 program slugs to v3 course slugs, or to {"type": "internship"}}';
 
     protected $description = 'Import the ubs-v2 data from a restored copy of its database (the legacy connection)';
 
@@ -79,12 +80,25 @@ class LegacyImport extends Command
             return self::FAILURE;
         }
 
+        $courseMap = [];
+
+        if ($path = $this->option('course-map')) {
+            $courseMap = is_readable($path) ? json_decode((string) file_get_contents($path), true) : null;
+
+            if (! is_array($courseMap)) {
+                $this->error("{$path} is not a readable JSON object.");
+
+                return self::FAILURE;
+            }
+        }
+
         $context = new Context(
             report: new Report($dryRun),
             ledger: new Ledger,
             generationOne: $generationOne,
             allGenerationOne: (bool) $this->option('all-generation-one'),
             storagePath: $this->option('storage'),
+            courseMap: $courseMap,
         );
 
         $report = $importer->run($context, $only);

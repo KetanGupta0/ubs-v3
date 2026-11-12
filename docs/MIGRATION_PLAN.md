@@ -128,6 +128,14 @@ per step (rolled back on a dry run), notifications, mail and queued jobs faked d
 and a JSON report under `storage/app/legacy-reports/` holding counts and source ids only.
 Tests run against `tests/Support/LegacyDatabase.php`, v2's table shapes with made up rows.
 
+*Progress (2026-11-12, second slice):* **courses, batches, enrolments, sessions and attendance**
+are built. Programs map onto existing v3 courses only through `--course-map=FILE` (JSON,
+by v2 slug: a v3 slug, or `{"type": "internship"}` for a new course); anything unmapped is
+imported as a draft for a person to read, and a private or inactive program stays inside the
+LMS. A v2 enrolment still waiting for payment is listed, not enrolled. Seats are recounted and
+each batch's group chat put in step, as the Enroller would. A dump missing a table reports it
+and skips that step instead of failing.
+
 **Generation 1 list.** A real run that imports users needs `--generation-one=FILE` (emails,
 one per line) or `--all-generation-one`. Make the file on the private server, never in a
 repository, from the June seed migration the old repository published, for example

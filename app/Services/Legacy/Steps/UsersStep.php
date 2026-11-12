@@ -44,6 +44,11 @@ class UsersStep extends Step
         return 'users';
     }
 
+    public function sourceTables(): array
+    {
+        return ['users'];
+    }
+
     public function run(Context $context): void
     {
         $report = $context->report;

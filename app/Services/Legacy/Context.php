@@ -20,6 +20,14 @@ class Context
         public readonly array $generationOne = [],
         public readonly bool $allGenerationOne = false,
         public readonly ?string $storagePath = null,
+        /**
+         * How v2 programs meet the v3 catalogue, by v2 slug: a v3 course slug to
+         * map onto, or ['type' => 'internship'|'course'|'programme'] for a new one.
+         * Never matched by title.
+         *
+         * @var array<string, string|array{type?: string}>
+         */
+        public readonly array $courseMap = [],
     ) {}
 
     public function source(): Connection

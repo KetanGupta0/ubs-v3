@@ -175,7 +175,9 @@ it('changes nothing and sends nothing on a dry run', function () {
 
     $report = json_decode(Storage::disk('local')->get(Storage::disk('local')->files('legacy-reports')[0]), true);
     expect($report['dry_run'])->toBeTrue()
-        ->and($report['steps']['users']['created'])->toBe(1);
+        ->and($report['steps']['users']['created'])->toBe(1)
+        // This fake dump has only users; the other steps say so rather than fail.
+        ->and($report['steps']['courses']['warnings'][0]['code'])->toBe('source_missing');
 });
 
 it('refuses a step it does not know', function () {
