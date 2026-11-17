@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Client\AgreementController;
 use App\Http\Controllers\Client\ApiKeyController;
+use App\Http\Controllers\Client\ChangeRequestController;
 use App\Http\Controllers\Client\DashboardController;
 use App\Http\Controllers\Client\DocumentController;
 use App\Http\Controllers\Client\MeetingController;
@@ -55,6 +56,15 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
         Route::post('projects/{project}/milestones/{milestone}/reject', [ProjectController::class, 'rejectMilestone'])
             ->whereNumber(['project', 'milestone'])
             ->name('projects.milestones.reject');
+        Route::post('projects/{project}/changes', [ChangeRequestController::class, 'store'])->whereNumber('project')->name('projects.changes.store');
+        Route::get('projects/{project}/changes/{change}', [ChangeRequestController::class, 'show'])->whereNumber(['project', 'change'])->name('projects.changes.show');
+        Route::get('projects/{project}/changes/{change}/pdf', [ChangeRequestController::class, 'pdf'])->whereNumber(['project', 'change'])->name('projects.changes.pdf');
+        Route::get('projects/{project}/changes/{change}/signed', [ChangeRequestController::class, 'signed'])->whereNumber(['project', 'change'])->name('projects.changes.signed');
+        Route::post('projects/{project}/changes/{change}/decline', [ChangeRequestController::class, 'decline'])->whereNumber(['project', 'change'])->name('projects.changes.decline');
+        Route::middleware('throttle:10,1')->group(function () {
+            Route::post('projects/{project}/changes/{change}/sign/code', [ChangeRequestController::class, 'signCode'])->whereNumber(['project', 'change'])->name('projects.changes.sign.code');
+            Route::post('projects/{project}/changes/{change}/sign', [ChangeRequestController::class, 'sign'])->whereNumber(['project', 'change'])->name('projects.changes.sign');
+        });
         Route::get('projects/{project}/waiting/{item}', [WaitingController::class, 'show'])
             ->whereNumber(['project', 'item'])
             ->name('projects.waiting.show');

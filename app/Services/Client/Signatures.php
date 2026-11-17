@@ -6,6 +6,7 @@ use App\Enums\OtpChannel;
 use App\Enums\OtpPurpose;
 use App\Enums\OtpResult;
 use App\Models\Agreement;
+use App\Models\ChangeRequest;
 use App\Models\DocumentSignature;
 use App\Models\Proposal;
 use App\Models\User;
@@ -39,7 +40,7 @@ class Signatures
     ) {}
 
     /** The first time somebody in the client's organisation opens it. Staff looking do not count. */
-    public function markViewed(Agreement|Proposal $document, User $viewer): void
+    public function markViewed(Agreement|Proposal|ChangeRequest $document, User $viewer): void
     {
         if ($document->viewed_at || ! $viewer->isClient() || app(Impersonation::class)->active()) {
             return;
@@ -53,7 +54,7 @@ class Signatures
      *
      * @return string Where it went, partly hidden, for the screen to say.
      */
-    public function requestCode(User $signer, Agreement|Proposal $document, string $party, Request $request): string
+    public function requestCode(User $signer, Agreement|Proposal|ChangeRequest $document, string $party, Request $request): string
     {
         $this->mustBeSignable($document, $party);
 
@@ -73,7 +74,7 @@ class Signatures
     /** Check the code and record the signature, then move the document on. */
     public function sign(
         User $signer,
-        Agreement|Proposal $document,
+        Agreement|Proposal|ChangeRequest $document,
         string $party,
         string $typedName,
         ?string $designation,
@@ -124,7 +125,10 @@ class Signatures
                 'signed_at' => now(),
             ]);
 
-            if ($document instanceof Proposal) {
+            if ($document instanceof ChangeRequest) {
+                // Approving the addendum changes the project (CL12).
+                app(ChangeRequests::class)->applyApproval($document, $signer);
+            } elseif ($document instanceof Proposal) {
                 $document->forceFill([
                     'status' => 'accepted',
                     'responded_at' => now(),
@@ -142,7 +146,11 @@ class Signatures
         $this->documents->signedCopy($document->fresh());
 
         $this->auditor->actingAs($signer)->action(
-            $document instanceof Proposal ? 'proposal.accepted' : ($party === 'client' ? 'agreement.signed' : 'agreement.countersigned'),
+            match (true) {
+                $document instanceof Proposal => 'proposal.accepted',
+                $document instanceof ChangeRequest => 'change_request.approved',
+                default => $party === 'client' ? 'agreement.signed' : 'agreement.countersigned',
+            },
             $document,
             ['signature' => $signature->id, 'sha256' => $document->pdf_sha256, 'by' => $party],
             $document->number,
@@ -155,11 +163,12 @@ class Signatures
 
     /* -------------------------------------------------------------------- */
 
-    protected function mustBeSignable(Agreement|Proposal $document, string $party): void
+    protected function mustBeSignable(Agreement|Proposal|ChangeRequest $document, string $party): void
     {
         $problem = match (true) {
             ! $document->pdf_path || ! $document->pdf_sha256 => 'This document has no PDF to sign yet.',
-            $document instanceof Proposal && $party !== 'client' => 'A proposal is accepted by the client; we do not countersign it.',
+            ! $document instanceof Agreement && $party !== 'client' => 'Only an agreement is countersigned.',
+            $document instanceof ChangeRequest && ! $document->canBeAnswered() => 'This change request is not waiting for approval.',
             $document instanceof Proposal && ! $document->canBeAnswered() => $document->hasExpired()
                 ? 'This proposal has passed its validity date. Ask us for a fresh one.'
                 : 'This proposal has already been answered.',
@@ -174,11 +183,12 @@ class Signatures
     }
 
     /** The other side hears about it. */
-    protected function tell(Agreement|Proposal $document, string $party): void
+    protected function tell(Agreement|Proposal|ChangeRequest $document, string $party): void
     {
         if ($party === 'client') {
+            $author = $document instanceof ChangeRequest ? $document->quoted_by : $document->created_by;
             $staff = User::query()
-                ->where(fn ($query) => $query->where('is_owner', true)->when($document->created_by, fn ($inner) => $inner->orWhere('id', $document->created_by)))
+                ->where(fn ($query) => $query->where('is_owner', true)->when($author, fn ($inner) => $inner->orWhere('id', $author)))
                 ->get();
 
             Notification::send($staff, new DocumentSigned($document));

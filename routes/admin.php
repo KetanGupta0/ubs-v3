@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\BatchPerformanceController;
 use App\Http\Controllers\Admin\BatchRunController;
 use App\Http\Controllers\Admin\BillingController;
 use App\Http\Controllers\Admin\CertificateTemplateController;
+use App\Http\Controllers\Admin\ChangeRequestController;
 use App\Http\Controllers\Admin\ChatReportController;
 use App\Http\Controllers\Admin\ClassScheduleController;
 use App\Http\Controllers\Admin\ClientMemberController;
@@ -219,6 +220,19 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('proposals/{proposal}/items', [ProposalController::class, 'storeItem'])->name('proposals.items.store');
             Route::put('proposals/{proposal}/items/{item}', [ProposalController::class, 'updateItem'])->name('proposals.items.update');
             Route::delete('proposals/{proposal}/items/{item}', [ProposalController::class, 'destroyItem'])->name('proposals.items.destroy');
+        });
+
+        /* -------------------------------------------------- change requests */
+        Route::middleware('permission:proposals.manage')->group(function () {
+            Route::get('change-requests', [ChangeRequestController::class, 'index'])->name('change-requests.index');
+            Route::get('change-requests/new', [ChangeRequestController::class, 'create'])->name('change-requests.create');
+            Route::post('change-requests', [ChangeRequestController::class, 'store'])->name('change-requests.store');
+            Route::get('change-requests/{changeRequest}', [ChangeRequestController::class, 'show'])->whereNumber('changeRequest')->name('change-requests.show');
+            Route::post('change-requests/{changeRequest}/quote', [ChangeRequestController::class, 'quote'])->whereNumber('changeRequest')->name('change-requests.quote');
+            Route::post('change-requests/{changeRequest}/withdraw', [ChangeRequestController::class, 'withdraw'])->whereNumber('changeRequest')->name('change-requests.withdraw');
+            Route::post('change-requests/{changeRequest}/again', [ChangeRequestController::class, 'quoteAgain'])->whereNumber('changeRequest')->name('change-requests.again');
+            Route::get('change-requests/{changeRequest}/pdf', [ChangeRequestController::class, 'pdf'])->whereNumber('changeRequest')->name('change-requests.pdf');
+            Route::get('change-requests/{changeRequest}/signed', [ChangeRequestController::class, 'signed'])->whereNumber('changeRequest')->name('change-requests.signed');
         });
 
         /* --------------------------------------------------------- meetings */

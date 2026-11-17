@@ -3,6 +3,7 @@
 namespace App\Services\Client;
 
 use App\Models\Agreement;
+use App\Models\ChangeRequest;
 use App\Models\Project;
 use App\Models\Proposal;
 use App\Services\Billing\Invoicer;
@@ -62,8 +63,24 @@ class ClientDocuments
         $agreement->forceFill(['pdf_path' => $path, 'pdf_sha256' => hash('sha256', $output)])->save();
     }
 
+    /** Freeze a change request as it is quoted (CL12): parties, PDF and hash. */
+    public function freezeChangeRequest(ChangeRequest $change): void
+    {
+        if ($change->pdf_path) {
+            return;
+        }
+
+        $change->forceFill(['parties' => $this->parties($change->client)]);
+        $output = $this->renderChangeRequest($change);
+
+        $path = 'documents/change-requests/'.str($change->number)->replace('/', '-')->toString().'.pdf';
+        Storage::disk('private')->put($path, $output);
+
+        $change->forceFill(['pdf_path' => $path, 'pdf_sha256' => hash('sha256', $output)]);
+    }
+
     /** The stored file of a sent document. Re-rendering a sent document is never right. */
-    public function stored(Proposal|Agreement $document): string
+    public function stored(Proposal|Agreement|ChangeRequest $document): string
     {
         if (! $document->pdf_path || ! Storage::disk('private')->exists($document->pdf_path)) {
             throw new LogicException("{$document->number} has no stored PDF.");
@@ -77,15 +94,21 @@ class ClientDocuments
      * appended. Made again after every signature; the original stays the
      * file that was signed, and the certificate names it by its hash.
      */
-    public function signedCopy(Proposal|Agreement $document): string
+    public function signedCopy(Proposal|Agreement|ChangeRequest $document): string
     {
         $signatures = $document->signatures()->get()->map->toCertificateArray()->all();
 
-        $output = $document instanceof Proposal
-            ? $this->renderProposal($document, $signatures)
-            : $this->renderAgreement($document, $signatures);
+        $output = match (true) {
+            $document instanceof Proposal => $this->renderProposal($document, $signatures),
+            $document instanceof ChangeRequest => $this->renderChangeRequest($document, $signatures),
+            default => $this->renderAgreement($document, $signatures),
+        };
 
-        $folder = $document instanceof Proposal ? 'proposals' : 'agreements';
+        $folder = match (true) {
+            $document instanceof Proposal => 'proposals',
+            $document instanceof ChangeRequest => 'change-requests',
+            default => 'agreements',
+        };
         $path = "documents/signed/{$folder}/".str($document->number)->replace('/', '-')->toString().'-signed.pdf';
         Storage::disk('private')->put($path, $output);
 
@@ -95,9 +118,13 @@ class ClientDocuments
     }
 
     /** A draft as it would look if sent now. Not kept. */
-    public function preview(Proposal|Agreement $document): string
+    public function preview(Proposal|Agreement|ChangeRequest $document): string
     {
-        return $document instanceof Proposal ? $this->renderProposal($document) : $this->renderAgreement($document);
+        return match (true) {
+            $document instanceof Proposal => $this->renderProposal($document),
+            $document instanceof ChangeRequest => $this->renderChangeRequest($document),
+            default => $this->renderAgreement($document),
+        };
     }
 
     /** Where a project stands, rendered now. A report, not a document anybody signs. */
@@ -132,6 +159,21 @@ class ClientDocuments
             'parties' => $proposal->parties ?? $this->parties($proposal->client),
             'money' => fn (int $paise) => Money::display($paise),
             'words' => $quotation ? Money::words($quotation->total) : null,
+            'signatures' => $signatures,
+        ])->setPaper('a4')->output();
+    }
+
+    protected function renderChangeRequest(ChangeRequest $change, array $signatures = []): string
+    {
+        $change->loadMissing(['project', 'client.profile']);
+        $rate = $this->invoicer->defaultTaxRate();
+
+        return Pdf::loadView('documents.change-request', [
+            'change' => $change,
+            'parties' => $change->parties ?? $this->parties($change->client),
+            'money' => fn (int $paise) => Money::display($paise),
+            'taxRate' => $rate,
+            'tax' => Money::taxOn((int) ($change->amount ?? 0), $rate),
             'signatures' => $signatures,
         ])->setPaper('a4')->output();
     }

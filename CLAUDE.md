@@ -357,6 +357,14 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   version or says what is wrong, and a correction is the next version, acknowledged
   afresh. What the client agreed to do becomes a "waiting on you" item, raised once
   however many versions repeat it.
+- **A change to the scope is an addendum the client signs (CL12).**
+  `App\Services\Client\ChangeRequests`: anybody in the organisation asks; staff quote an
+  amount (before tax) and days, which freezes the request as a PDF with its hash like any
+  sent document, and `ChangeRequest` refuses to change after that. A signatory or an owner
+  approves by signing it through `Signatures`, or declines with a reason. Approval, in the
+  signing transaction, adds the amount to the project's budget, moves its target date and
+  adds the work as a milestone carrying the amount, so it is invoiced on acceptance (CL9)
+  like any other. A different estimate is a new request (`previous_id`).
 - **The client dashboard leads with what needs them:** items to reply to, milestones to
   accept, proposals and agreements to sign, payments, renewals. Something only another
   role can do still shows, saying whose it is. An overdue invoice whose payment request

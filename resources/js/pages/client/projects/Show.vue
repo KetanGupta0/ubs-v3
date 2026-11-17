@@ -6,10 +6,11 @@
  * changing it is a conversation, not a form field. The one thing asked of
  * them here is accepting a milestone, which opens on its own page (CL9).
  */
-import { Head, Link } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
     ArrowLeft, CheckCircle2, Circle, ExternalLink, FileText, Clock, AlertTriangle,
-    FileDown, Inbox, ArrowRight,
+    FileDown, Inbox, ArrowRight, FilePlus2,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -19,16 +20,31 @@ import UiBadge from '@/components/UI/UiBadge.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import UiProgress from '@/components/UI/UiProgress.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
+import UiFormField from '@/components/UI/UiFormField.vue';
+import UiInput from '@/components/UI/UiInput.vue';
+import UiModal from '@/components/UI/UiModal.vue';
+import UiTextarea from '@/components/UI/UiTextarea.vue';
 
-defineProps({
+const props = defineProps({
     project: { type: Object, required: true },
     /** What we need from them to carry on (CL10). */
     waiting: { type: Array, default: () => [] },
     waitingTime: { type: String, default: null },
+    /** Changes to the scope (CL12). */
+    changes: { type: Array, default: () => [] },
     milestones: { type: Array, default: () => [] },
     updates: { type: Array, default: () => [] },
     documents: { type: Array, default: () => [] },
 });
+
+/* Asking for a change to the scope (CL12). */
+const asking = ref(false);
+const changeForm = useForm({ title: '', description: '' });
+const changeTones = { requested: 'warning', quoted: 'brand', approved: 'success', declined: 'danger', withdrawn: 'neutral' };
+
+function askForChange() {
+    changeForm.post(`/client/projects/${props.project.id}/changes`, { onSuccess: () => { asking.value = false; changeForm.reset(); } });
+}
 </script>
 
 <template>
@@ -130,6 +146,31 @@ defineProps({
                             <span v-else class="flex shrink-0 items-center gap-1 text-xs font-medium" style="color: var(--color-brand-600)">
                                 Reply <ArrowRight class="h-3 w-3" />
                             </span>
+                        </Link>
+                    </li>
+                </ul>
+            </UiCard>
+
+            <!-- ------------------------------------------ scope changes -->
+            <UiCard>
+                <template #header>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h2 class="text-base font-semibold">Changes to the scope</h2>
+                        <UiButton size="xs" variant="secondary" @click="asking = true">
+                            <template #leading><FilePlus2 class="h-3 w-3" /></template>
+                            Ask for a change
+                        </UiButton>
+                    </div>
+                </template>
+                <p v-if="!changes.length" class="text-sm" style="color: var(--text-muted)">Need something the plan does not cover? Ask here: we estimate it, and nothing changes until you approve.</p>
+                <ul v-else class="divide-y">
+                    <li v-for="change in changes" :key="change.id">
+                        <Link :href="`/client/projects/${project.id}/changes/${change.id}`" class="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-sm font-medium">{{ change.title }}</span>
+                                <span class="block text-xs" style="color: var(--text-muted)">{{ change.number }}<template v-if="change.amount"> · {{ change.amount }} before tax</template></span>
+                            </span>
+                            <UiBadge :tone="changeTones[change.status] ?? 'neutral'" size="sm" dot>{{ change.statusLabel }}</UiBadge>
                         </Link>
                     </li>
                 </ul>
@@ -270,5 +311,19 @@ defineProps({
                 </div>
             </div>
         </div>
+        <UiModal :open="asking" title="Ask for a change" description="Describe what you need. We estimate it and send it to your signatories; nothing changes until it is approved." @close="asking = false">
+            <form id="change-form" class="space-y-4" @submit.prevent="askForChange">
+                <UiFormField label="The change" required :error="changeForm.errors.title">
+                    <UiInput v-model="changeForm.title" maxlength="160" />
+                </UiFormField>
+                <UiFormField label="What you need, and why" required :error="changeForm.errors.description">
+                    <UiTextarea v-model="changeForm.description" :rows="6" />
+                </UiFormField>
+            </form>
+            <template #footer>
+                <UiButton variant="ghost" @click="asking = false">Cancel</UiButton>
+                <UiButton type="submit" form="change-form" :loading="changeForm.processing" :disabled="!changeForm.title.trim() || !changeForm.description.trim()">Send</UiButton>
+            </template>
+        </UiModal>
     </AppLayout>
 </template>

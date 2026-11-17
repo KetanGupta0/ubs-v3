@@ -17,7 +17,7 @@
  * disabled rather than linking nowhere.
  */
 import {
-    CalendarClock,
+    CalendarClock, FilePlus2,
     LayoutDashboard, FolderKanban, FileText, Receipt, LifeBuoy, MessagesSquare,
     KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy, UserCheck, Video, Star, Search, Scale, Contact, PanelTop, Images, Type,
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
@@ -44,6 +44,7 @@ export const navigation = {
         { group: 'Clients', label: 'Projects', icon: FolderKanban, href: '/admin/projects', permission: 'projects.view' },
         { group: 'Clients', label: 'Meetings', icon: CalendarClock, href: '/admin/meetings', permission: 'projects.view' },
         { group: 'Clients', label: 'Proposals', icon: FileSignature, href: '/admin/proposals', permission: 'proposals.manage' },
+        { group: 'Clients', label: 'Change requests', icon: FilePlus2, href: '/admin/change-requests', permission: 'proposals.manage' },
         { group: 'Clients', label: 'Agreements', icon: ScrollText, href: '/admin/agreements', permission: 'proposals.manage' },
         { group: 'Clients', label: 'Documents', icon: Files, href: '/admin/documents', permission: 'documents.manage' },
         { group: 'Clients', label: 'Contracts', icon: ShieldCheck, href: '/admin/contracts', permission: 'support.manage' },

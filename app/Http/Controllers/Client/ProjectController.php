@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Models\ChangeRequest;
 use App\Models\Document;
 use App\Models\MilestoneSignoff;
 use App\Models\Project;
@@ -58,6 +59,17 @@ class ProjectController extends ClientController
             // What we are waiting on them for (CL10), still open or just answered.
             'waiting' => $waiting->forScreen($record->waitingItems()->whereIn('status', ['open', 'answered'])->get(), $waitingTime['items']),
             'waitingTime' => $waitingTime['seconds'] > 0 ? $waitingTime['label'] : null,
+
+            // Changes to the scope (CL12), newest first.
+            'changes' => ChangeRequest::query()->where('project_id', $record->id)->latest('id')->get()
+                ->map(fn (ChangeRequest $change) => [
+                    'id' => $change->id,
+                    'number' => $change->number,
+                    'title' => $change->title,
+                    'status' => $change->status,
+                    'statusLabel' => $change->statusLabel(),
+                    'amount' => $change->amountLabel(),
+                ]),
 
             'project' => [
                 'id' => $record->id,

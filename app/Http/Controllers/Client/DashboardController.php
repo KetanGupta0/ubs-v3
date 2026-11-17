@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Models\Agreement;
+use App\Models\ChangeRequest;
 use App\Models\ClientMember;
 use App\Models\Document;
 use App\Models\Invoice;
@@ -201,6 +202,23 @@ class DashboardController extends ClientController
                     'href' => "/client/proposals/{$proposal->id}",
                     'action' => $mayApprove ? 'Read and sign' : 'Read',
                     'urgent' => $proposal->valid_until !== null && $proposal->valid_until->diffInDays(today()) <= 7,
+                ];
+            });
+
+        // Changes to the scope waiting for approval (CL12).
+        ChangeRequest::query()
+            ->forClient($client)
+            ->where('status', 'quoted')
+            ->with('project:id,name')
+            ->get()
+            ->each(function (ChangeRequest $change) use (&$items, $mayApprove) {
+                $items[] = [
+                    'kind' => 'change',
+                    'title' => "Approve: {$change->title}",
+                    'detail' => "{$change->amountLabel()} before tax · {$change->project->name}".($mayApprove ? '' : ' · for a signatory'),
+                    'href' => "/client/projects/{$change->project_id}/changes/{$change->id}",
+                    'action' => $mayApprove ? 'Review and sign' : 'Read',
+                    'urgent' => $change->quoted_at !== null && $change->quoted_at->lt(now()->subDays(7)),
                 ];
             });
 
