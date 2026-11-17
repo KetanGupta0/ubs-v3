@@ -192,7 +192,7 @@ function cancel(row) {
                 </UiFormField>
 
                 <div class="grid gap-4 sm:grid-cols-2">
-                    <UiFormField label="Amount (₹)" required :error="form.errors.amount">
+                    <UiFormField label="Amount before tax (₹)" required :error="form.errors.amount">
                         <UiInput v-model="form.amount" type="number" step="0.01" min="0" />
                     </UiFormField>
 

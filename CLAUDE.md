@@ -392,6 +392,13 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   statement of account (`App\Services\Billing\Statement`) is drawn from the ledger on
   demand: invoices and refunds paid out are debits; payments, TDS and credit notes are
   credits; cancelled invoices were never owed.
+- **Nothing of a client's lapses unnoticed (CL16).** `renewals:remind`, daily, reminds at
+  30, 14 and 3 days about subscriptions, maintenance contracts and `RenewalItem`s
+  (domains, hosting, certificates, update windows), each once per window, to the
+  organisation's finance or technical people; a domain or certificate, which takes a
+  site down, goes to our side too. A subscription set to renew itself is billed on its
+  date, before tax at the usual rate, under a row lock so it is billed once, and moved
+  on a period. Notes on a renewal say where access is kept, never what it is (X6).
 - **An API key is shown once.** Only a hash and the prefix are stored. Lost keys
   are rotated, not recovered.
 - **`$request->validate()` drops optional fields the request did not send**, so

@@ -8,12 +8,14 @@ use App\Models\ClientMember;
 use App\Models\Document;
 use App\Models\FeedbackItem;
 use App\Models\Invoice;
+use App\Models\MaintenanceContract;
 use App\Models\Meeting;
 use App\Models\MilestoneSignoff;
 use App\Models\PaymentRequest;
 use App\Models\Project;
 use App\Models\ProjectUpdate;
 use App\Models\Proposal;
+use App\Models\RenewalItem;
 use App\Models\Subscription;
 use App\Models\SupportTicket;
 use App\Models\TdsDeduction;
@@ -312,6 +314,32 @@ class DashboardController extends ClientController
                     'href' => '/client/subscriptions',
                     'action' => 'Review',
                     'urgent' => $subscription->daysToRenewal() <= 7,
+                ];
+            });
+
+        // Contracts, domains, hosting and certificates lapsing within a month (CL16).
+        MaintenanceContract::query()->where('client_id', $client->id)->where('status', 'active')
+            ->whereBetween('ends_on', [today(), today()->addDays(30)])->get()
+            ->each(function (MaintenanceContract $contract) use (&$items) {
+                $items[] = [
+                    'kind' => 'renewal',
+                    'title' => "Contract {$contract->reference} ends",
+                    'detail' => $contract->ends_on->format('j M Y')." · {$contract->plan}",
+                    'href' => '/client/renewals',
+                    'action' => 'Review',
+                    'urgent' => today()->diffInDays($contract->ends_on) <= 7,
+                ];
+            });
+        RenewalItem::query()->forClient($client)->active()
+            ->where('expires_on', '<=', today()->addDays(30))->get()
+            ->each(function (RenewalItem $item) use (&$items) {
+                $items[] = [
+                    'kind' => 'renewal',
+                    'title' => "{$item->name} ".($item->expires_on->isPast() ? 'has lapsed' : 'lapses'),
+                    'detail' => "{$item->kindLabel()} · ".$item->expires_on->format('j M Y'),
+                    'href' => '/client/renewals',
+                    'action' => 'Review',
+                    'urgent' => $item->daysToExpiry() <= 7,
                 ];
             });
 

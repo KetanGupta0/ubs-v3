@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\PeopleController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProposalController;
 use App\Http\Controllers\Admin\RegistrationFormController;
+use App\Http\Controllers\Admin\RenewalController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SeoController;
@@ -248,6 +249,14 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
         Route::middleware('permission:projects.manage')->group(function () {
             Route::post('feedback/{feedback}/move', [FeedbackController::class, 'move'])->whereNumber('feedback')->name('feedback.move');
             Route::post('feedback/{feedback}/comment', [FeedbackController::class, 'comment'])->whereNumber('feedback')->name('feedback.comment');
+        });
+
+        /* --------------------------------------------------------- renewals */
+        Route::middleware('permission:support.manage')->group(function () {
+            Route::get('renewals', [RenewalController::class, 'index'])->name('renewals.index');
+            Route::post('renewals', [RenewalController::class, 'store'])->name('renewals.store');
+            Route::put('renewals/{renewal}', [RenewalController::class, 'update'])->whereNumber('renewal')->name('renewals.update');
+            Route::post('renewals/{renewal}/cancel', [RenewalController::class, 'cancel'])->whereNumber('renewal')->name('renewals.cancel');
         });
 
         /* --------------------------------------------------------- meetings */

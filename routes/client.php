@@ -13,6 +13,7 @@ use App\Http\Controllers\Client\PaymentController;
 use App\Http\Controllers\Client\PeopleController;
 use App\Http\Controllers\Client\ProjectController;
 use App\Http\Controllers\Client\ProposalController;
+use App\Http\Controllers\Client\RenewalController;
 use App\Http\Controllers\Client\ReportController;
 use App\Http\Controllers\Client\StatementController;
 use App\Http\Controllers\Client\SubscriptionController;
@@ -150,6 +151,7 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
             ->whereNumber('payment')
             ->name('payments.show');
         Route::get('statement', StatementController::class)->name('statement');
+        Route::get('renewals', RenewalController::class)->name('renewals');
         Route::get('credit-notes/{creditNote}/pdf', [CreditNoteController::class, 'pdf'])->whereNumber('creditNote')->name('credit-notes.pdf');
         Route::get('billing-details', [BillingDetailsController::class, 'edit'])->name('billing-details.edit');
         Route::put('billing-details', [BillingDetailsController::class, 'update'])->name('billing-details.update');

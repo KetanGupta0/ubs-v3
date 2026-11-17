@@ -29,6 +29,7 @@ class MaintenanceContract extends Model
             'exclusions' => 'array',
             'starts_on' => 'date',
             'ends_on' => 'date',
+            'reminders_sent' => 'array',
         ];
     }
 

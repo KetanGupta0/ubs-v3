@@ -17,7 +17,7 @@
  * disabled rather than linking nowhere.
  */
 import {
-    CalendarClock, FilePlus2, Bug, Landmark,
+    CalendarClock, FilePlus2, Bug, Landmark, CalendarSync,
     LayoutDashboard, FolderKanban, FileText, Receipt, LifeBuoy, MessagesSquare,
     KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy, UserCheck, Video, Star, Search, Scale, Contact, PanelTop, Images, Type,
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
@@ -49,6 +49,7 @@ export const navigation = {
         { group: 'Clients', label: 'Agreements', icon: ScrollText, href: '/admin/agreements', permission: 'proposals.manage' },
         { group: 'Clients', label: 'Documents', icon: Files, href: '/admin/documents', permission: 'documents.manage' },
         { group: 'Clients', label: 'Contracts', icon: ShieldCheck, href: '/admin/contracts', permission: 'support.manage' },
+        { group: 'Clients', label: 'Renewals', icon: CalendarSync, href: '/admin/renewals', permission: 'support.manage' },
         { group: 'Clients', label: 'Tickets', icon: LifeBuoyIcon, href: '/admin/tickets', permission: 'support.manage' },
 
         { group: 'Learning', label: 'Students', icon: Users, href: '/admin/students', permission: 'students.view', primary: true },
@@ -97,6 +98,7 @@ export const navigation = {
         { label: 'Transactions', icon: Banknote, href: '/client/transactions' },
         { label: 'Support', icon: LifeBuoy, href: '/client/support' },
         { label: 'Subscriptions', icon: RefreshCw, href: '/client/subscriptions' },
+        { label: 'Renewals', icon: CalendarSync, href: '/client/renewals' },
         { label: 'API keys', icon: KeyRound, href: '/client/api-keys' },
         { label: 'Reports', icon: BarChart3, href: '/client/reports' },
         { label: 'People', icon: Users, href: '/client/people' },
