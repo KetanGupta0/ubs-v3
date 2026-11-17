@@ -4,7 +4,7 @@
  */
 import { ref } from 'vue';
 import { Head, useForm, router, Link } from '@inertiajs/vue3';
-import { ArrowLeft, Download, Ban, Banknote, Undo2 } from 'lucide-vue-next';
+import { ArrowLeft, Download, Ban, Banknote, Undo2, FileMinus } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -25,6 +25,15 @@ const props = defineProps({
 });
 
 const offlineOpen = ref(false);
+
+/* Credit notes against the invoice (CL14). */
+const creditForm = useForm({ amount: '', reason: '' });
+
+function issueCredit() {
+    if (window.confirm(`Issue a credit note for ₹${creditForm.amount} before tax against ${props.invoice.number}? It cannot be changed afterwards.`)) {
+        creditForm.post(`/admin/invoices/${props.invoice.id}/credit-notes`, { preserveScroll: true, onSuccess: () => creditForm.reset() });
+    }
+}
 const refunding = ref(null);
 
 const offlineForm = useForm({
@@ -163,6 +172,40 @@ const tones = { successful: 'success', failed: 'danger', refunded: 'warning', cr
                    style="background: var(--surface-sunken); color: var(--text-muted)">
                     {{ payment.notes }}
                 </p>
+            </UiCard>
+
+            <!-- ------------------------------------ settled otherwise (CL14) -->
+            <UiCard v-if="invoice">
+                <template #header>
+                    <h2 class="text-base font-semibold">TDS and credit notes</h2>
+                </template>
+                <dl class="grid gap-3 text-sm sm:grid-cols-2">
+                    <div><dt class="text-xs" style="color: var(--text-muted)">TDS deducted by the client</dt><dd class="tnum">{{ invoice.tds ?? '—' }}</dd></div>
+                    <div><dt class="text-xs" style="color: var(--text-muted)">Credited</dt><dd class="tnum">{{ invoice.credited ?? '—' }}</dd></div>
+                </dl>
+                <ul v-if="invoice.creditNotes.length" class="mt-4 space-y-2 text-sm">
+                    <li v-for="note in invoice.creditNotes" :key="note.id" class="flex flex-wrap items-center gap-2">
+                        <FileMinus class="h-4 w-4 shrink-0" style="color: var(--text-muted)" aria-hidden="true" />
+                        <span class="font-medium">{{ note.number }}</span>
+                        <span class="tnum">{{ note.total }}</span>
+                        <span style="color: var(--text-muted)">· {{ note.issuedAt }} · {{ note.reason }}</span>
+                        <UiButton :href="`/admin/credit-notes/${note.id}/pdf`" :inertia="false" variant="ghost" size="xs">PDF</UiButton>
+                    </li>
+                </ul>
+                <form v-if="invoice.creditable > 0 && !['cancelled', 'refunded'].includes(invoice.status)" class="mt-4 space-y-3 border-t pt-4" style="border-color: var(--border-subtle)" @submit.prevent="issueCredit">
+                    <p class="text-xs" style="color: var(--text-muted)">Up to ₹{{ invoice.creditable.toLocaleString('en-IN') }} of taxable value is left to credit. Tax is added at the invoice's own rates.</p>
+                    <div class="grid gap-3 sm:grid-cols-3">
+                        <UiFormField label="Amount before tax (₹)" :error="creditForm.errors.amount">
+                            <UiInput v-model="creditForm.amount" type="number" step="0.01" min="0.01" :max="invoice.creditable" />
+                        </UiFormField>
+                        <UiFormField label="Reason" class="sm:col-span-2" :error="creditForm.errors.reason">
+                            <UiInput v-model="creditForm.reason" maxlength="500" placeholder="Discount agreed on 20 Nov" />
+                        </UiFormField>
+                    </div>
+                    <div class="flex justify-end">
+                        <UiButton type="submit" size="sm" variant="secondary" :loading="creditForm.processing" :disabled="!creditForm.amount || creditForm.reason.trim().length < 5">Issue a credit note</UiButton>
+                    </div>
+                </form>
             </UiCard>
 
             <!-- ---------------------------------------------- attempts -->

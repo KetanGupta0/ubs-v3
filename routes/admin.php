@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\ContentController;
 use App\Http\Controllers\Admin\CourseBuilderController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CredentialsController;
+use App\Http\Controllers\Admin\CreditNoteController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\DoubtController;
@@ -42,6 +43,7 @@ use App\Http\Controllers\Admin\SiteMenuController;
 use App\Http\Controllers\Admin\SitePageController;
 use App\Http\Controllers\Admin\SolutionController;
 use App\Http\Controllers\Admin\StaffController;
+use App\Http\Controllers\Admin\StatementController;
 use App\Http\Controllers\Admin\StudentNoticeController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\SupportController;
@@ -312,6 +314,8 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
         /* ----------------------------------------------- money, both lines */
         Route::middleware('permission:billing.view')->group(function () {
             Route::get('billing/tds', [TdsController::class, 'index'])->name('billing.tds.index');
+            Route::get('credit-notes/{creditNote}/pdf', [CreditNoteController::class, 'pdf'])->whereNumber('creditNote')->name('credit-notes.pdf');
+            Route::get('clients/{user}/statement', StatementController::class)->whereNumber('user')->name('clients.statement');
             Route::get('billing/tds/{deduction}/certificate', [TdsController::class, 'certificate'])->whereNumber('deduction')->name('billing.tds.certificate');
             Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
             Route::get('billing/{payment}', [BillingController::class, 'show'])
@@ -327,6 +331,7 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('billing/{payment}/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
             Route::post('billing/{payment}/offline', [BillingController::class, 'recordOffline'])->name('billing.offline');
             Route::post('billing/tds/{deduction}/check', [TdsController::class, 'check'])->whereNumber('deduction')->name('billing.tds.check');
+            Route::post('invoices/{invoice}/credit-notes', [CreditNoteController::class, 'store'])->whereNumber('invoice')->name('credit-notes.store');
         });
 
         Route::middleware('permission:billing.refund')->group(function () {

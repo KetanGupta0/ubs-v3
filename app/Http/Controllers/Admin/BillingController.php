@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Models\CreditNote;
 use App\Models\Invoice;
 use App\Models\PaymentRequest;
 use App\Models\Project;
@@ -14,6 +15,7 @@ use App\Models\User;
 use App\Notifications\PaymentRequested;
 use App\Services\Admin\Auditor;
 use App\Services\Billing\BillingDocuments;
+use App\Services\Billing\CreditNotes;
 use App\Services\Billing\Invoicer;
 use App\Services\Payments\Checkout;
 use App\Support\Money;
@@ -193,6 +195,12 @@ class BillingController extends Controller
                 'balanceValue' => $payment->invoice->balance() / 100,
                 'status' => $payment->invoice->status,
                 'issuedAt' => $payment->invoice->issued_at->format('j M Y'),
+                // What else settled it (CL14).
+                'tds' => $payment->invoice->tds_amount ? Money::display($payment->invoice->tds_amount) : null,
+                'credited' => $payment->invoice->credited_amount ? Money::display($payment->invoice->credited_amount) : null,
+                'creditable' => CreditNotes::creditable($payment->invoice) / 100,
+                'creditNotes' => CreditNote::query()->where('invoice_id', $payment->invoice->id)->latest('id')->get()
+                    ->map(fn (CreditNote $note) => ['id' => $note->id, 'number' => $note->number, 'total' => $note->totalLabel(), 'reason' => $note->reason, 'issuedAt' => $note->issued_at->format('j M Y')]),
             ] : null,
             'transactions' => $payment->transactions->map(fn (Transaction $transaction) => [
                 'id' => $transaction->id,

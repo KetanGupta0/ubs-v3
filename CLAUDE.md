@@ -385,6 +385,13 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   legal name, GSTIN and state (`/client/billing-details`, the state picked from
   `IndianStates`, the GSTIN's code checked against it), and an invoice copies them, and
   the PO number, when it is issued.
+- **A credit note is a tax document of its own (CL14).** `App\Services\Billing\CreditNotes`
+  never edits the invoice: it issues a note in its own `CN/{year}/{n}` series, with the
+  parties copied from the invoice and tax at the invoice's own rates, for no more than
+  the taxable value left to credit; `CreditNote` refuses to change or be deleted. The
+  statement of account (`App\Services\Billing\Statement`) is drawn from the ledger on
+  demand: invoices and refunds paid out are debits; payments, TDS and credit notes are
+  credits; cancelled invoices were never owed.
 - **An API key is shown once.** Only a hash and the prefix are stored. Lost keys
   are rotated, not recovered.
 - **`$request->validate()` drops optional fields the request did not send**, so

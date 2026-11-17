@@ -102,6 +102,9 @@ function resend() {
                         Back
                     </UiButton>
 
+                    <UiButton v-if="role === 'client' && $page.props.auth.permissions?.includes('billing.view')" :href="`/admin/clients/${person.id}/statement`" variant="secondary" size="sm">
+                        Statement
+                    </UiButton>
                     <UiButton v-if="canViewAs" variant="secondary" size="sm" @click="viewingAs = true">
                         <template #leading><Eye class="h-3.5 w-3.5" /></template>
                         View as

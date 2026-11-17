@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Models\CreditNote;
 use App\Models\Invoice;
 use App\Models\Transaction;
 use App\Services\Billing\BillingDocuments;
@@ -87,6 +88,8 @@ class TransactionController extends ClientController
                 'tds' => $record->tds_amount ? Money::display($record->tds_amount) : null,
                 'credited' => $record->credited_amount ? Money::display($record->credited_amount) : null,
                 'poNumber' => $record->po_number,
+                'creditNotes' => CreditNote::query()->where('invoice_id', $record->id)->latest('id')->get()
+                    ->map(fn (CreditNote $note) => ['id' => $note->id, 'number' => $note->number, 'total' => $note->totalLabel(), 'reason' => $note->reason, 'issuedAt' => $note->issued_at->format('j M Y')]),
                 'balance' => Money::display($record->balance()),
                 'terms' => $record->terms,
                 'paymentRequestId' => $record->payment_request_id,

@@ -4,6 +4,7 @@ use App\Http\Controllers\Client\AgreementController;
 use App\Http\Controllers\Client\ApiKeyController;
 use App\Http\Controllers\Client\BillingDetailsController;
 use App\Http\Controllers\Client\ChangeRequestController;
+use App\Http\Controllers\Client\CreditNoteController;
 use App\Http\Controllers\Client\DashboardController;
 use App\Http\Controllers\Client\DocumentController;
 use App\Http\Controllers\Client\FeedbackController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Client\PeopleController;
 use App\Http\Controllers\Client\ProjectController;
 use App\Http\Controllers\Client\ProposalController;
 use App\Http\Controllers\Client\ReportController;
+use App\Http\Controllers\Client\StatementController;
 use App\Http\Controllers\Client\SubscriptionController;
 use App\Http\Controllers\Client\SupportController;
 use App\Http\Controllers\Client\TransactionController;
@@ -147,6 +149,8 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
         Route::get('payments/{payment}', [PaymentController::class, 'show'])
             ->whereNumber('payment')
             ->name('payments.show');
+        Route::get('statement', StatementController::class)->name('statement');
+        Route::get('credit-notes/{creditNote}/pdf', [CreditNoteController::class, 'pdf'])->whereNumber('creditNote')->name('credit-notes.pdf');
         Route::get('billing-details', [BillingDetailsController::class, 'edit'])->name('billing-details.edit');
         Route::put('billing-details', [BillingDetailsController::class, 'update'])->name('billing-details.update');
         Route::post('payments/{payment}/tds', [PaymentController::class, 'declareTds'])->whereNumber('payment')->name('payments.tds.declare');

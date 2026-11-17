@@ -153,6 +153,17 @@ defineProps({
                     </div>
                 </dl>
 
+                <div v-if="invoice.creditNotes?.length" class="mt-6 border-t pt-4 text-sm" style="border-color: var(--border-subtle)">
+                    <p class="text-xs font-semibold uppercase tracking-wide" style="color: var(--text-muted)">Credit notes</p>
+                    <ul class="mt-2 space-y-1.5">
+                        <li v-for="note in invoice.creditNotes" :key="note.id" class="flex flex-wrap items-center gap-2">
+                            <a :href="`/client/credit-notes/${note.id}/pdf`" class="font-medium text-brand-600 hover:underline dark:text-brand-400">{{ note.number }}</a>
+                            <span class="tnum">{{ note.total }}</span>
+                            <span style="color: var(--text-muted)">· {{ note.issuedAt }} · {{ note.reason }}</span>
+                        </li>
+                    </ul>
+                </div>
+
                 <p class="mt-3 text-right text-xs" style="color: var(--text-muted)">{{ invoice.totalInWords }}</p>
 
                 <p v-if="invoice.terms" class="mt-6 whitespace-pre-line border-t pt-4 text-xs"
