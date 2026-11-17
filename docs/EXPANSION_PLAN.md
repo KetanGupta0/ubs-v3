@@ -430,6 +430,18 @@ These are required before v2 is switched off.
 - Students are told what is tracked, on their settings page. It is not used to grade
   anyone without a person looking at it.
 
+*Progress on the improvements, performance and activity (built 2026-11-12 to 2026-11-17):*
+- *Next step: the dashboard opens with the lesson to go back to (the last one opened and not finished, if it is still open, else the first one not done), then recordings of classes the student missed, then the next class and what is due. Time on a lesson is counted only while the page is visible, in capped beats, and shown in coarse buckets.*
+- *Reminders (`lms:remind`, every five minutes from the scheduler): the day before and an hour before a class, a day before work closes if it is not done, and after two missed classes in a row, which also tells the trainer; whether that needs a notice on the warnings ladder stays their decision. Each goes once (`reminders_sent`), in the app and by email, and each kind can be switched off under Reminders.*
+- *Recordings: a class can be tied to a lesson of its course, and its recording shows on that lesson; the batch is told when a recording first goes up. Building it found that editing a class wiped its lesson, and that an edit without a status was a 500.*
+- *Doubts: a question thread per lesson, visible to the asker's batch, answered by staff holding the new `lms.doubts` permission from Learning → Questions.*
+- *Notes and bookmarks per lesson, private to the student, collected under My notes; "view as" does not show them.*
+- *Progress per module is counted from completions on the course page.*
+- *Performance: My progress for the student and the same card on their record for staff (attendance, work on time, quiz trend, lessons, rank). Batch → Performance for trainers, with four signals as a filter. A signal is a prompt; nothing issues a warning by itself.*
+- *Leaderboards: my batch, this week (so a late joiner can top something), my course and everybody. A student can hide their name; they keep their place and staff still see it.*
+- *Activity: signing in and posting in the group are now recorded too, and the Reminders page tells students what is recorded and who sees it. Heatmaps of the last twelve weeks for a student and for a batch.*
+- *Landed differently: "online now" is somebody seen in the last five minutes (`last_seen_at`, written at most once a minute), not the chat presence channel. Presence only covers people with the chat open, and on shared hosting every Pusher connection counts against the plan, so a socket on every page would cost the connections chat needs.*
+
 ---
 
 ## 7. Batch group chat

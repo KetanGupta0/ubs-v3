@@ -367,6 +367,26 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   record, and staff cannot approve it for them (X5); a staff or client address gets
   nothing sent. Messages to an existing account repeat nothing the sender typed.
   Forms are `noindex` and out of the sitemap, and an LMS only course may have one.
+- **A student's notes are theirs alone.** `LessonNote` is never shown to staff, in any
+  report or export, and "view as" says they are private instead of showing them.
+- **Time on a lesson is an indication, never a measurement.** The page sends beats
+  only while it is visible; `LessonVisit` caps each beat and the total, and it is
+  shown in coarse buckets. Nothing grades, warns or ranks on it.
+- **Reminders go once.** `App\Services\Lms\Reminders` claims each one in
+  `reminders_sent` before sending, so overlapping or repeated runs of `lms:remind`
+  cannot double up. Every kind a student can switch off is in `Reminders::KINDS`;
+  add a new kind there, and to what the Reminders page says.
+- **Signals are prompts, not verdicts.** `Performance` and the batch view flag who may
+  be slipping; a warning is still a person's decision. Two missed classes tell the
+  trainer, never issue a notice.
+- **Questions on a lesson are seen by the asker's batch only**, as first name and
+  initial (`LessonDoubt::visibleOn`). Answering takes `lms.doubts`.
+- **A hidden name keeps its place.** `Leaderboard` shows a student who hid their name
+  as "A student" in their real rank, so hiding moves nobody; they see themselves and
+  staff pass `revealNames`.
+- **"Online now" is `last_seen_at` in the last five minutes**, written by
+  `RecordLastSeen` at most once a minute and never while viewing as somebody. It is
+  not the chat presence channel, which only knows who has a chat open.
 - **Warnings climb one rung at a time** — notice, warning, escalation — and the
   student is told every time. The private note is for us and never reaches them.
 - `/verify` answers identically for a code that never existed and one that was
