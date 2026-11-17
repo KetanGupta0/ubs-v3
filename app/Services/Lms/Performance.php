@@ -196,7 +196,7 @@ class Performance
         return Enrollment::query()
             ->where('enrollments.batch_id', $batch->id)
             ->where('enrollments.status', 'active')
-            ->with('user:id,name,email')
+            ->with('user:id,name,email,last_seen_at')
             ->select('enrollments.*')
             ->selectSub($subs['attended'], 'attended')
             ->selectSub($subs['on_time'], 'on_time')

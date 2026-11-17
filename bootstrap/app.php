@@ -5,6 +5,7 @@ use App\Http\Middleware\EnsureUserHasPermission;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\GuardImpersonation;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RecordLastSeen;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Models\Redirect;
 use Illuminate\Foundation\Application;
@@ -31,6 +32,11 @@ return Application::configure(basePath: dirname(__DIR__))
             GuardImpersonation::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            RecordLastSeen::class,
+        ]);
+
+        $middleware->api(append: [
+            RecordLastSeen::class,
         ]);
 
         $middleware->alias([

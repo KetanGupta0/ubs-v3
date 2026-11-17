@@ -7,9 +7,11 @@ import PageHeader from '@/components/Admin/PageHeader.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import PerformanceCard from '@/components/Student/PerformanceCard.vue';
+import ActivityHeatmapCard from '@/components/Student/ActivityHeatmapCard.vue';
 
 defineProps({
     courses: { type: Array, default: () => [] },
+    heatmap: { type: Array, default: () => [] },
 });
 </script>
 
@@ -25,6 +27,13 @@ defineProps({
                     <UiButton href="/student/catalogue" size="sm">Browse courses</UiButton>
                 </template>
             </UiEmptyState>
+
+            <ActivityHeatmapCard
+                v-if="courses.length"
+                :days="heatmap"
+                title="Your last twelve weeks"
+                subtitle="Each square is a day; the darker it is, the more you did. What counts is listed under Reminders."
+            />
 
             <PerformanceCard v-for="course in courses" :key="course.courseId" :performance="course" />
         </div>

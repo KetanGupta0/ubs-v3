@@ -5,6 +5,7 @@ namespace App\Services\Lms;
 use App\Models\Announcement;
 use App\Models\Certificate;
 use App\Models\Enrollment;
+use App\Models\LessonVisit;
 use App\Models\PaymentRequest;
 use App\Models\StudentWarning;
 use App\Models\User;
@@ -20,7 +21,11 @@ use App\Support\Money;
  */
 class StudentRecord
 {
-    public function __construct(protected ResultCard $results, protected Performance $performance) {}
+    public function __construct(
+        protected ResultCard $results,
+        protected Performance $performance,
+        protected ActivityHeatmap $heatmap,
+    ) {}
 
     /**
      * @param  bool  $withPayments  Off for staff who may not see billing: the
@@ -40,6 +45,26 @@ class StudentRecord
             'performance' => $enrolments->whereIn('status', ['active', 'completed'])
                 ->map(fn (Enrollment $enrolment) => $this->performance->forEnrolment($enrolment))
                 ->values(),
+            'activity' => [
+                'heatmap' => $this->heatmap->forStudent($student),
+                'online' => $student->isOnline(),
+                'lastSeen' => $student->last_seen_at?->diffForHumans(),
+                // Time on lessons, in the same coarse buckets the student is told about.
+                'lessons' => LessonVisit::query()
+                    ->where('user_id', $student->id)
+                    ->with('lesson:id,title', 'course:id,title')
+                    ->latest('last_opened_at')
+                    ->limit(15)
+                    ->get()
+                    ->map(fn (LessonVisit $visit) => [
+                        'lesson' => $visit->lesson?->title,
+                        'course' => $visit->course?->title,
+                        'time' => $visit->bucket(),
+                        'visits' => $visit->visits,
+                        'lastOpened' => $visit->last_opened_at->diffForHumans(),
+                    ])
+                    ->values(),
+            ],
             'payments' => $withPayments ? $this->payments($student) : [],
             'certificates' => $this->certificates($student),
             'warnings' => $this->warnings($student),

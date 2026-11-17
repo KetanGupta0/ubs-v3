@@ -8,11 +8,15 @@ import StatTile from '@/components/Admin/StatTile.vue';
 import DataTable from '@/components/DataTable/DataTable.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
 import UiButton from '@/components/UI/UiButton.vue';
+import UiAvatar from '@/components/UI/UiAvatar.vue';
+import ActivityHeatmapCard from '@/components/Student/ActivityHeatmapCard.vue';
 
 const props = defineProps({
     batch: { type: Object, required: true },
     table: { type: Object, required: true },
     slipping: { type: Number, default: 0 },
+    heatmap: { type: Array, default: () => [] },
+    online: { type: Array, default: () => [] },
 });
 
 const base = `/admin/batches/${props.batch.routeKey}`;
@@ -38,10 +42,28 @@ const base = `/admin/batches/${props.batch.routeKey}`;
                 </template>
             </PageHeader>
 
-            <div class="mb-5 grid gap-3 sm:grid-cols-3">
+            <div class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <StatTile label="Showing a signal" :value="slipping" :tone="slipping ? 'warning' : 'neutral'" :href="`${base}/performance?filter[signal]=any`" />
+                <StatTile label="Online now" :value="online.length" :tone="online.length ? 'success' : 'neutral'" hint="Seen in the last five minutes" />
                 <StatTile label="Classes held" :value="batch.held" />
                 <StatTile label="Work past its date" :value="batch.due" />
+            </div>
+
+            <div v-if="online.length" class="mb-5 flex flex-wrap items-center gap-2 text-sm">
+                <span style="color: var(--text-muted)">Online now:</span>
+                <span v-for="person in online" :key="person.id" class="inline-flex items-center gap-1.5 rounded-full border py-0.5 pl-0.5 pr-2.5" style="border-color: var(--border-subtle)">
+                    <UiAvatar :name="person.name" :src="person.avatarUrl" size="xs" />
+                    {{ person.name }}
+                </span>
+            </div>
+
+            <div class="mb-5">
+                <ActivityHeatmapCard
+                    :days="heatmap"
+                    title="Students active per day, last twelve weeks"
+                    subtitle="How many of the batch did anything that day: signed in, studied, joined a class, handed in work, sat a quiz or posted in the group."
+                    :noun="['student', 'students']"
+                />
             </div>
 
             <DataTable
@@ -52,7 +74,10 @@ const base = `/admin/batches/${props.batch.routeKey}`;
                 :only="['table', 'slipping']"
             >
                 <template #cell:student="{ row }">
-                    <Link :href="`/admin/students/${row.userId}`" class="block font-medium hover:underline" style="color: var(--text-strong)">{{ row.student }}</Link>
+                    <Link :href="`/admin/students/${row.userId}`" class="flex items-center gap-1.5 font-medium hover:underline" style="color: var(--text-strong)">
+                        <span v-if="row.online" class="inline-block h-2 w-2 shrink-0 rounded-full" style="background: var(--color-signal-500)" title="Online now" aria-label="Online now" />
+                        {{ row.student }}
+                    </Link>
                     <span class="block text-xs" style="color: var(--text-muted)">{{ row.email }}</span>
                 </template>
                 <template #cell:signals="{ row }">

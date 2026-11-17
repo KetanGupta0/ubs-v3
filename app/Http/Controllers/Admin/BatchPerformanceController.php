@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Batch;
 use App\Models\Enrollment;
+use App\Models\User;
+use App\Services\Lms\ActivityHeatmap;
 use App\Services\Lms\Performance;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
@@ -21,7 +23,7 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
  */
 class BatchPerformanceController extends Controller
 {
-    public function __invoke(Request $request, Batch $batch, Performance $performance): Response|HttpResponse
+    public function __invoke(Request $request, Batch $batch, Performance $performance, ActivityHeatmap $heatmap): Response|HttpResponse
     {
         $held = $performance->heldCount($batch);
         $due = $performance->dueCount($batch);
@@ -72,6 +74,7 @@ class BatchPerformanceController extends Controller
                     'last_active' => $lastActive?->diffForHumans() ?? 'Never',
                     'signals' => $signals->map(fn (string $key) => Performance::SIGNALS[$key])->implode(', ') ?: '—',
                     'signalKeys' => $signals->values(),
+                    'online' => (bool) $enrolment->user?->isOnline(),
                 ];
             });
 
@@ -90,6 +93,13 @@ class BatchPerformanceController extends Controller
             ],
             'table' => $table->toArray($request),
             'slipping' => $this->slipping($performance, $batch),
+            'heatmap' => $heatmap->forBatch($batch),
+            'online' => User::query()
+                ->whereIn('id', Enrollment::query()->where('batch_id', $batch->id)->where('status', 'active')->select('user_id'))
+                ->where('last_seen_at', '>', now()->subMinutes(5))
+                ->orderBy('name')
+                ->get(['id', 'name', 'avatar_path'])
+                ->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name, 'avatarUrl' => $user->avatar_url]),
         ]);
     }
 

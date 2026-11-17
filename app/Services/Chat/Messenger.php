@@ -9,6 +9,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\MessageReceipt;
 use App\Models\User;
+use App\Services\Lms\Activity;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -213,6 +214,12 @@ class Messenger
         });
 
         $this->announce(new MessageSent($message));
+
+        // A student posting in their batch group is part of their record of
+        // taking part: that they posted, never what they said.
+        if ($conversation->isGroup() && $sender->isStudent()) {
+            app(Activity::class)->record($sender, 'group.posted', $conversation, [], $conversation->batch?->course_id, $conversation->batch_id);
+        }
 
         return $message;
     }

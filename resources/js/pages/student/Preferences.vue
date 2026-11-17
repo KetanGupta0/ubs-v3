@@ -25,7 +25,7 @@ function save() {
 }
 
 const recorded = [
-    'When you sign in.',
+    'When you sign in, and when you were last on the site, so your trainer can see who is online.',
     'Which lessons you open, and roughly how long you spend on each, counted only while the page is in front of you and shown as a range such as "15 to 30 minutes", never to the second.',
     'When you join a live class from here, and the attendance your trainer marks.',
     'When you hand in an assignment or sit a quiz, and the result.',

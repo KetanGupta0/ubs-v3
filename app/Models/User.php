@@ -57,6 +57,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'mobile_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
+            'last_seen_at' => 'datetime',
             'password' => 'hashed',
             'role' => Role::class,
             'status' => UserStatus::class,
@@ -65,6 +66,12 @@ class User extends Authenticatable implements MustVerifyEmail
             'reminder_preferences' => 'array',
             'show_on_leaderboard' => 'boolean',
         ];
+    }
+
+    /** Seen in the last five minutes: what "online now" means here. */
+    public function isOnline(): bool
+    {
+        return $this->last_seen_at !== null && $this->last_seen_at->gt(now()->subMinutes(5));
     }
 
     /** Whether this person wants a kind of reminder. Every kind is on until switched off. */

@@ -15,6 +15,7 @@ import UiInput from '@/components/UI/UiInput.vue';
 import UiTextarea from '@/components/UI/UiTextarea.vue';
 import UiCheckbox from '@/components/UI/UiCheckbox.vue';
 import PerformanceCard from '@/components/Student/PerformanceCard.vue';
+import ActivityHeatmapCard from '@/components/Student/ActivityHeatmapCard.vue';
 
 /**
  * One student's learning, on their admin profile: what they are on and how it
@@ -32,7 +33,7 @@ const tab = ref('enrolments');
 
 const tabs = computed(() => [
     { value: 'enrolments', label: 'Enrolments', count: props.record.enrolments.length },
-    { value: 'performance', label: 'Performance', count: (props.record.performance ?? []).length },
+    { value: 'performance', label: 'Performance and activity' },
     ...(props.canSeeBilling ? [{ value: 'payments', label: 'Payments', count: props.record.payments.length }] : []),
     { value: 'certificates', label: 'Certificates', count: props.record.certificates.length },
     { value: 'warnings', label: 'Warnings', count: props.record.warnings.length },
@@ -160,9 +161,35 @@ const percent = (value) => (value === null || value === undefined ? '—' : `${M
 
             <!-- How each course is going, the same card the student sees -->
             <template v-else-if="tab === 'performance'">
-                <UiEmptyState v-if="!(record.performance ?? []).length" title="Nothing to show" description="Performance shows for active and finished courses." />
-                <div v-else class="space-y-4">
+                <div class="space-y-4">
+                    <p v-if="record.activity" class="flex items-center gap-2 text-sm">
+                        <span class="inline-block h-2 w-2 rounded-full" :style="{ background: record.activity.online ? 'var(--color-signal-500)' : 'var(--border-strong)' }" aria-hidden="true" />
+                        {{ record.activity.online ? 'Online now' : (record.activity.lastSeen ? `Last seen ${record.activity.lastSeen}` : 'Not seen yet') }}
+                    </p>
+
+                    <ActivityHeatmapCard
+                        v-if="record.activity"
+                        :days="record.activity.heatmap"
+                        title="Activity, last twelve weeks"
+                        subtitle="Things recorded per day: signing in, lessons, classes, work, quizzes and posts in the batch group."
+                    />
+
+                    <UiEmptyState v-if="!(record.performance ?? []).length" title="No course figures" description="Performance shows for active and finished courses." />
                     <PerformanceCard v-for="course in record.performance" :key="course.courseId" :performance="course" audience="staff" />
+
+                    <UiCard v-if="record.activity?.lessons?.length">
+                        <template #header><h3 class="text-sm font-semibold">Time on lessons</h3></template>
+                        <ul class="divide-y" style="border-color: var(--border-subtle)">
+                            <li v-for="(visit, index) in record.activity.lessons" :key="index" class="flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+                                <span class="min-w-0">
+                                    <span class="block truncate">{{ visit.lesson }}</span>
+                                    <span class="block text-xs" style="color: var(--text-muted)">{{ visit.course }} · opened {{ visit.visits }} {{ visit.visits === 1 ? 'time' : 'times' }}, last {{ visit.lastOpened }}</span>
+                                </span>
+                                <span class="shrink-0 text-xs" style="color: var(--text-muted)">{{ visit.time }}</span>
+                            </li>
+                        </ul>
+                        <p class="mt-3 text-xs" style="color: var(--text-muted)">Counted only while the lesson page was in front of them, and shown in ranges. An indication, not a measurement.</p>
+                    </UiCard>
                 </div>
             </template>
 

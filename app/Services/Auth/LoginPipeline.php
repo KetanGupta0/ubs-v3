@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 
 use App\Enums\AuthEvent;
 use App\Models\User;
+use App\Services\Lms\Activity;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -100,6 +101,11 @@ class LoginPipeline
         ])->save();
 
         $this->auditor->record(AuthEvent::LoginSucceeded, $user, $user->email, true, null, $method);
+
+        // A student's record of studying starts with turning up.
+        if ($user->isStudent()) {
+            app(Activity::class)->record($user, 'signed.in', meta: ['method' => $method]);
+        }
     }
 
     /**
