@@ -43,6 +43,19 @@ Route::middleware(['auth', 'password.owned'])
             ->whereNumber('message')
             ->name('messages.destroy');
 
+        // Running a group. Who may is Conversation::canBeModeratedBy().
+        Route::post('{conversation}/pin', [ChatController::class, 'pin'])->whereNumber('conversation')->name('pin');
+        Route::put('{conversation}/announcement', [ChatController::class, 'announcement'])->whereNumber('conversation')->name('announcement');
+        Route::post('{conversation}/members/{user}/silence', [ChatController::class, 'silence'])->whereNumber(['conversation', 'user'])->name('silence');
+        Route::delete('{conversation}/members/{user}/silence', [ChatController::class, 'lift'])->whereNumber(['conversation', 'user'])->name('silence.lift');
+
+        // Any member: report a message, or mute the room for themselves.
+        Route::post('{conversation}/messages/{message}/report', [ChatController::class, 'report'])
+            ->whereNumber(['conversation', 'message'])
+            ->middleware('throttle:20,1')
+            ->name('report');
+        Route::put('{conversation}/mute', [ChatController::class, 'mute'])->whereNumber('conversation')->name('mute');
+
         Route::get('{conversation}/gallery', [ChatController::class, 'gallery'])
             ->whereNumber('conversation')
             ->name('gallery');

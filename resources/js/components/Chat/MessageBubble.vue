@@ -7,18 +7,29 @@
  * something that is no longer there.
  */
 import { computed } from 'vue';
-import { Check, CheckCheck, Reply, Trash2, Ban } from 'lucide-vue-next';
+import { Check, CheckCheck, Reply, Trash2, Ban, MoreHorizontal, Pin, PinOff, Flag, MicOff } from 'lucide-vue-next';
 
 import UiAvatar from '@/components/UI/UiAvatar.vue';
+import UiDropdown from '@/components/UI/UiDropdown.vue';
+import UiDropdownItem from '@/components/UI/UiDropdownItem.vue';
 import VoiceNote from '@/components/Chat/VoiceNote.vue';
 
 const props = defineProps({
     message: { type: Object, required: true },
     showSender: { type: Boolean, default: false },
     canRemove: { type: Boolean, default: false },
+    /** Runs this group: may pin, and keep a member from posting. */
+    canModerate: { type: Boolean, default: false },
+    /** A member who may report somebody else's message. */
+    canReport: { type: Boolean, default: false },
+    pinned: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['reply', 'remove', 'open', 'media-loaded']);
+const emit = defineEmits(['reply', 'remove', 'open', 'media-loaded', 'pin', 'report', 'silence']);
+
+/** Somebody the moderator can keep from posting: a student, not staff. */
+const canSilence = computed(() => props.canModerate && !mine.value && props.message.sender.role === 'student');
+const hasMore = computed(() => !props.message.removed && (props.canModerate || (props.canReport && !mine.value)));
 
 const mine = computed(() => props.message.mine);
 
@@ -124,6 +135,7 @@ const receipt = computed(() => {
                     class="mt-1 flex items-center justify-end gap-1 text-[0.65rem]"
                     :style="{ color: mine ? 'rgba(255,255,255,0.75)' : 'var(--text-muted)' }"
                 >
+                    <Pin v-if="pinned" class="h-3 w-3" aria-label="Pinned" />
                     {{ message.sentAtLabel }}
                     <Check v-if="receipt === 'sent'" class="h-3 w-3" />
                     <CheckCheck v-else-if="receipt === 'delivered'" class="h-3 w-3" />
@@ -157,6 +169,30 @@ const receipt = computed(() => {
             >
                 <Trash2 class="h-3.5 w-3.5" />
             </button>
+
+            <UiDropdown v-if="hasMore" :align="mine ? 'right' : 'left'" width="w-60">
+                <template #trigger>
+                    <button
+                        type="button"
+                        class="rounded-lg p-1.5 transition hover:bg-[var(--surface-sunken)]"
+                        style="color: var(--text-muted)"
+                        aria-label="More"
+                    >
+                        <MoreHorizontal class="h-3.5 w-3.5" />
+                    </button>
+                </template>
+
+                <UiDropdownItem v-if="canModerate" @click="$emit('pin', pinned ? null : message)">
+                    <component :is="pinned ? PinOff : Pin" class="h-4 w-4" />
+                    {{ pinned ? 'Unpin' : 'Pin for everybody' }}
+                </UiDropdownItem>
+                <UiDropdownItem v-if="canSilence" @click="$emit('silence', message.sender)">
+                    <MicOff class="h-4 w-4" /> Stop {{ message.sender.name.split(' ')[0] }} posting for a while
+                </UiDropdownItem>
+                <UiDropdownItem v-if="canReport && !mine" @click="$emit('report', message)">
+                    <Flag class="h-4 w-4" /> Report to the group's admins
+                </UiDropdownItem>
+            </UiDropdown>
         </div>
     </div>
 </template>

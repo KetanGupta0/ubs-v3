@@ -11,7 +11,7 @@
  * thirty bars would be a strange way to spend a request.
  */
 import { ref, computed, onBeforeUnmount, nextTick } from 'vue';
-import { Send, ImagePlus, Mic, Square, Trash2, X } from 'lucide-vue-next';
+import { Send, ImagePlus, Mic, Square, Trash2, X, Lock } from 'lucide-vue-next';
 
 import UiButton from '@/components/UI/UiButton.vue';
 import { toast } from '@/support/toast';
@@ -19,6 +19,8 @@ import { toast } from '@/support/toast';
 const props = defineProps({
     conversationId: { type: Number, required: true },
     replyTo: { type: Object, default: null },
+    /** Why this person cannot post here right now: announcement mode, or kept from posting. */
+    blockedReason: { type: String, default: null },
 });
 
 const emit = defineEmits(['sent', 'typing', 'cancel-reply']);
@@ -269,7 +271,17 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div class="border-t px-3 py-2.5 sm:px-4" style="border-color: var(--border-subtle); background: var(--surface)">
+    <div
+        v-if="blockedReason"
+        class="flex items-center gap-2 border-t px-4 py-3 text-sm"
+        style="border-color: var(--border-subtle); background: var(--surface-sunken); color: var(--text-muted)"
+        role="status"
+    >
+        <Lock class="h-4 w-4 shrink-0" />
+        {{ blockedReason }}
+    </div>
+
+    <div v-else class="border-t px-3 py-2.5 sm:px-4" style="border-color: var(--border-subtle); background: var(--surface)">
         <!-- replying to -->
         <div
             v-if="replyTo"

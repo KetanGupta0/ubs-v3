@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\BatchPerformanceController;
 use App\Http\Controllers\Admin\BatchRunController;
 use App\Http\Controllers\Admin\BillingController;
 use App\Http\Controllers\Admin\CertificateTemplateController;
+use App\Http\Controllers\Admin\ChatReportController;
 use App\Http\Controllers\Admin\ClassScheduleController;
 use App\Http\Controllers\Admin\CollegeController;
 use App\Http\Controllers\Admin\CollegeDeskController;
@@ -412,6 +413,14 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::put('reviews/{review}/status', [ReviewController::class, 'moderate'])->name('reviews.moderate');
             Route::put('reviews/{review}/reply', [ReviewController::class, 'reply'])->name('reviews.reply');
             Route::post('reviews/{review}/testimonial', [ReviewController::class, 'promote'])->name('reviews.promote');
+        });
+
+        /* ------------------------------------------- reported chat messages */
+        Route::middleware('permission:chat.reply')->group(function () {
+            Route::get('chat/reports', [ChatReportController::class, 'index'])->name('chat-reports.index');
+            Route::post('chat/reports/{report}/remove', [ChatReportController::class, 'remove'])->whereNumber('report')->name('chat-reports.remove');
+            Route::post('chat/reports/{report}/silence', [ChatReportController::class, 'silence'])->whereNumber('report')->name('chat-reports.silence');
+            Route::post('chat/reports/{report}/dismiss', [ChatReportController::class, 'dismiss'])->whereNumber('report')->name('chat-reports.dismiss');
         });
 
         /* ----------------------------------------------- questions on lessons */

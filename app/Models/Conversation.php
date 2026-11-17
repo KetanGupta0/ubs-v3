@@ -27,7 +27,79 @@ class Conversation extends Model
         return [
             'last_message_at' => 'datetime',
             'is_archived' => 'boolean',
+            'announcement_only' => 'boolean',
         ];
+    }
+
+    public function pinnedMessage(): BelongsTo
+    {
+        return $this->belongsTo(Message::class, 'pinned_message_id');
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(MessageReport::class);
+    }
+
+    /**
+     * Whether this person runs this group: pins, removes, announcement mode,
+     * keeping somebody from posting, and the reports.
+     *
+     * The owner (an admin of every group), the batch's trainer, and staff who
+     * may answer chat. Client threads are not groups and have no moderators.
+     */
+    public function canBeModeratedBy(User $user): bool
+    {
+        if (! $this->isGroup()) {
+            return false;
+        }
+
+        if ($user->is_owner || ($this->trainerId() !== null && $this->trainerId() === $user->id)) {
+            return true;
+        }
+
+        return $user->isAdmin() && $user->hasPermission('chat.reply');
+    }
+
+    /**
+     * The batch's trainer, read so that it does not matter how the batch was
+     * loaded: a constrained eager load (`batch:id,name`) leaves trainer_id out
+     * and would quietly make the trainer a stranger in their own group.
+     */
+    public function trainerId(): ?int
+    {
+        if (! $this->batch_id) {
+            return null;
+        }
+
+        if ($this->relationLoaded('batch') && $this->batch && array_key_exists('trainer_id', $this->batch->getAttributes())) {
+            return $this->batch->trainer_id;
+        }
+
+        return Batch::query()->whereKey($this->batch_id)->value('trainer_id');
+    }
+
+    /**
+     * Why this person cannot post here right now, or null when they can.
+     * Said in words, because the composer shows it instead of a text box.
+     */
+    public function postingBlockedFor(User $user): ?string
+    {
+        if (! $this->isGroup() || $this->canBeModeratedBy($user)) {
+            return null;
+        }
+
+        $participant = $this->participantFor($user);
+
+        if ($participant?->silenced_until && $participant->silenced_until->isFuture()) {
+            return 'You cannot post in this group until '.$participant->silenced_until->format('g:i a, j M').'. You can still read it.';
+        }
+
+        if ($this->announcement_only) {
+            return 'Only the trainer and the team can post here at the moment. You can still read and report messages.';
+        }
+
+        return null;
     }
 
     public function client(): BelongsTo

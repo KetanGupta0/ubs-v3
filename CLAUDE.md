@@ -418,7 +418,23 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   chat message that waits for a worker is not a chat message.
 - **Staff reach a room by permission and join it by replying.** Reading is not
   joining, or an administrator glancing at a thread would collect an unread
-  badge for every client on the platform.
+  badge for every client on the platform. The one exception is the owner, who is
+  an `admin` participant of every batch group (`Rooms::syncBatch`), joined muted
+  and read up to the moment they joined; a muted room shows no unread count.
+- **Running a group is `Conversation::canBeModeratedBy()`**: the owner, the batch's
+  trainer and staff holding `chat.reply`. Pinning, announcement mode, keeping a
+  student from posting (`silenced_until`, not `is_muted`, which is somebody muting
+  the room for themselves) and the reports queue all ask it, through
+  `App\Services\Chat\Moderation`, which audits each one. Read the trainer with
+  `trainerId()`: a constrained eager load of `batch` drops `trainer_id`, and until
+  November 2026 that made the trainer a stranger in their own group.
+- **A report takes nothing down.** Members report; a person removes, stops the
+  sender posting, or dismisses. Nothing reads messages to decide anything (owner
+  decision, 2026-11-10).
+- **The poll carries everything the socket does**: new messages, which messages were
+  removed since `since` (the server's `now` from the previous poll), and the room's
+  settings with this viewer's `blockedReason`. Until November 2026 a removed message
+  stayed on screen in a thread without a socket until it was reloaded.
 - **A removed message keeps its bubble** and says it was removed. The file is
   deleted for real.
 - Run the socket server with `php artisan reverb:start`. Without it the chat

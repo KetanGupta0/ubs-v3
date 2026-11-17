@@ -99,6 +99,13 @@ class Rooms
             $this->join($conversation, $batch->trainer_id, 'staff');
         }
 
+        // The owner runs every group (§7): an admin of each, muted, so being
+        // in all of them does not mean an unread badge for each. This is the
+        // one exception to staff joining a room by replying.
+        foreach (User::query()->where('is_owner', true)->pluck('id') as $ownerId) {
+            $this->join($conversation, $ownerId, 'admin');
+        }
+
         ConversationParticipant::query()
             ->where('conversation_id', $conversation->id)
             ->where('role', 'member')
@@ -114,11 +121,26 @@ class Rooms
 
         $participant = ConversationParticipant::query()->firstOrCreate(
             ['conversation_id' => $conversation->id, 'user_id' => $id],
-            ['role' => $role, 'joined_at' => now()],
+            // A group admin starts muted and read up to now: they are in the
+            // room to run it, not to be told about every message in it.
+            $role === 'admin'
+                ? ['role' => 'admin', 'joined_at' => now(), 'is_muted' => true, 'last_read_at' => now()]
+                : ['role' => $role, 'joined_at' => now()],
         );
 
+        $changes = [];
+
         if ($participant->left_at) {
-            $participant->forceFill(['left_at' => null])->save();
+            $changes['left_at'] = null;
+        }
+
+        // Somebody who joined by replying and is now made a group admin.
+        if ($role === 'admin' && $participant->role !== 'admin') {
+            $changes['role'] = 'admin';
+        }
+
+        if ($changes) {
+            $participant->forceFill($changes)->save();
         }
 
         return $participant;

@@ -24,9 +24,23 @@ const SLOW_POLL_MS = 30000;
  * @param {() => number|null} currentId  which conversation is on screen
  * @param {() => Array} initialMessages  what the page was rendered with
  * @param {() => number|null} me  the signed in user's id
+ * @param {() => object} initialRoom  what is pinned, announcement mode, and why this person cannot post
  */
-export function useConversation(currentId, initialMessages, me) {
+export function useConversation(currentId, initialMessages, me, initialRoom = () => ({})) {
     const messages = ref([...initialMessages()]);
+
+    /**
+     * The room's settings: what is pinned, whether it is announcements only,
+     * and why this person cannot post (null when they can). The socket says
+     * when they change; the poll and the moderation answers carry them whole,
+     * because why *this* person cannot post is not something a broadcast to
+     * everybody can know.
+     */
+    const room = ref({ ...initialRoom() });
+
+    function applyRoom(state) {
+        if (state) room.value = { ...room.value, ...state };
+    }
     const typing = ref([]);
     const present = ref([]);
     const hasMore = ref(true);
@@ -35,6 +49,8 @@ export function useConversation(currentId, initialMessages, me) {
     let channelName = null;
     let channel = null;
     let poller = null;
+    /** The server's clock at the last poll, so it can say what was removed since. */
+    let polledAt = null;
     let typingTimers = {};
 
     const lastId = computed(() =>
@@ -93,13 +109,18 @@ export function useConversation(currentId, initialMessages, me) {
         if (!id) return;
 
         try {
-            const response = await fetch(`/chat/${id}/messages?after=${lastId.value}`, {
+            const since = polledAt ? `&since=${encodeURIComponent(polledAt)}` : '';
+            const response = await fetch(`/chat/${id}/messages?after=${lastId.value}${since}`, {
                 headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 credentials: 'same-origin',
             });
 
             if (response.ok && currentId() === id) {
-                apply((await response.json()).messages || []);
+                const data = await response.json();
+                apply(data.messages || []);
+                (data.removed || []).forEach(markRemoved);
+                applyRoom(data.room);
+                polledAt = data.now ?? polledAt;
             }
         } catch {
             // A failed poll is a network blip. The next one covers it.
@@ -209,6 +230,11 @@ export function useConversation(currentId, initialMessages, me) {
             })
             .listen('.message.read', markRead)
             .listen('.message.removed', (payload) => markRemoved(payload.messageId))
+            .listen('.room.updated', (payload) => {
+                applyRoom(payload);
+                // Whether this person can still post may have changed with it.
+                poll();
+            })
             .listenForWhisper('typing', noteTyping);
     }
 
@@ -216,6 +242,8 @@ export function useConversation(currentId, initialMessages, me) {
         unsubscribe();
 
         messages.value = [...(seed ?? [])];
+        room.value = { ...initialRoom() };
+        polledAt = null;
         hasMore.value = true;
 
         schedule();
@@ -241,7 +269,10 @@ export function useConversation(currentId, initialMessages, me) {
         hasMore,
         loadingOlder,
         live,
+        room,
         apply,
+        applyRoom,
+        markRemoved,
         loadOlder,
         markRead: tellThemIAmReading,
         whisperTyping,

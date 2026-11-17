@@ -9,6 +9,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Models\MessageReceipt;
 use App\Models\User;
+use App\Services\Admin\Auditor;
 use App\Services\Lms\Activity;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -167,8 +168,9 @@ class Messenger
      */
     public function remove(Message $message, User $actor): void
     {
+        $room = $message->conversation;
         $ownIt = $message->sender_id === $actor->id;
-        $moderating = $actor->isAdmin() && $actor->hasPermission('chat.reply');
+        $moderating = $room->canBeModeratedBy($actor) || ($actor->isAdmin() && $actor->hasPermission('chat.reply'));
 
         abort_unless($ownIt || $moderating, 403);
 
@@ -179,7 +181,30 @@ class Messenger
         $message->forceFill(['media_path' => null])->save();
         $message->delete();
 
+        // The room's preview in everybody's list must not keep quoting it.
+        $latest = $room->messages()->withTrashed()->max('id');
+
+        if ($latest === $message->id) {
+            $room->forceFill(['last_message_preview' => $message->preview()])->save();
+        }
+
+        // Somebody else's message taken down is a moderation decision, and
+        // goes on the record with whose it was.
+        if (! $ownIt) {
+            app(Auditor::class)->actingAs($actor)->action('chat.message_removed', $message, [
+                'group' => $room->displayTitle(),
+                'sender' => $message->sender?->name,
+            ], 'Message in '.$room->displayTitle());
+
+            app(Moderation::class)->resolveReportsOn($message, $actor);
+        }
+
         $this->announce(new MessageRemoved($message->conversation_id, $message->id));
+
+        // A removed message cannot stay pinned, whoever removed it.
+        if ($room->pinned_message_id === $message->id) {
+            app(Moderation::class)->clearPin($room);
+        }
     }
 
     /* ----------------------------------------------------------- internals */
@@ -187,6 +212,12 @@ class Messenger
     /** @param  array<string, mixed>  $attributes */
     protected function store(Conversation $conversation, User $sender, array $attributes): Message
     {
+        // Announcement mode, or kept from posting for a while: said in words,
+        // and the same for the page, the poll and the phone.
+        if ($blocked = $conversation->postingBlockedFor($sender)) {
+            throw new RuntimeException($blocked);
+        }
+
         // Somebody who replies is in the room from then on, which is how a
         // member of staff picks up read receipts and presence without every
         // administrator being a participant in every thread.

@@ -25,6 +25,7 @@ class ConversationParticipant extends Model
             'last_read_at' => 'datetime',
             'left_at' => 'datetime',
             'is_muted' => 'boolean',
+            'silenced_until' => 'datetime',
         ];
     }
 
@@ -44,6 +45,11 @@ class ConversationParticipant extends Model
      * Their own messages never count, because nobody has unread messages from
      * themselves.
      */
+    public function isSilenced(): bool
+    {
+        return $this->silenced_until !== null && $this->silenced_until->isFuture();
+    }
+
     public function unreadCount(): int
     {
         return $this->conversation->messages()

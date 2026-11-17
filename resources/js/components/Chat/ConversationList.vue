@@ -8,7 +8,7 @@
  * or every message in the room, and neither is worth looking at.
  */
 import { Link } from '@inertiajs/vue3';
-import { MessagesSquare, Users } from 'lucide-vue-next';
+import { MessagesSquare, Users, BellOff } from 'lucide-vue-next';
 
 import UiAvatar from '@/components/UI/UiAvatar.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
@@ -69,6 +69,7 @@ defineProps({
                                 {{ room.preview || 'No messages yet' }}
                             </span>
 
+                            <BellOff v-if="room.muted" class="h-3 w-3 shrink-0" style="color: var(--text-muted)" aria-label="Muted" />
                             <UiBadge v-if="room.unread" tone="brand" size="sm">{{ room.unread }}</UiBadge>
                             <UiBadge v-else-if="staffView && room.awaitingReply" tone="warning" size="sm">
                                 waiting

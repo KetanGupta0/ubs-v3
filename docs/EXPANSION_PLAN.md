@@ -484,6 +484,12 @@ So the allowed media types are already exactly what was asked for.
   - announcement mode, where only admins and the trainer can post
   - report a message (any member), which goes to a queue for the group admins
 
+*Progress (built 2026-11-17):*
+- *The owner is an admin of every batch group, existing ones backfilled by the migration, joined muted and read up to that moment; a muted room shows no unread count, and anybody can mute or unmute a room for themselves from its header.*
+- *The owner, the batch's trainer and staff holding `chat.reply` run a group: pin one message (shown above the thread to everybody), announcement mode (only they can post; members see why instead of a text box), stop a student posting for an hour, a day or a week (they can still read, and are told until when and why), remove a message (audited, with whose it was).*
+- *Any member can report somebody else's message. The trainer and the owner are told; staff with `chat.reply` work through Overview → Reported messages (remove, stop posting, dismiss), and a trainer without it is sent to the group itself. A report takes nothing down by itself.*
+- *Building it found that a thread with no socket never learnt that a message had been removed until it was reloaded, and that the room's preview kept quoting a removed last message. The poll now carries removals and the room's settings, so moderation works the same on polling as on Pusher.*
+
 ---
 
 ## 8. Email: festival greetings and broadcasts

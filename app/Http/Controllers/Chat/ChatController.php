@@ -8,11 +8,13 @@ use App\Models\ConversationParticipant;
 use App\Models\Message;
 use App\Models\MessageReceipt;
 use App\Services\Chat\Messenger;
+use App\Services\Chat\Moderation;
 use App\Services\Chat\Rooms;
 use App\Support\Chat\MessagePayload;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -38,6 +40,7 @@ class ChatController extends Controller
     public function __construct(
         protected Rooms $rooms,
         protected Messenger $messenger,
+        protected Moderation $moderation,
     ) {}
 
     public function index(Request $request): Response
@@ -68,7 +71,7 @@ class ChatController extends Controller
             'conversations' => $this->conversationList($request),
             'conversation' => $this->conversationArray($room, $user),
             'messages' => $this->messagesFor($room, $user),
-            'participants' => $this->participantsFor($room),
+            'participants' => $this->participantsFor($room, $user),
         ]);
     }
 
@@ -114,10 +117,22 @@ class ChatController extends Controller
             $this->messenger->markDelivered($room, $user);
         }
 
+        // Messages taken down since the last poll. Without these, a thread
+        // with no socket kept showing a removed message until it was
+        // reloaded, which made removing one pointless for exactly the people
+        // the poll exists for. `since` is the server's own clock, handed back
+        // as `now` on every poll.
+        $since = rescue(fn () => Carbon::parse((string) $request->query('since')), null, false);
+        $since = $since && $since->gt(now()->subDay()) ? $since : now()->subMinutes(5);
+
         return response()->json([
+            'now' => now()->toIso8601String(),
+            'removed' => $room->messages()->onlyTrashed()->where('deleted_at', '>', $since)->pluck('id'),
             'messages' => $this->decorate($fresh, $room, $user),
             // The list in the sidebar goes stale too, so it rides along.
             'conversations' => $this->conversationList($request),
+            // As does what is pinned and who may post, for anybody without a socket.
+            'room' => $this->roomState($room, $user),
         ]);
     }
 
@@ -206,6 +221,108 @@ class ChatController extends Controller
         return back();
     }
 
+    /* --------------------------------------------------- running a group */
+
+    /** Pin a message, or unpin with no message_id. */
+    public function pin(Request $request, int $conversation): RedirectResponse|JsonResponse
+    {
+        $room = $this->readable($request, $conversation);
+        $validated = $this->validatedInput($request, ['message_id' => ['nullable', 'integer']]);
+
+        $message = $validated['message_id'] ? $room->messages()->findOrFail($validated['message_id']) : null;
+
+        try {
+            $this->moderation->pin($room, $message, $request->user());
+        } catch (\InvalidArgumentException $e) {
+            return $this->answer($request, $e->getMessage(), 422);
+        }
+
+        return $this->answer($request, $message ? 'Pinned for everybody in the group.' : 'Unpinned.', room: $room->fresh());
+    }
+
+    public function announcement(Request $request, int $conversation): RedirectResponse|JsonResponse
+    {
+        $room = $this->readable($request, $conversation);
+        $on = $request->boolean('on');
+
+        $this->moderation->setAnnouncementOnly($room, $on, $request->user());
+
+        return $this->answer($request, $on
+            ? 'Announcements only: just the trainer and the team can post until you switch it off.'
+            : 'Everybody in the group can post again.', room: $room->fresh());
+    }
+
+    public function silence(Request $request, int $conversation, int $user): RedirectResponse|JsonResponse
+    {
+        $room = $this->readable($request, $conversation);
+        $validated = $this->validatedInput($request, [
+            'for' => ['required', Rule::in(array_keys(Moderation::SILENCE_FOR))],
+            'reason' => ['nullable', 'string', 'max:300'],
+        ]);
+
+        $student = $room->participants()->where('user_id', $user)->whereNull('left_at')->firstOrFail()->user;
+
+        try {
+            $until = $this->moderation->silence($room, $student, $validated['for'], $request->user(), $validated['reason']);
+        } catch (\InvalidArgumentException $e) {
+            return $this->answer($request, $e->getMessage(), 422);
+        }
+
+        return $this->answer($request, "{$student->name} cannot post here until {$until->format('g:i a, j M')}, and has been told.");
+    }
+
+    public function lift(Request $request, int $conversation, int $user): RedirectResponse|JsonResponse
+    {
+        $room = $this->readable($request, $conversation);
+        $student = $room->participants()->where('user_id', $user)->firstOrFail()->user;
+
+        $this->moderation->lift($room, $student, $request->user());
+
+        return $this->answer($request, "{$student->name} can post again.");
+    }
+
+    public function report(Request $request, int $conversation, int $message): RedirectResponse|JsonResponse
+    {
+        $room = $this->readable($request, $conversation);
+        $validated = $this->validatedInput($request, ['reason' => ['nullable', 'string', 'max:500']]);
+        $record = $room->messages()->findOrFail($message);
+
+        try {
+            $this->moderation->report($record, $request->user(), $validated['reason']);
+        } catch (\InvalidArgumentException $e) {
+            return $this->answer($request, $e->getMessage(), 422);
+        }
+
+        // The same words whether it was the first report or a repeat.
+        return $this->answer($request, 'Reported. The people who run this group will look at it.');
+    }
+
+    /** This person muting the room's notifications for themselves, or unmuting. */
+    public function mute(Request $request, int $conversation): RedirectResponse|JsonResponse
+    {
+        $room = $this->readable($request, $conversation);
+        $participant = $room->participantFor($request->user());
+
+        abort_unless($participant !== null, 404);
+
+        $participant->forceFill(['is_muted' => $request->boolean('muted')])->save();
+
+        return $this->answer($request, $participant->is_muted ? 'Muted. It no longer counts towards your unread messages.' : 'Unmuted.');
+    }
+
+    /** JSON for the page's own fetch, a flash for anything else. */
+    protected function answer(Request $request, string $message, int $status = 200, ?Conversation $room = null): RedirectResponse|JsonResponse
+    {
+        if ($request->expectsJson()) {
+            return response()->json(array_filter([
+                'message' => $message,
+                'room' => $room ? $this->roomState($room, $request->user()) : null,
+            ], fn ($value) => $value !== null), $status);
+        }
+
+        return $status >= 400 ? back()->with('error', $message) : back()->with('success', $message);
+    }
+
     /** Every photo and voice note in one room, newest first. */
     public function gallery(Request $request, int $conversation): JsonResponse
     {
@@ -251,7 +368,7 @@ class ChatController extends Controller
     protected function readable(Request $request, int $conversation): Conversation
     {
         $room = Conversation::query()
-            ->with(['participants', 'client:id,name', 'project:id,name', 'batch:id,name,course_id'])
+            ->with(['participants', 'client:id,name', 'project:id,name', 'batch:id,name,course_id,trainer_id'])
             ->findOrFail($conversation);
 
         abort_unless($room->canBeReadBy($request->user()), 404);
@@ -309,7 +426,9 @@ class ChatController extends Controller
                 // are not members of every room, so a count would be either
                 // zero or the whole thread; what they actually need to know is
                 // which rooms are waiting on an answer.
-                'unread' => $participant ? $participant->unreadCount() : 0,
+                // A muted room shows no count: muting is how the owner can be
+                // in every batch group without a badge for each one.
+                'unread' => $participant && ! $participant->is_muted ? $participant->unreadCount() : 0,
                 'awaitingReply' => $last !== null && ! ($last->sender?->isAdmin() ?? false),
 
                 'muted' => (bool) $participant?->is_muted,
@@ -353,7 +472,23 @@ class ChatController extends Controller
             'title' => $room->displayTitle(),
             'subtitle' => $this->subtitleFor($room, $user),
             'isGroup' => $room->isGroup(),
-            'canRemoveAny' => $user->isAdmin() && $user->hasPermission('chat.reply'),
+            'canRemoveAny' => $room->canBeModeratedBy($user) || ($user->isAdmin() && $user->hasPermission('chat.reply')),
+            'canModerate' => $room->canBeModeratedBy($user),
+            // Any member of a group can report somebody else's message.
+            'canReport' => $room->isGroup() && $room->includes($user) && ! $room->canBeModeratedBy($user),
+            'isParticipant' => $room->includes($user),
+            'muted' => (bool) $room->participantFor($user)?->is_muted,
+            'silenceOptions' => collect(Moderation::SILENCE_FOR)->map(fn (array $option, string $key) => ['value' => $key, 'label' => $option[0]])->values(),
+            ...$this->roomState($room, $user),
+        ];
+    }
+
+    /** @return array<string, mixed> What is pinned, whether it is announcements only, and whether this person can post. */
+    protected function roomState(Conversation $room, $user): array
+    {
+        return [
+            ...$this->moderation->settings($room),
+            'blockedReason' => $room->postingBlockedFor($user),
         ];
     }
 
@@ -385,8 +520,10 @@ class ChatController extends Controller
      *
      * @return array<int, array<string, mixed>>
      */
-    protected function participantsFor(Conversation $room): array
+    protected function participantsFor(Conversation $room, $viewer = null): array
     {
+        $moderator = $viewer && $room->canBeModeratedBy($viewer);
+
         return $room->participants()
             ->whereNull('left_at')
             ->with('user:id,name,avatar_path,role')
@@ -396,6 +533,10 @@ class ChatController extends Controller
                 'name' => $participant->user?->name ?? 'Somebody',
                 'avatarUrl' => $participant->user?->avatar_url,
                 'role' => $participant->role,
+                // Who is kept from posting is for the people who run the group.
+                'silencedUntil' => $moderator && $participant->isSilenced()
+                    ? $participant->silenced_until->format('g:i a, j M')
+                    : null,
             ])
             ->values()
             ->all();

@@ -22,7 +22,7 @@ import {
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
     UserPlus, Package, ShieldCheck, Building2, Wrench, HelpCircle, UserCog,
     ScrollText, FileSignature, Files, LifeBuoy as LifeBuoyIcon, Banknote,
-    ShieldAlert, ClipboardPen, NotebookPen, MessageCircleQuestion, BellRing, TrendingUp,
+    ShieldAlert, ClipboardPen, NotebookPen, MessageCircleQuestion, BellRing, TrendingUp, Flag,
 } from 'lucide-vue-next';
 
 export const navigation = {
@@ -36,6 +36,7 @@ export const navigation = {
         { group: 'Overview', label: 'Dashboard', icon: LayoutDashboard, href: '/admin', primary: true },
         { group: 'Overview', label: 'Leads', icon: Inbox, href: '/admin/leads', permission: 'leads.view', primary: true },
         { group: 'Overview', label: 'Chat', icon: MessagesSquare, href: '/chat', permission: 'chat.reply' },
+        { group: 'Overview', label: 'Reported messages', icon: Flag, href: '/admin/chat/reports?filter[status]=open', permission: 'chat.reply' },
         { group: 'Overview', label: 'Reports', icon: BarChart3, href: '/admin/reports' },
 
         { group: 'Clients', label: 'Clients', icon: Briefcase, href: '/admin/clients', permission: 'clients.view', primary: true },
