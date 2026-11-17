@@ -33,6 +33,7 @@ class Proposal extends Model
     protected function casts(): array
     {
         return [
+            'parties' => 'array',
             'valid_until' => 'date',
             'sent_at' => 'datetime',
             'responded_at' => 'datetime',

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Client\AgreementController;
 use App\Http\Controllers\Client\ApiKeyController;
 use App\Http\Controllers\Client\DashboardController;
 use App\Http\Controllers\Client\DocumentController;
@@ -40,12 +41,24 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
         Route::get('projects/{project}', [ProjectController::class, 'show'])
             ->whereNumber('project')
             ->name('projects.show');
+        Route::get('projects/{project}/status-report', [ProjectController::class, 'statusReport'])
+            ->whereNumber('project')
+            ->name('projects.status-report');
 
         /* -------------------------------------------------------- proposals */
         Route::get('proposals', [ProposalController::class, 'index'])->name('proposals.index');
         Route::get('proposals/{proposal}', [ProposalController::class, 'show'])
             ->whereNumber('proposal')
             ->name('proposals.show');
+        Route::get('proposals/{proposal}/pdf', [ProposalController::class, 'pdf'])
+            ->whereNumber('proposal')
+            ->name('proposals.pdf');
+
+        /* ------------------------------------------------------- agreements */
+        Route::get('agreements', [AgreementController::class, 'index'])->name('agreements.index');
+        Route::get('agreements/{agreement}', [AgreementController::class, 'show'])->whereNumber('agreement')->name('agreements.show');
+        Route::get('agreements/{agreement}/pdf', [AgreementController::class, 'pdf'])->whereNumber('agreement')->name('agreements.pdf');
+
         Route::post('proposals/{proposal}/respond', [ProposalController::class, 'respond'])
             ->whereNumber('proposal')
             ->name('proposals.respond');

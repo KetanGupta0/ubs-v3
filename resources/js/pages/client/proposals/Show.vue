@@ -8,7 +8,7 @@
  */
 import { ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Check, X, Clock, Printer } from 'lucide-vue-next';
+import { ArrowLeft, Check, X, Clock, Printer, FileDown } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -65,6 +65,10 @@ const tones = { accepted: 'success', rejected: 'danger', expired: 'neutral', sen
                     <UiButton href="/client/proposals" variant="ghost" size="sm">
                         <template #leading><ArrowLeft class="h-3.5 w-3.5" /></template>
                         Back
+                    </UiButton>
+                    <UiButton :href="`/client/proposals/${proposal.id}/pdf`" :inertia="false" variant="secondary" size="sm">
+                        <template #leading><FileDown class="h-3.5 w-3.5" /></template>
+                        PDF
                     </UiButton>
                     <UiButton variant="secondary" size="sm" @click="print()">
                         <template #leading><Printer class="h-3.5 w-3.5" /></template>

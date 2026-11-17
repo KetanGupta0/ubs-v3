@@ -5,12 +5,14 @@ namespace App\Http\Controllers\Client;
 use App\Models\Proposal;
 use App\Models\QuotationItem;
 use App\Services\Admin\Auditor;
+use App\Services\Client\ClientDocuments;
 use App\Support\Money;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
  * Proposals and their quotations, as the client sees them.
@@ -74,6 +76,24 @@ class ProposalController extends ClientController
                     'amount' => Money::display($item->amount),
                 ]),
             ] : null,
+        ]);
+    }
+
+    /** The proposal as it was sent, as a PDF. */
+    public function pdf(Request $request, int $proposal, ClientDocuments $documents): HttpResponse
+    {
+        $record = $this->own($request, Proposal::query()
+            ->where('client_id', $this->client($request)->id)
+            ->visibleToClient(), $proposal);
+
+        if (! $record->pdf_path) {
+            // Sent before PDFs were kept: frozen now, once.
+            $documents->freezeProposal($record);
+        }
+
+        return response($documents->stored($record->fresh()), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.str($record->number)->replace('/', '-').'.pdf"',
         ]);
     }
 

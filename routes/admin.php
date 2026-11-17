@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AgreementController;
 use App\Http\Controllers\Admin\AssessmentController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BatchController;
@@ -171,6 +172,7 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::get('projects/{project}', [ProjectController::class, 'show'])
                 ->whereNumber('project')
                 ->name('projects.show');
+            Route::get('projects/{project}/status-report', [ProjectController::class, 'statusReport'])->name('projects.status-report');
         });
 
         Route::middleware('permission:projects.manage')->group(function () {
@@ -203,10 +205,26 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('proposals/{proposal}/withdraw', [ProposalController::class, 'withdraw'])->name('proposals.withdraw');
             Route::delete('proposals/{proposal}', [ProposalController::class, 'destroy'])->name('proposals.destroy');
 
+            Route::get('proposals/{proposal}/pdf', [ProposalController::class, 'pdf'])->whereNumber('proposal')->name('proposals.pdf');
             Route::put('proposals/{proposal}/quotation', [ProposalController::class, 'updateQuotation'])->name('proposals.quotation.update');
             Route::post('proposals/{proposal}/items', [ProposalController::class, 'storeItem'])->name('proposals.items.store');
             Route::put('proposals/{proposal}/items/{item}', [ProposalController::class, 'updateItem'])->name('proposals.items.update');
             Route::delete('proposals/{proposal}/items/{item}', [ProposalController::class, 'destroyItem'])->name('proposals.items.destroy');
+        });
+
+        /* ------------------------------------------------------- agreements */
+        Route::middleware('permission:proposals.manage')->group(function () {
+            Route::get('agreements', [AgreementController::class, 'index'])->name('agreements.index');
+            Route::get('agreements/new', [AgreementController::class, 'create'])->name('agreements.create');
+            Route::post('agreements', [AgreementController::class, 'store'])->name('agreements.store');
+            Route::get('agreements/{agreement}', [AgreementController::class, 'show'])->whereNumber('agreement')->name('agreements.show');
+            Route::get('agreements/{agreement}/edit', [AgreementController::class, 'edit'])->whereNumber('agreement')->name('agreements.edit');
+            Route::put('agreements/{agreement}', [AgreementController::class, 'update'])->whereNumber('agreement')->name('agreements.update');
+            Route::delete('agreements/{agreement}', [AgreementController::class, 'destroy'])->whereNumber('agreement')->name('agreements.destroy');
+            Route::post('agreements/{agreement}/send', [AgreementController::class, 'send'])->whereNumber('agreement')->name('agreements.send');
+            Route::post('agreements/{agreement}/revise', [AgreementController::class, 'revise'])->whereNumber('agreement')->name('agreements.revise');
+            Route::post('agreements/{agreement}/withdraw', [AgreementController::class, 'withdraw'])->whereNumber('agreement')->name('agreements.withdraw');
+            Route::get('agreements/{agreement}/pdf', [AgreementController::class, 'pdf'])->whereNumber('agreement')->name('agreements.pdf');
         });
 
         /* -------------------------------------------------------- documents */

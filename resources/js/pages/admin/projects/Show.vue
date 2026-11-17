@@ -10,6 +10,7 @@ import { ref } from 'vue';
 import { Head, useForm, router, Link } from '@inertiajs/vue3';
 import {
     ArrowLeft, Pencil, Plus, Trash2, CheckCircle2, Circle, EyeOff, Eye, Send,
+    FileDown,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -127,6 +128,10 @@ function setStatus(status) {
                     <UiButton href="/admin/projects" variant="ghost" size="sm">
                         <template #leading><ArrowLeft class="h-3.5 w-3.5" /></template>
                         All projects
+                    </UiButton>
+                    <UiButton :href="`/admin/projects/${project.id}/status-report`" :inertia="false" variant="secondary" size="sm">
+                        <template #leading><FileDown class="h-3.5 w-3.5" /></template>
+                        Status report
                     </UiButton>
                     <UiButton :href="`/admin/projects/${project.id}/edit`" variant="secondary" size="sm">
                         <template #leading><Pencil class="h-3.5 w-3.5" /></template>

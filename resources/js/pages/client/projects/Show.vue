@@ -8,6 +8,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import {
     ArrowLeft, CheckCircle2, Circle, ExternalLink, FileText, Clock, AlertTriangle,
+    FileDown,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -43,6 +44,10 @@ defineProps({
                     <UiButton href="/client/projects" variant="ghost" size="sm">
                         <template #leading><ArrowLeft class="h-3.5 w-3.5" /></template>
                         All projects
+                    </UiButton>
+                    <UiButton :href="`/client/projects/${project.id}/status-report`" :inertia="false" variant="secondary" size="sm">
+                        <template #leading><FileDown class="h-3.5 w-3.5" /></template>
+                        Status report
                     </UiButton>
                     <UiButton
                         v-if="project.stagingUrl"

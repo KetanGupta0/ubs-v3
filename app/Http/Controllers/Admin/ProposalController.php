@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Notifications\ProposalSent;
 use App\Services\Admin\Auditor;
 use App\Services\Billing\Invoicer;
+use App\Services\Client\ClientDocuments;
 use App\Support\Money;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
@@ -151,12 +152,34 @@ class ProposalController extends Controller
         $proposal->forceFill(['status' => 'sent', 'sent_at' => now()])->save();
         $proposal->quotation?->forceFill(['status' => 'sent'])->save();
 
+        // The PDF and the parties are fixed as it goes out (CL3).
+        app(ClientDocuments::class)->freezeProposal($proposal);
+
         // To whoever may sign for the client's organisation (CL8).
         Notification::send($proposal->client->clientRecipients('signing'), new ProposalSent($proposal));
 
         $auditor->action('proposal.sent', $proposal, ['to' => $proposal->client->email], $proposal->number);
 
         return back()->with('success', "Sent to {$proposal->client->email}.");
+    }
+
+    /** The PDF: the stored one once sent, a preview of a draft. */
+    public function pdf(Proposal $proposal, ClientDocuments $documents): HttpResponse
+    {
+        $draft = $proposal->status === 'draft';
+
+        if (! $draft && ! $proposal->pdf_path) {
+            // Sent before PDFs were kept: frozen now, once.
+            $documents->freezeProposal($proposal);
+        }
+
+        $bytes = $draft ? $documents->preview($proposal) : $documents->stored($proposal->fresh());
+        $name = str($proposal->number)->replace('/', '-').($draft ? '-draft' : '').'.pdf';
+
+        return response($bytes, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => ($draft ? 'inline' : 'attachment')."; filename=\"{$name}\"",
+        ]);
     }
 
     /**
@@ -167,7 +190,7 @@ class ProposalController extends Controller
      */
     public function revise(Proposal $proposal, Auditor $auditor): RedirectResponse
     {
-        $revision = $proposal->replicate(['number', 'status', 'sent_at', 'responded_at', 'response_note', 'responded_ip']);
+        $revision = $proposal->replicate(['number', 'status', 'sent_at', 'responded_at', 'response_note', 'responded_ip', 'parties', 'pdf_path', 'pdf_sha256']);
         $revision->number = Proposal::nextNumber();
         $revision->version = $proposal->version + 1;
         $revision->status = 'draft';

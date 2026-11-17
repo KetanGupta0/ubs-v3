@@ -310,6 +310,14 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   off the contract later would let an edit rewrite whether we met the promise.
 - **A sent proposal is immutable.** Revise it into a new version instead; the old
   one keeps the answer it was given.
+- **A sent document is a file, not a render (CL3).** `App\Services\Client\ClientDocuments`
+  freezes a proposal or an agreement as it goes out: the parties are copied onto the
+  row, the PDF is stored with its SHA-256, and every later download is that file. A
+  draft previews and is never kept. The hash is what a signature is a signature of.
+- **An agreement's text is permanent once sent (CL1).** `Agreement` refuses to change
+  any of `Agreement::FROZEN` or to be deleted after it leaves draft, whatever code path
+  asks. A change is a new version (`previous_id`); the one it replaces is marked
+  superseded when the new one is sent, and stays readable.
 - **An API key is shown once.** Only a hash and the prefix are stored. Lost keys
   are rotated, not recovered.
 - **`$request->validate()` drops optional fields the request did not send**, so

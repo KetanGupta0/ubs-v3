@@ -11,6 +11,7 @@ use App\Models\Solution;
 use App\Models\User;
 use App\Notifications\ProjectUpdated;
 use App\Services\Admin\Auditor;
+use App\Services\Client\ClientDocuments;
 use App\Support\Money;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
@@ -369,5 +370,14 @@ class ProjectController extends Controller
                 'overdue' => $project->isOverdue(),
                 'manager' => $project->manager?->name ?? 'Unassigned',
             ]);
+    }
+
+    /** Where the project stands, as a PDF, as of now (CL3): what the client can download too. */
+    public function statusReport(Project $project, ClientDocuments $documents): HttpResponse
+    {
+        return response($documents->statusReport($project), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$project->code.'-status-'.now()->format('Y-m-d').'.pdf"',
+        ]);
     }
 }

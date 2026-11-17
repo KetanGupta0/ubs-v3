@@ -8,7 +8,7 @@
  */
 import { ref } from 'vue';
 import { Head, useForm, router, Link } from '@inertiajs/vue3';
-import { ArrowLeft, Plus, Trash2, Pencil, Send, Copy, Ban } from 'lucide-vue-next';
+import { ArrowLeft, Plus, Trash2, Pencil, Send, Copy, Ban, FileDown } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -116,6 +116,10 @@ const tones = { accepted: 'success', rejected: 'danger', sent: 'brand', draft: '
                     <UiButton href="/admin/proposals" variant="ghost" size="sm">
                         <template #leading><ArrowLeft class="h-3.5 w-3.5" /></template>
                         Back
+                    </UiButton>
+                    <UiButton :href="`/admin/proposals/${proposal.id}/pdf`" :inertia="false" target="_blank" variant="secondary" size="sm">
+                        <template #leading><FileDown class="h-3.5 w-3.5" /></template>
+                        {{ proposal.status === 'draft' ? 'Preview PDF' : 'PDF as sent' }}
                     </UiButton>
                     <UiButton v-if="proposal.editable" size="sm" @click="send">
                         <template #leading><Send class="h-3.5 w-3.5" /></template>

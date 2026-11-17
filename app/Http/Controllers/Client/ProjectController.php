@@ -6,6 +6,7 @@ use App\Models\Document;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectUpdate;
+use App\Services\Client\ClientDocuments;
 use App\Support\Money;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
@@ -148,5 +149,16 @@ class ProjectController extends ClientController
                 'overdue' => $project->isOverdue(),
                 'solution' => $project->solution?->title ?? '—',
             ]);
+    }
+
+    /** Where the project stands, as a PDF, as of now (CL3). */
+    public function statusReport(Request $request, int $project, ClientDocuments $documents): HttpResponse
+    {
+        $record = $this->own($request, Project::query()->forClient($this->client($request)), $project);
+
+        return response($documents->statusReport($record), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$record->code.'-status-'.now()->format('Y-m-d').'.pdf"',
+        ]);
     }
 }
