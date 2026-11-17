@@ -41,6 +41,7 @@ class PermissionSeeder extends Seeder
                 'projects.view' => 'View projects',
                 'projects.manage' => 'Create and edit projects',
                 'proposals.manage' => 'Write and send proposals',
+                'agreements.countersign' => 'Countersign agreements for the company',
                 'documents.manage' => 'Upload and manage client documents',
                 'support.manage' => 'Answer support tickets',
                 'api.manage' => 'Issue and revoke API keys',

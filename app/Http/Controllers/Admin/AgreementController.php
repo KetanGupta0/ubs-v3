@@ -11,18 +11,22 @@ use App\Models\User;
 use App\Notifications\AgreementSent;
 use App\Services\Admin\Auditor;
 use App\Services\Client\ClientDocuments;
+use App\Services\Client\Signatures;
 use App\Support\Markdown;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
 use App\Support\Table\Table;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
@@ -89,9 +93,9 @@ class AgreementController extends Controller
         return redirect()->route('admin.agreements.show', $agreement)->with('success', 'Saved as a draft. Preview the PDF before you send it.');
     }
 
-    public function show(Agreement $agreement): Response
+    public function show(Request $request, Agreement $agreement): Response
     {
-        $agreement->load('client.profile', 'project:id,name,code', 'contract:id,reference,plan', 'subscription:id,name', 'previous:id,number,version', 'author:id,name');
+        $agreement->load('client.profile', 'project:id,name,code', 'contract:id,reference,plan', 'subscription:id,name', 'previous:id,number,version', 'author:id,name', 'signatures', 'viewer:id,name');
 
         return Inertia::render('admin/agreements/Show', [
             'agreement' => [
@@ -116,7 +120,13 @@ class AgreementController extends Controller
                 'later' => Agreement::query()->where('previous_id', $agreement->id)->get(['id', 'number', 'version', 'status'])
                     ->map(fn (Agreement $later) => ['id' => $later->id, 'number' => $later->number, 'status' => $later->statusLabel()]),
                 'author' => $agreement->author?->name,
+                'viewedAt' => $agreement->viewed_at?->format('j M Y, g:i a'),
+                'viewedBy' => $agreement->viewer?->name,
+                'signatures' => $agreement->signatures->map->toCertificateArray()->values(),
+                'hasSignedCopy' => $agreement->signed_pdf_path !== null,
             ],
+            // Countersigning binds the company, so it is its own permission.
+            'canCountersign' => $agreement->status === 'signed' && $request->user()->hasPermission('agreements.countersign'),
         ]);
     }
 
@@ -232,6 +242,49 @@ class AgreementController extends Controller
         return response($bytes, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => ($draft ? 'inline' : 'attachment')."; filename=\"{$name}\"",
+        ]);
+    }
+
+    /* ------------------------------------------------------ countersigning */
+
+    public function countersignCode(Request $request, Agreement $agreement, Signatures $signatures): JsonResponse
+    {
+        try {
+            return response()->json(['sentTo' => $signatures->requestCode($request->user(), $agreement, 'us', $request), 'sha256' => $agreement->pdf_sha256]);
+        } catch (InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function countersign(Request $request, Agreement $agreement, Signatures $signatures): RedirectResponse
+    {
+        $validated = $this->validatedInput($request, [
+            'name' => ['required', 'string', 'max:160'],
+            'designation' => ['nullable', 'string', 'max:120'],
+            'code' => ['required', 'string', 'max:10'],
+            'confirm' => ['accepted'],
+        ], [
+            'confirm.accepted' => 'Confirm that you are countersigning for the company.',
+            'name.required' => 'Type your full name as your signature.',
+        ]);
+
+        try {
+            $signatures->sign($request->user(), $agreement, 'us', $validated['name'], $validated['designation'], $validated['code'], $request);
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['code' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Countersigned. The client has been sent word, and the copy signed by both is ready.');
+    }
+
+    /** The signed copy, with its certificate of signing. */
+    public function signed(Agreement $agreement): HttpResponse
+    {
+        abort_unless($agreement->signed_pdf_path !== null, 404);
+
+        return response(Storage::disk('private')->get($agreement->signed_pdf_path), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.str($agreement->number)->replace('/', '-').'-signed.pdf"',
         ]);
     }
 

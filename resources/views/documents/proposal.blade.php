@@ -77,5 +77,15 @@
     This proposal was issued on {{ ($proposal->sent_at ?? now())->format('j M Y') }}{{ $proposal->valid_until ? ' and is valid until '.$proposal->valid_until->format('j M Y') : '' }}.
     Prices are in Indian rupees. Accepting it is recorded in your account with the time and the person who accepted.
 </p>
+@if(!empty($signatures))
+    @include('documents._certificate', [
+        'documentLabel' => 'Proposal',
+        'number' => $proposal->number,
+        'version' => $proposal->version,
+        'title' => $proposal->title,
+        'sha256' => $proposal->pdf_sha256,
+        'signatures' => $signatures,
+    ])
+@endif
 </body>
 </html>

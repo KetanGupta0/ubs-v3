@@ -58,10 +58,21 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
         Route::get('agreements', [AgreementController::class, 'index'])->name('agreements.index');
         Route::get('agreements/{agreement}', [AgreementController::class, 'show'])->whereNumber('agreement')->name('agreements.show');
         Route::get('agreements/{agreement}/pdf', [AgreementController::class, 'pdf'])->whereNumber('agreement')->name('agreements.pdf');
+        Route::get('agreements/{agreement}/signed', [AgreementController::class, 'signed'])->whereNumber('agreement')->name('agreements.signed');
+        Route::get('proposals/{proposal}/signed', [ProposalController::class, 'signed'])->whereNumber('proposal')->name('proposals.signed');
 
         Route::post('proposals/{proposal}/respond', [ProposalController::class, 'respond'])
             ->whereNumber('proposal')
             ->name('proposals.respond');
+
+        // Signing (CL2): a one time code to the signer's own address, then
+        // the signature. Accepting a proposal is signing it.
+        Route::middleware('throttle:10,1')->group(function () {
+            Route::post('proposals/{proposal}/sign/code', [ProposalController::class, 'signCode'])->whereNumber('proposal')->name('proposals.sign.code');
+            Route::post('proposals/{proposal}/sign', [ProposalController::class, 'sign'])->whereNumber('proposal')->name('proposals.sign');
+            Route::post('agreements/{agreement}/sign/code', [AgreementController::class, 'signCode'])->whereNumber('agreement')->name('agreements.sign.code');
+            Route::post('agreements/{agreement}/sign', [AgreementController::class, 'sign'])->whereNumber('agreement')->name('agreements.sign');
+        });
 
         /* -------------------------------------------------------- documents */
         Route::get('documents', [DocumentController::class, 'index'])->name('documents.index');

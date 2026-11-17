@@ -72,6 +72,28 @@ class ClientDocuments
         return Storage::disk('private')->get($document->pdf_path);
     }
 
+    /**
+     * The signed copy: the document as sent, with a certificate of signing
+     * appended. Made again after every signature; the original stays the
+     * file that was signed, and the certificate names it by its hash.
+     */
+    public function signedCopy(Proposal|Agreement $document): string
+    {
+        $signatures = $document->signatures()->get()->map->toCertificateArray()->all();
+
+        $output = $document instanceof Proposal
+            ? $this->renderProposal($document, $signatures)
+            : $this->renderAgreement($document, $signatures);
+
+        $folder = $document instanceof Proposal ? 'proposals' : 'agreements';
+        $path = "documents/signed/{$folder}/".str($document->number)->replace('/', '-')->toString().'-signed.pdf';
+        Storage::disk('private')->put($path, $output);
+
+        $document->forceFill(['signed_pdf_path' => $path])->save();
+
+        return $path;
+    }
+
     /** A draft as it would look if sent now. Not kept. */
     public function preview(Proposal|Agreement $document): string
     {
@@ -93,7 +115,7 @@ class ClientDocuments
 
     /* -------------------------------------------------------------------- */
 
-    protected function renderProposal(Proposal $proposal): string
+    protected function renderProposal(Proposal $proposal, array $signatures = []): string
     {
         $proposal->loadMissing(['quotation.items', 'client.profile']);
         $quotation = $proposal->quotation;
@@ -104,10 +126,11 @@ class ClientDocuments
             'parties' => $proposal->parties ?? $this->parties($proposal->client),
             'money' => fn (int $paise) => Money::display($paise),
             'words' => $quotation ? Money::words($quotation->total) : null,
+            'signatures' => $signatures,
         ])->setPaper('a4')->output();
     }
 
-    protected function renderAgreement(Agreement $agreement): string
+    protected function renderAgreement(Agreement $agreement, array $signatures = []): string
     {
         $agreement->loadMissing(['project', 'client.profile']);
 
@@ -115,6 +138,7 @@ class ClientDocuments
             'agreement' => $agreement,
             'parties' => $agreement->parties ?? $this->parties($agreement->client),
             'html' => Markdown::html($agreement->body),
+            'signatures' => $signatures,
         ])->setPaper('a4')->output();
     }
 

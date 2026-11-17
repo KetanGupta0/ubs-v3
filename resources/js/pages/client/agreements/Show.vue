@@ -8,8 +8,13 @@ import MarkdownHtml from '@/components/Marketing/MarkdownHtml.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import UiCard from '@/components/UI/UiCard.vue';
+import SignDocument from '@/components/Documents/SignDocument.vue';
+import SignatureList from '@/components/Documents/SignatureList.vue';
 
-defineProps({ agreement: { type: Object, required: true } });
+defineProps({
+    agreement: { type: Object, required: true },
+    canSign: { type: Boolean, default: false },
+});
 
 const tones = { sent: 'warning', signed: 'brand', countersigned: 'success', superseded: 'neutral', withdrawn: 'danger' };
 </script>
@@ -44,13 +49,31 @@ const tones = { sent: 'warning', signed: 'brand', countersigned: 'success', supe
                     <Link :href="`/client/agreements/${agreement.replacedBy}`" class="font-medium text-brand-600 hover:underline dark:text-brand-400">read it</Link>.
                 </p>
                 <p v-if="agreement.status === 'withdrawn'" class="mt-3 text-sm">We withdrew this agreement. It is kept here as it was sent.</p>
+                <p v-if="agreement.status === 'sent' && !canSign" class="mt-3 text-sm" style="color: var(--text-muted)">
+                    Waiting for an authorised signatory or an owner in your organisation to sign it.
+                </p>
+                <p v-if="agreement.status === 'signed'" class="mt-3 text-sm" style="color: var(--text-muted)">
+                    Signed by your organisation. We countersign next, and you will be sent the copy signed by both.
+                </p>
             </UiCard>
 
             <UiCard>
                 <MarkdownHtml :html="agreement.html" />
             </UiCard>
 
-            <p v-if="agreement.sha256" class="break-all font-mono text-[0.65rem]" style="color: var(--text-muted)">
+            <SignatureList :signatures="agreement.signatures" :signed-url="agreement.hasSignedCopy ? `/client/agreements/${agreement.id}/signed` : null" />
+
+            <SignDocument
+                v-if="canSign"
+                :code-url="`/client/agreements/${agreement.id}/sign/code`"
+                :sign-url="`/client/agreements/${agreement.id}/sign`"
+                :pdf-url="`/client/agreements/${agreement.id}/pdf`"
+                :sha256="agreement.sha256"
+                heading="Sign this agreement"
+                confirm-label="I have read the agreement and sign it for my organisation."
+            />
+
+            <p v-else-if="agreement.sha256" class="break-all font-mono text-[0.65rem]" style="color: var(--text-muted)">
                 The PDF's SHA-256, recorded when it was sent: {{ agreement.sha256 }}
             </p>
         </div>

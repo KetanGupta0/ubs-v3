@@ -20,6 +20,7 @@ import UiTextarea from '@/components/UI/UiTextarea.vue';
 import UiModal from '@/components/UI/UiModal.vue';
 import UiFormField from '@/components/UI/UiFormField.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
+import SignatureList from '@/components/Documents/SignatureList.vue';
 
 const props = defineProps({
     proposal: { type: Object, required: true },
@@ -160,7 +161,13 @@ const tones = { accepted: 'success', rejected: 'danger', sent: 'brand', draft: '
                 <p v-if="proposal.responseNote" class="mt-1 whitespace-pre-line text-sm" style="color: var(--text-muted)">
                     “{{ proposal.responseNote }}”
                 </p>
+                <p v-if="proposal.sentAt && !proposal.respondedAt" class="mt-3 text-sm" style="color: var(--text-muted)">
+                    <template v-if="proposal.viewedAt">Opened {{ proposal.viewedAt }}<template v-if="proposal.viewedBy"> by {{ proposal.viewedBy }}</template>.</template>
+                    <template v-else>Not opened yet.</template>
+                </p>
             </UiCard>
+
+            <SignatureList :signatures="proposal.signatures" :signed-url="proposal.hasSignedCopy ? `/admin/proposals/${proposal.id}/signed` : null" detailed />
 
             <!-- ------------------------------------------------- quotation -->
             <UiCard v-if="quotation">

@@ -30,5 +30,15 @@
     {{ $agreement->number }}{{ $agreement->version > 1 ? ', version '.$agreement->version : '' }}.
     This text is fixed from the moment it was issued; any change is made in a new version.
 </p>
+@if(!empty($signatures))
+    @include('documents._certificate', [
+        'documentLabel' => $agreement->kindLabel(),
+        'number' => $agreement->number,
+        'version' => $agreement->version,
+        'title' => $agreement->title,
+        'sha256' => $agreement->pdf_sha256,
+        'signatures' => $signatures,
+    ])
+@endif
 </body>
 </html>

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use LogicException;
 
 /**
@@ -62,6 +63,7 @@ class Agreement extends Model
     protected function casts(): array
     {
         return [
+            'viewed_at' => 'datetime',
             'effective_on' => 'date',
             'expires_on' => 'date',
             'sent_at' => 'datetime',
@@ -99,6 +101,12 @@ class Agreement extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /** The first person in the client's organisation to open it. */
+    public function viewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'viewed_by');
+    }
+
     public function scopeForClient(Builder $query, User|int $client): Builder
     {
         return $query->where('client_id', $client instanceof User ? $client->id : $client);
@@ -127,5 +135,11 @@ class Agreement extends Model
         $sequence = $last ? (int) str($last)->afterLast('/')->toString() : 0;
 
         return sprintf('UBS/A/%d/%03d', $year, $sequence + 1);
+    }
+
+    /** Who has signed it, oldest first (CL2). */
+    public function signatures(): MorphMany
+    {
+        return $this->morphMany(DocumentSignature::class, 'signable')->orderBy('signed_at');
     }
 }

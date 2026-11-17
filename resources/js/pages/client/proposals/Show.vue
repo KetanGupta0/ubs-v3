@@ -2,13 +2,13 @@
 /**
  * Reading a proposal and answering it.
  *
- * The answer is a deliberate two step: a dialog that states plainly what is
- * being agreed to, because "accept" on a page of prices is a commitment and a
- * single click is too easy to make by accident.
+ * Accepting is signing (CL2): a typed name and a code sent to the signer's
+ * email, over the PDF that was sent. Declining stays a dialog with an
+ * optional reason.
  */
 import { ref } from 'vue';
 import { Head, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, Check, X, Clock, Printer, FileDown } from 'lucide-vue-next';
+import { ArrowLeft, Check, Clock, Printer, FileDown } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -18,6 +18,8 @@ import UiButton from '@/components/UI/UiButton.vue';
 import UiModal from '@/components/UI/UiModal.vue';
 import UiTextarea from '@/components/UI/UiTextarea.vue';
 import UiFormField from '@/components/UI/UiFormField.vue';
+import SignDocument from '@/components/Documents/SignDocument.vue';
+import SignatureList from '@/components/Documents/SignatureList.vue';
 import { useClientRole } from '@/composables/useClientRole';
 
 const props = defineProps({
@@ -182,23 +184,23 @@ const tones = { accepted: 'success', rejected: 'danger', expired: 'neutral', sen
                 </p>
             </UiCard>
 
-            <UiCard v-else-if="proposal.canRespond">
+            <template v-else-if="proposal.canRespond">
+                <SignDocument
+                    :code-url="`/client/proposals/${proposal.id}/sign/code`"
+                    :sign-url="`/client/proposals/${proposal.id}/sign`"
+                    :pdf-url="`/client/proposals/${proposal.id}/pdf`"
+                    :sha256="proposal.sha256"
+                    heading="Accept by signing"
+                    intro="Accepting this proposal is signing it, with your name and a code we email you."
+                    confirm-label="I have read the proposal and its quotation, and accept them for my organisation."
+                    button-label="Accept and sign"
+                    with-note
+                />
                 <p class="text-sm" style="color: var(--text-muted)">
-                    Accepting records your agreement with a timestamp. If anything needs changing first, reply to the
-                    email instead and we will send a revised version.
+                    If anything needs changing first, reply to the email and we will send a revised version. Or
+                    <button type="button" class="font-medium text-danger-500 hover:underline" @click="open('rejected')">decline it</button>.
                 </p>
-
-                <div class="mt-4 flex flex-wrap gap-2">
-                    <UiButton @click="open('accepted')">
-                        <template #leading><Check class="h-4 w-4" /></template>
-                        Accept this proposal
-                    </UiButton>
-                    <UiButton variant="ghost" @click="open('rejected')">
-                        <template #leading><X class="h-4 w-4" /></template>
-                        Decline
-                    </UiButton>
-                </div>
-            </UiCard>
+            </template>
 
             <UiCard v-else-if="proposal.respondedAt">
                 <p class="text-sm">
@@ -208,21 +210,18 @@ const tones = { accepted: 'success', rejected: 'danger', expired: 'neutral', sen
                     “{{ proposal.responseNote }}”
                 </p>
             </UiCard>
+
+            <SignatureList :signatures="proposal.signatures" :signed-url="proposal.hasSignedCopy ? `/client/proposals/${proposal.id}/signed` : null" />
         </div>
 
         <UiModal
             :open="Boolean(responding)"
-            :title="responding === 'accepted' ? 'Accept this proposal?' : 'Decline this proposal?'"
-            :description="responding === 'accepted'
-                ? `This records your agreement to ${proposal.title}${quotation ? ` at ${quotation.total}` : ''}. We will be in touch to start.`
-                : 'We will come back to you. Telling us why helps us get the next one right.'"
+            title="Decline this proposal?"
+            description="We will come back to you. Telling us why helps us get the next one right."
             @close="responding = null"
         >
             <form id="respond-form" @submit.prevent="submit">
-                <UiFormField
-                    :label="responding === 'accepted' ? 'Anything to add (optional)' : 'What did not work (optional)'"
-                    :error="form.errors.note"
-                >
+                <UiFormField label="What did not work (optional)" :error="form.errors.note">
                     <UiTextarea v-model="form.note" :rows="4" />
                 </UiFormField>
 
@@ -231,14 +230,7 @@ const tones = { accepted: 'success', rejected: 'danger', expired: 'neutral', sen
 
             <template #footer>
                 <UiButton variant="ghost" @click="responding = null">Cancel</UiButton>
-                <UiButton
-                    type="submit"
-                    form="respond-form"
-                    :variant="responding === 'accepted' ? 'primary' : 'danger'"
-                    :loading="form.processing"
-                >
-                    {{ responding === 'accepted' ? 'Yes, accept it' : 'Decline' }}
-                </UiButton>
+                <UiButton type="submit" form="respond-form" variant="danger" :loading="form.processing">Decline</UiButton>
             </template>
         </UiModal>
     </AppLayout>

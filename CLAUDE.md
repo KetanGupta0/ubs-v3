@@ -318,6 +318,15 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   any of `Agreement::FROZEN` or to be deleted after it leaves draft, whatever code path
   asks. A change is a new version (`previous_id`); the one it replaces is marked
   superseded when the new one is sent, and stays readable.
+- **A signature is a typed name and a one time code over the PDF as sent (CL2).**
+  `App\Services\Client\Signatures` sends the code to the signer's own address, refuses
+  when the stored PDF no longer matches its SHA-256, and records the signer, time, IP and
+  browser in `document_signatures`, which refuses any change or delete. Accepting a
+  proposal is signing it; `respond` only declines. A signatory or an owner signs, and
+  staff countersign an agreement only with `agreements.countersign`, because that binds
+  the company. Each signature renders a separate signed copy with a certificate page;
+  the PDF as sent is never touched. "Opened" is the first time somebody in the client's
+  organisation opened it, never staff and never "view as".
 - **An API key is shown once.** Only a hash and the prefix are stored. Lost keys
   are rotated, not recovered.
 - **`$request->validate()` drops optional fields the request did not send**, so

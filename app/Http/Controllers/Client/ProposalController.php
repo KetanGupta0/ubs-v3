@@ -6,12 +6,16 @@ use App\Models\Proposal;
 use App\Models\QuotationItem;
 use App\Services\Admin\Auditor;
 use App\Services\Client\ClientDocuments;
+use App\Services\Client\Signatures;
 use App\Support\Money;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
@@ -38,12 +42,14 @@ class ProposalController extends ClientController
         ]);
     }
 
-    public function show(Request $request, int $proposal): Response
+    public function show(Request $request, int $proposal, Signatures $signatures): Response
     {
         $record = $this->own($request, Proposal::query()
             ->where('client_id', $this->client($request)->id)
             ->visibleToClient()
-            ->with(['quotation.items', 'project:id,name,code', 'author:id,name']), $proposal);
+            ->with(['quotation.items', 'project:id,name,code', 'author:id,name', 'signatures']), $proposal);
+
+        $signatures->markViewed($record, $request->user());
 
         return Inertia::render('client/proposals/Show', [
             'proposal' => [
@@ -57,6 +63,9 @@ class ProposalController extends ClientController
                 'author' => $record->author?->name,
                 'responseNote' => $record->response_note,
                 'respondedAt' => $record->responded_at?->format('j M Y, g:i a'),
+                'signatures' => $record->signatures->map->toCertificateArray()->values(),
+                'hasSignedCopy' => $record->signed_pdf_path !== null,
+                'sha256' => $record->pdf_sha256,
             ],
 
             'quotation' => $record->quotation ? [
@@ -80,11 +89,12 @@ class ProposalController extends ClientController
     }
 
     /** The proposal as it was sent, as a PDF. */
-    public function pdf(Request $request, int $proposal, ClientDocuments $documents): HttpResponse
+    public function pdf(Request $request, int $proposal, ClientDocuments $documents, Signatures $signatures): HttpResponse
     {
         $record = $this->own($request, Proposal::query()
             ->where('client_id', $this->client($request)->id)
             ->visibleToClient(), $proposal);
+        $signatures->markViewed($record, $request->user());
 
         if (! $record->pdf_path) {
             // Sent before PDFs were kept: frozen now, once.
@@ -117,27 +127,24 @@ class ProposalController extends ClientController
             'note' => ['nullable', 'string', 'max:2000'],
         ]);
 
+        // Accepting is signing (CL2): a named person, proved by a one time
+        // code, over the PDF that was sent. Only declining happens here.
+        if ($validated['response'] === 'accepted') {
+            return back()->withErrors(['response' => 'Accept a proposal by signing it.']);
+        }
+
         $record->forceFill([
-            'status' => $validated['response'],
+            'status' => 'rejected',
             'responded_at' => now(),
             'response_note' => $validated['note'] ?? null,
             'responded_ip' => $request->ip(),
         ])->save();
 
-        $record->quotation?->forceFill([
-            'status' => $validated['response'] === 'accepted' ? 'accepted' : 'rejected',
-        ])->save();
+        $record->quotation?->forceFill(['status' => 'rejected'])->save();
 
-        $auditor->action('proposal.'.$validated['response'], $record, [
-            'by' => 'client',
-        ], $record->number);
+        $auditor->action('proposal.rejected', $record, ['by' => 'client'], $record->number);
 
-        return back()->with(
-            'success',
-            $validated['response'] === 'accepted'
-                ? 'Thank you. We will be in touch to start.'
-                : 'Recorded. We will come back to you.',
-        );
+        return back()->with('success', 'Recorded. We will come back to you.');
     }
 
     /** @return array<string, mixed> */
@@ -156,5 +163,61 @@ class ProposalController extends ClientController
             'total' => $proposal->quotation ? Money::display($proposal->quotation->total) : null,
             'sentAt' => $proposal->sent_at?->format('j M Y'),
         ];
+    }
+
+    /* --------------------------------------------- accepting by signing */
+
+    public function signCode(Request $request, int $proposal, Signatures $signatures, ClientDocuments $documents): JsonResponse
+    {
+        $this->mayAsClient($request, 'approve');
+        $record = $this->own($request, Proposal::query()->where('client_id', $this->client($request)->id)->visibleToClient(), $proposal);
+
+        if (! $record->pdf_path) {
+            $documents->freezeProposal($record);
+        }
+
+        $record = $record->fresh();
+
+        try {
+            return response()->json(['sentTo' => $signatures->requestCode($request->user(), $record, 'client', $request), 'sha256' => $record->pdf_sha256]);
+        } catch (InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function sign(Request $request, int $proposal, Signatures $signatures): RedirectResponse
+    {
+        $this->mayAsClient($request, 'approve');
+        $record = $this->own($request, Proposal::query()->where('client_id', $this->client($request)->id)->visibleToClient(), $proposal);
+
+        $validated = $this->validatedInput($request, [
+            'name' => ['required', 'string', 'max:160'],
+            'designation' => ['nullable', 'string', 'max:120'],
+            'code' => ['required', 'string', 'max:10'],
+            'note' => ['nullable', 'string', 'max:2000'],
+            'confirm' => ['accepted'],
+        ], [
+            'confirm.accepted' => 'Confirm that you have read it and accept it.',
+            'name.required' => 'Type your full name as your signature.',
+        ]);
+
+        try {
+            $signatures->sign($request->user(), $record, 'client', $validated['name'], $validated['designation'], $validated['code'], $request, $validated['note']);
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['code' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Accepted and signed. Thank you; we will be in touch to start.');
+    }
+
+    public function signed(Request $request, int $proposal): HttpResponse
+    {
+        $record = $this->own($request, Proposal::query()->where('client_id', $this->client($request)->id)->visibleToClient(), $proposal);
+        abort_unless($record->signed_pdf_path !== null, 404);
+
+        return response(Storage::disk('private')->get($record->signed_pdf_path), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.str($record->number)->replace('/', '-').'-signed.pdf"',
+        ]);
     }
 }

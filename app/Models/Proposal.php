@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
@@ -33,6 +34,7 @@ class Proposal extends Model
     protected function casts(): array
     {
         return [
+            'viewed_at' => 'datetime',
             'parties' => 'array',
             'valid_until' => 'date',
             'sent_at' => 'datetime',
@@ -60,6 +62,12 @@ class Proposal extends Model
     public function author(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** The first person in the client's organisation to open it. */
+    public function viewer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'viewed_by');
     }
 
     /** What the client is allowed to see: sent, and everything after. */
@@ -97,5 +105,11 @@ class Proposal extends Model
         $sequence = $last ? (int) str($last)->afterLast('/')->toString() : 0;
 
         return sprintf('UBS/P/%d/%03d', $year, $sequence + 1);
+    }
+
+    /** Who has signed it, oldest first (CL2). */
+    public function signatures(): MorphMany
+    {
+        return $this->morphMany(DocumentSignature::class, 'signable')->orderBy('signed_at');
     }
 }

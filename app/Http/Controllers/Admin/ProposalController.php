@@ -19,6 +19,7 @@ use App\Support\Table\Table;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -80,7 +81,7 @@ class ProposalController extends Controller
 
     public function show(Proposal $proposal, Invoicer $invoicer): Response
     {
-        $proposal->load(['client:id,name,email', 'project:id,name', 'quotation.items', 'author:id,name']);
+        $proposal->load(['client:id,name,email', 'project:id,name', 'quotation.items', 'author:id,name', 'signatures', 'viewer:id,name']);
 
         return Inertia::render('admin/proposals/Show', [
             'proposal' => [
@@ -104,6 +105,10 @@ class ProposalController extends Controller
                 'project' => $proposal->project?->name,
                 'author' => $proposal->author?->name,
                 'editable' => $proposal->status === 'draft',
+                'viewedAt' => $proposal->viewed_at?->format('j M Y, g:i a'),
+                'viewedBy' => $proposal->viewer?->name,
+                'signatures' => $proposal->signatures->map->toCertificateArray()->values(),
+                'hasSignedCopy' => $proposal->signed_pdf_path !== null,
             ],
             'quotation' => $proposal->quotation ? [
                 'id' => $proposal->quotation->id,
@@ -161,6 +166,17 @@ class ProposalController extends Controller
         $auditor->action('proposal.sent', $proposal, ['to' => $proposal->client->email], $proposal->number);
 
         return back()->with('success', "Sent to {$proposal->client->email}.");
+    }
+
+    /** The copy the client signed, with its certificate of signing. */
+    public function signed(Proposal $proposal): HttpResponse
+    {
+        abort_unless($proposal->signed_pdf_path !== null, 404);
+
+        return response(Storage::disk('private')->get($proposal->signed_pdf_path), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.str($proposal->number)->replace('/', '-').'-signed.pdf"',
+        ]);
     }
 
     /** The PDF: the stored one once sent, a preview of a draft. */

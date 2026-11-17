@@ -206,6 +206,7 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::delete('proposals/{proposal}', [ProposalController::class, 'destroy'])->name('proposals.destroy');
 
             Route::get('proposals/{proposal}/pdf', [ProposalController::class, 'pdf'])->whereNumber('proposal')->name('proposals.pdf');
+            Route::get('proposals/{proposal}/signed', [ProposalController::class, 'signed'])->whereNumber('proposal')->name('proposals.signed');
             Route::put('proposals/{proposal}/quotation', [ProposalController::class, 'updateQuotation'])->name('proposals.quotation.update');
             Route::post('proposals/{proposal}/items', [ProposalController::class, 'storeItem'])->name('proposals.items.store');
             Route::put('proposals/{proposal}/items/{item}', [ProposalController::class, 'updateItem'])->name('proposals.items.update');
@@ -225,6 +226,13 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('agreements/{agreement}/revise', [AgreementController::class, 'revise'])->whereNumber('agreement')->name('agreements.revise');
             Route::post('agreements/{agreement}/withdraw', [AgreementController::class, 'withdraw'])->whereNumber('agreement')->name('agreements.withdraw');
             Route::get('agreements/{agreement}/pdf', [AgreementController::class, 'pdf'])->whereNumber('agreement')->name('agreements.pdf');
+            Route::get('agreements/{agreement}/signed', [AgreementController::class, 'signed'])->whereNumber('agreement')->name('agreements.signed');
+
+            // Countersigning binds the company: a permission of its own.
+            Route::middleware(['permission:agreements.countersign', 'throttle:10,1'])->group(function () {
+                Route::post('agreements/{agreement}/countersign/code', [AgreementController::class, 'countersignCode'])->whereNumber('agreement')->name('agreements.countersign.code');
+                Route::post('agreements/{agreement}/countersign', [AgreementController::class, 'countersign'])->whereNumber('agreement')->name('agreements.countersign');
+            });
         });
 
         /* -------------------------------------------------------- documents */

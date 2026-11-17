@@ -62,7 +62,7 @@ it('hides a draft proposal from the client it was written for', function () {
         ->assertInertia(fn ($page) => $page->has('proposals', 0));
 });
 
-it('records who accepted a proposal and when', function () {
+it('records who declined a proposal and when, and accepts one only by signing it', function () {
     $proposal = Proposal::query()->create([
         'client_id' => $this->client->id,
         'title' => 'Driver application',
@@ -71,16 +71,22 @@ it('records who accepted a proposal and when', function () {
         'valid_until' => today()->addWeek(),
     ]);
 
+    // Accepting is signing (CL2), never a bare click.
     $this->actingAs($this->client)
-        ->post("/client/proposals/{$proposal->id}/respond", ['response' => 'accepted', 'note' => 'Go ahead.'])
+        ->post("/client/proposals/{$proposal->id}/respond", ['response' => 'accepted'])
+        ->assertSessionHasErrors(['response' => 'Accept a proposal by signing it.']);
+    expect($proposal->fresh()->status)->toBe('sent');
+
+    $this->actingAs($this->client)
+        ->post("/client/proposals/{$proposal->id}/respond", ['response' => 'rejected', 'note' => 'Too early for us.'])
         ->assertRedirect();
 
     $proposal->refresh();
 
-    expect($proposal->status)->toBe('accepted')
+    expect($proposal->status)->toBe('rejected')
         ->and($proposal->responded_at)->not->toBeNull()
         ->and($proposal->responded_ip)->not->toBeNull()
-        ->and($proposal->response_note)->toBe('Go ahead.');
+        ->and($proposal->response_note)->toBe('Too early for us.');
 });
 
 it('refuses a proposal that has passed its validity date', function () {
@@ -93,8 +99,8 @@ it('refuses a proposal that has passed its validity date', function () {
     ]);
 
     $this->actingAs($this->client)
-        ->post("/client/proposals/{$proposal->id}/respond", ['response' => 'accepted'])
-        ->assertSessionHasErrors('response');
+        ->post("/client/proposals/{$proposal->id}/respond", ['response' => 'rejected'])
+        ->assertSessionHasErrors(['response' => 'This proposal has passed its validity date. Ask us for a fresh one.']);
 
     expect($proposal->fresh()->status)->toBe('sent');
 });
@@ -109,8 +115,8 @@ it('will not let the same proposal be answered twice', function () {
     ]);
 
     $this->actingAs($this->client)
-        ->post("/client/proposals/{$proposal->id}/respond", ['response' => 'accepted'])
-        ->assertSessionHasErrors('response');
+        ->post("/client/proposals/{$proposal->id}/respond", ['response' => 'rejected'])
+        ->assertSessionHasErrors(['response' => 'This proposal has already been answered.']);
 
     expect($proposal->fresh()->status)->toBe('rejected');
 });

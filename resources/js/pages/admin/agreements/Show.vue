@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { ArrowLeft, CopyPlus, Download, Eye, Pencil, Send, Trash2, Undo2 } from 'lucide-vue-next';
+import { ArrowLeft, CopyPlus, Download, Eye, FileCheck2, Pencil, Send, Trash2, Undo2 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -8,8 +8,13 @@ import MarkdownHtml from '@/components/Marketing/MarkdownHtml.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import UiCard from '@/components/UI/UiCard.vue';
+import SignDocument from '@/components/Documents/SignDocument.vue';
+import SignatureList from '@/components/Documents/SignatureList.vue';
 
-const props = defineProps({ agreement: { type: Object, required: true } });
+const props = defineProps({
+    agreement: { type: Object, required: true },
+    canCountersign: { type: Boolean, default: false },
+});
 
 const tones = { draft: 'neutral', sent: 'warning', signed: 'brand', countersigned: 'success', superseded: 'neutral', withdrawn: 'danger' };
 const base = `/admin/agreements/${props.agreement.id}`;
@@ -47,9 +52,25 @@ function destroy() {
             </PageHeader>
 
             <div class="grid gap-5 lg:grid-cols-3">
-                <UiCard class="lg:col-span-2">
-                    <MarkdownHtml :html="agreement.html" />
-                </UiCard>
+                <div class="space-y-5 lg:col-span-2">
+                    <SignDocument
+                        v-if="canCountersign"
+                        :code-url="`${base}/countersign/code`"
+                        :sign-url="`${base}/countersign`"
+                        :pdf-url="`${base}/pdf`"
+                        :sha256="agreement.sha256"
+                        heading="Countersign for the company"
+                        intro="The client has signed. Countersigning binds the company to it."
+                        confirm-label="I have read the agreement and countersign it for the company, with authority to do so."
+                        button-label="Countersign"
+                    />
+
+                    <SignatureList :signatures="agreement.signatures" :signed-url="agreement.hasSignedCopy ? `${base}/signed` : null" detailed />
+
+                    <UiCard>
+                        <MarkdownHtml :html="agreement.html" />
+                    </UiCard>
+                </div>
 
                 <div class="space-y-5">
                     <UiCard>
@@ -59,6 +80,10 @@ function destroy() {
                         </div>
                         <dl class="mt-3 space-y-1.5 text-sm">
                             <div v-if="agreement.sentAt" class="flex justify-between gap-2"><dt style="color: var(--text-muted)">Sent</dt><dd>{{ agreement.sentAt }}</dd></div>
+                            <div v-if="agreement.sentAt" class="flex justify-between gap-2">
+                                <dt style="color: var(--text-muted)">Opened</dt>
+                                <dd class="text-right">{{ agreement.viewedAt ? `${agreement.viewedAt}${agreement.viewedBy ? `, ${agreement.viewedBy}` : ''}` : 'Not yet' }}</dd>
+                            </div>
                             <div v-if="agreement.effectiveOn" class="flex justify-between gap-2"><dt style="color: var(--text-muted)">Effective</dt><dd>{{ agreement.effectiveOn }}</dd></div>
                             <div v-if="agreement.expiresOn" class="flex justify-between gap-2"><dt style="color: var(--text-muted)">Ends</dt><dd>{{ agreement.expiresOn }}</dd></div>
                             <div v-if="agreement.project" class="flex justify-between gap-2"><dt style="color: var(--text-muted)">Project</dt><dd><Link :href="`/admin/projects/${agreement.project.id}`" class="hover:underline">{{ agreement.project.name }}</Link></dd></div>
@@ -94,6 +119,10 @@ function destroy() {
                                 <UiButton :href="`${base}/pdf`" :inertia="false" variant="secondary" size="sm">
                                     <template #leading><Download class="h-3.5 w-3.5" /></template>
                                     Download the PDF as sent
+                                </UiButton>
+                                <UiButton v-if="agreement.hasSignedCopy" :href="`${base}/signed`" :inertia="false" variant="secondary" size="sm">
+                                    <template #leading><FileCheck2 class="h-3.5 w-3.5" /></template>
+                                    Download the signed copy
                                 </UiButton>
                                 <UiButton variant="secondary" size="sm" @click="router.post(`${base}/revise`)">
                                     <template #leading><CopyPlus class="h-3.5 w-3.5" /></template>

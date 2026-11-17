@@ -105,10 +105,11 @@ it('lets each role do its own part, and says who can when it cannot', function (
     $proposal = Proposal::query()->create([
         'client_id' => $this->acme->id, 'title' => 'Driver app', 'status' => 'sent', 'sent_at' => now(), 'valid_until' => today()->addWeek(),
     ]);
-    $this->actingAs($this->finance)->post("/client/proposals/{$proposal->id}/respond", ['response' => 'accepted'])->assertForbidden();
+    $this->actingAs($this->finance)->post("/client/proposals/{$proposal->id}/respond", ['response' => 'rejected'])->assertForbidden();
+    $this->actingAs($this->finance)->postJson("/client/proposals/{$proposal->id}/sign/code")->assertForbidden();
     expect($proposal->fresh()->status)->toBe('sent');
-    $this->actingAs($this->signatory)->post("/client/proposals/{$proposal->id}/respond", ['response' => 'accepted'])->assertRedirect();
-    expect($proposal->fresh()->status)->toBe('accepted');
+    $this->actingAs($this->signatory)->post("/client/proposals/{$proposal->id}/respond", ['response' => 'rejected'])->assertRedirect();
+    expect($proposal->fresh()->status)->toBe('rejected');
 
     $this->actingAs($this->finance)->post('/client/api-keys', ['plan_id' => 1, 'label' => 'x', 'environment' => 'test'])->assertForbidden();
 
