@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
  * A numbered tax invoice.
@@ -30,6 +31,8 @@ class Invoice extends Model
         'tax' => 0,
         'total' => 0,
         'amount_paid' => 0,
+        'tds_amount' => 0,
+        'credited_amount' => 0,
     ];
 
     protected function casts(): array
@@ -73,9 +76,19 @@ class Invoice extends Model
         return $query->whereIn('status', ['issued', 'partially_paid']);
     }
 
+    /**
+     * What is still owed: the total less what was paid, the TDS the client
+     * deducted (CL14) and any credit notes against it.
+     */
     public function balance(): int
     {
-        return max(0, $this->total - $this->amount_paid);
+        return max(0, $this->total - $this->amount_paid - $this->tds_amount - $this->credited_amount);
+    }
+
+    /** The TDS the client declared on it, if any (CL14). */
+    public function tdsDeduction(): HasOne
+    {
+        return $this->hasOne(TdsDeduction::class);
     }
 
     public function totalLabel(): string

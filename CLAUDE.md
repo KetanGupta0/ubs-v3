@@ -375,6 +375,16 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   accept, proposals and agreements to sign, payments, renewals. Something only another
   role can do still shows, saying whose it is. An overdue invoice whose payment request
   is still open is the same debt and is listed once.
+- **An invoice is settled by more than money (CL14).** `Invoice::balance()` is the total
+  less what was paid, the TDS the client deducted and credit notes, and
+  `Invoicer::settle()` is the one place that turns that into the invoice's status and
+  marks its request paid. TDS is declared by finance or an owner before paying, at a
+  section rate from `config/company.php` on the taxable value (never the GST), and the
+  client pays the net; the Form 16A is chased by quarter and checked against Form 26AS.
+  `Checkout` reuses an attempt only at the current amount. The client keeps its own
+  legal name, GSTIN and state (`/client/billing-details`, the state picked from
+  `IndianStates`, the GSTIN's code checked against it), and an invoice copies them, and
+  the PO number, when it is issued.
 - **An API key is shown once.** Only a hash and the prefix are stored. Lost keys
   are rotated, not recovered.
 - **`$request->validate()` drops optional fields the request did not send**, so

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Client\AgreementController;
 use App\Http\Controllers\Client\ApiKeyController;
+use App\Http\Controllers\Client\BillingDetailsController;
 use App\Http\Controllers\Client\ChangeRequestController;
 use App\Http\Controllers\Client\DashboardController;
 use App\Http\Controllers\Client\DocumentController;
@@ -146,6 +147,12 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
         Route::get('payments/{payment}', [PaymentController::class, 'show'])
             ->whereNumber('payment')
             ->name('payments.show');
+        Route::get('billing-details', [BillingDetailsController::class, 'edit'])->name('billing-details.edit');
+        Route::put('billing-details', [BillingDetailsController::class, 'update'])->name('billing-details.update');
+        Route::post('payments/{payment}/tds', [PaymentController::class, 'declareTds'])->whereNumber('payment')->name('payments.tds.declare');
+        Route::delete('payments/{payment}/tds', [PaymentController::class, 'withdrawTds'])->whereNumber('payment')->name('payments.tds.withdraw');
+        Route::post('payments/{payment}/tds/certificate', [PaymentController::class, 'uploadCertificate'])->whereNumber('payment')->name('payments.tds.upload');
+        Route::get('payments/{payment}/tds/certificate', [PaymentController::class, 'certificate'])->whereNumber('payment')->name('payments.tds.certificate');
         Route::post('payments/{payment}/checkout', [PaymentController::class, 'begin'])
             ->whereNumber('payment')
             ->middleware('throttle:20,1')

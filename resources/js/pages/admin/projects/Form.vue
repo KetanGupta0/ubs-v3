@@ -38,6 +38,7 @@ const form = useForm({
     target_date: props.project?.target_date ?? '',
     delivered_on: props.project?.delivered_on ?? '',
     budget: props.project?.budget ?? null,
+    po_number: props.project?.po_number ?? '',
     manager_id: props.project?.manager_id ?? null,
     team: props.project?.team ?? [],
     repository_url: props.project?.repository_url ?? '',
@@ -147,9 +148,14 @@ function destroy() {
                     </UiFormField>
                 </div>
 
-                <UiFormField label="Agreed value (₹)" :error="form.errors.budget" hint="Shown to the client on the project page.">
-                    <UiInput v-model="form.budget" type="number" step="0.01" min="0" />
-                </UiFormField>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <UiFormField label="Agreed value (₹)" :error="form.errors.budget" hint="Shown to the client on the project page.">
+                        <UiInput v-model="form.budget" type="number" step="0.01" min="0" />
+                    </UiFormField>
+                    <UiFormField label="Client's PO number" :error="form.errors.po_number" hint="Printed on this project's invoices.">
+                        <UiInput v-model="form.po_number" maxlength="60" />
+                    </UiFormField>
+                </div>
             </FormSection>
 
             <FormSection title="Team and links">

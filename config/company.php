@@ -44,4 +44,17 @@ return [
     'billing' => [
         'milestone_due_days' => 7,
     ],
+
+    /*
+    | TDS a client may declare on one of our invoices (CL14), by section, at
+    | the rate for a resident company deducting from us. Rates change with
+    | Finance Acts: change them here, never in the code that applies them.
+    */
+    'tds' => [
+        'sections' => [
+            '194J-professional' => ['label' => 'Professional services, section 194J', 'rate' => 10],
+            '194J-technical' => ['label' => 'Technical services, section 194J', 'rate' => 2],
+            '194C' => ['label' => 'Contract work, section 194C', 'rate' => 2],
+        ],
+    ],
 ];

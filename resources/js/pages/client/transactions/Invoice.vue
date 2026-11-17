@@ -90,6 +90,9 @@ defineProps({
                         <p v-if="invoice.placeOfSupply" class="mt-1 text-xs" style="color: var(--text-muted)">
                             Place of supply: {{ invoice.placeOfSupply }}
                         </p>
+                        <p v-if="invoice.poNumber" class="mt-1 text-xs" style="color: var(--text-muted)">
+                            Your PO: {{ invoice.poNumber }}
+                        </p>
                     </div>
                 </div>
 
@@ -135,6 +138,14 @@ defineProps({
                     <div v-if="invoice.amountPaid !== '₹0.00'" class="flex justify-between">
                         <dt style="color: var(--text-muted)">Paid</dt>
                         <dd class="tnum">{{ invoice.amountPaid }}</dd>
+                    </div>
+                    <div v-if="invoice.tds" class="flex justify-between">
+                        <dt style="color: var(--text-muted)">TDS you deducted</dt>
+                        <dd class="tnum">{{ invoice.tds }}</dd>
+                    </div>
+                    <div v-if="invoice.credited" class="flex justify-between">
+                        <dt style="color: var(--text-muted)">Credit notes</dt>
+                        <dd class="tnum">{{ invoice.credited }}</dd>
                     </div>
                     <div v-if="invoice.balance !== '₹0.00'" class="flex justify-between font-semibold">
                         <dt>Balance</dt>

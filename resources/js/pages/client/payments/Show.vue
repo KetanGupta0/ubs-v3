@@ -6,9 +6,9 @@
  * checkout and the server decides what is owed, because a checkout that takes
  * its amount from the page is a lakh rupee invoice payable with one rupee.
  */
-import { ref, onMounted } from 'vue';
-import { Head, router, usePage } from '@inertiajs/vue3';
-import { ArrowLeft, Download, CreditCard, ShieldCheck, AlertTriangle } from 'lucide-vue-next';
+import { computed, ref, onMounted } from 'vue';
+import { Head, router, useForm, usePage } from '@inertiajs/vue3';
+import { ArrowLeft, Download, CreditCard, ShieldCheck, AlertTriangle, Landmark, Upload } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -16,6 +16,9 @@ import UiCard from '@/components/UI/UiCard.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import UiModal from '@/components/UI/UiModal.vue';
+import UiFileDrop from '@/components/UI/UiFileDrop.vue';
+import UiFormField from '@/components/UI/UiFormField.vue';
+import UiSelect from '@/components/UI/UiSelect.vue';
 import { toast } from '@/support/toast';
 import { useClientRole } from '@/composables/useClientRole';
 
@@ -23,7 +26,33 @@ const props = defineProps({
     payment: { type: Object, required: true },
     invoice: { type: Object, default: null },
     gateway: { type: Object, default: () => ({}) },
+    /** TDS the organisation deducts, and its Form 16A (CL14). */
+    tds: { type: Object, default: null },
 });
+
+/* ----------------------------------------------------------- TDS (CL14) */
+
+const tdsForm = useForm({ section: '' });
+const certificateForm = useForm({ certificate: [] });
+const chosenSection = computed(() => props.tds?.sections?.find((section) => section.value === tdsForm.section) ?? null);
+// What the button offers to pay: the net once TDS is recorded.
+const toPay = computed(() => (props.invoice && props.invoice.balance !== props.invoice.total ? props.invoice.balance : props.payment.total));
+
+function declareTds() {
+    tdsForm.post(`/client/payments/${props.payment.id}/tds`, { preserveScroll: true });
+}
+
+function withdrawTds() {
+    if (window.confirm('Remove the TDS? The full amount becomes due.')) {
+        router.delete(`/client/payments/${props.payment.id}/tds`, { preserveScroll: true });
+    }
+}
+
+function uploadCertificate() {
+    certificateForm
+        .transform((data) => ({ certificate: data.certificate[0] ?? null }))
+        .post(`/client/payments/${props.payment.id}/tds/certificate`, { preserveScroll: true, forceFormData: true, onSuccess: () => certificateForm.reset() });
+}
 
 const { may } = useClientRole();
 
@@ -177,7 +206,7 @@ function simulate(outcome) {
                 <div v-if="payment.payable" class="mt-5 flex flex-wrap gap-2">
                     <UiButton v-if="may('pay')" :loading="busy" @click="pay">
                         <template #leading><CreditCard class="h-4 w-4" /></template>
-                        Pay {{ payment.total }}
+                        Pay {{ toPay }}
                     </UiButton>
                     <UiButton
                         v-if="invoice"
@@ -199,6 +228,48 @@ function simulate(outcome) {
                         No payment provider is configured, so this environment simulates the result.
                     </span>
                 </p>
+            </UiCard>
+
+            <!-- ------------------------------------------------ TDS (CL14) -->
+            <UiCard v-if="tds && (tds.deduction || tds.sections.length)">
+                <div class="flex items-start gap-3">
+                    <Landmark class="mt-0.5 h-5 w-5 shrink-0" style="color: var(--text-muted)" aria-hidden="true" />
+                    <div class="min-w-0 flex-1">
+                        <h2 class="text-base font-semibold" style="color: var(--text-strong)">TDS</h2>
+
+                        <template v-if="tds.deduction">
+                            <p class="mt-1 text-sm">
+                                {{ tds.deduction.amount }} deducted under {{ tds.deduction.section }} ({{ tds.deduction.rate }}%), {{ tds.deduction.quarter }}.
+                                <UiBadge :tone="tds.deduction.status === 'verified' ? 'success' : tds.deduction.status === 'mismatch' ? 'danger' : 'warning'" size="sm" dot>{{ tds.deduction.statusLabel }}</UiBadge>
+                            </p>
+                            <p v-if="tds.deduction.status === 'declared'" class="mt-1 text-xs" style="color: var(--text-muted)">Please send us the Form 16A for this quarter by {{ tds.deduction.dueOn }}.</p>
+                            <p v-if="tds.deduction.checkNote" class="mt-2 rounded-xl p-3 text-sm" style="background: var(--surface-sunken)">{{ tds.deduction.checkNote }}</p>
+
+                            <form v-if="tds.deduction.canUpload" class="mt-4 space-y-3" @submit.prevent="uploadCertificate">
+                                <UiFormField label="Form 16A" hint="The PDF from TRACES, up to 5 MB." :error="certificateForm.errors.certificate">
+                                    <UiFileDrop v-model="certificateForm.certificate" accept="application/pdf" :max-size="5" />
+                                </UiFormField>
+                                <UiButton type="submit" size="sm" :loading="certificateForm.processing" :disabled="!certificateForm.certificate.length">
+                                    <template #leading><Upload class="h-3.5 w-3.5" /></template>
+                                    Send the certificate
+                                </UiButton>
+                            </form>
+                            <div class="mt-3 flex flex-wrap gap-2">
+                                <UiButton v-if="tds.deduction.hasCertificate" :href="`/client/payments/${payment.id}/tds/certificate`" :inertia="false" variant="ghost" size="xs">Download the Form 16A sent</UiButton>
+                                <UiButton v-if="tds.deduction.canWithdraw" variant="ghost" size="xs" @click="withdrawTds">Remove the TDS</UiButton>
+                            </div>
+                        </template>
+
+                        <form v-else class="mt-2 space-y-3" @submit.prevent="declareTds">
+                            <p class="text-sm" style="color: var(--text-muted)">If your organisation deducts tax at source, record it before paying: you pay the rest, and send us the Form 16A when the quarter's return is filed.</p>
+                            <UiFormField label="Section you deduct under" :error="tdsForm.errors.section">
+                                <UiSelect v-model="tdsForm.section" :options="[{ value: '', label: 'Choose a section' }, ...tds.sections]" />
+                            </UiFormField>
+                            <p v-if="chosenSection" class="text-sm">TDS {{ chosenSection.amount }}, so you pay <strong>{{ chosenSection.net }}</strong>.</p>
+                            <UiButton type="submit" size="sm" variant="secondary" :loading="tdsForm.processing" :disabled="!tdsForm.section">Record the TDS</UiButton>
+                        </form>
+                    </div>
+                </div>
             </UiCard>
 
             <UiCard v-if="invoice">

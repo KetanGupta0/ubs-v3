@@ -6,13 +6,18 @@ use App\Models\Invoice;
 use App\Models\PaymentRequest;
 use App\Models\Transaction;
 use App\Services\Billing\Invoicer;
+use App\Services\Billing\Tds;
 use App\Services\Payments\Checkout;
 use App\Support\Money;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
  * Paying for things.
@@ -78,7 +83,109 @@ class PaymentController extends ClientController
                 'name' => $checkout->gateway()->name(),
                 'live' => $checkout->gateway()->isLive(),
             ],
+            'tds' => $this->tdsFor($request, $record, $invoice),
         ]);
+    }
+
+    /* ------------------------------------------------------- TDS (CL14) */
+
+    public function declareTds(Request $request, int $payment, Tds $tds): RedirectResponse
+    {
+        $this->mayAsClient($request, 'pay');
+        $record = $this->own($request, PaymentRequest::query()->forUser($this->client($request)), $payment);
+
+        $validated = $this->validatedInput($request, [
+            'section' => ['required', Rule::in(array_keys(Tds::sections()))],
+        ], ['section.required' => 'Choose the section you deduct under.', 'section.in' => 'Choose the section you deduct under.']);
+
+        try {
+            $deduction = $tds->declare($record, $request->user(), $validated['section']);
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['section' => $e->getMessage()]);
+        }
+
+        return back()->with('success', "Recorded TDS of {$deduction->amountLabel()}. Pay the rest, and send us the Form 16A by {$deduction->certificate_due_on->format('j M Y')}.");
+    }
+
+    public function withdrawTds(Request $request, int $payment, Tds $tds): RedirectResponse
+    {
+        $this->mayAsClient($request, 'pay');
+        $record = $this->own($request, PaymentRequest::query()->forUser($this->client($request))->with('invoice.tdsDeduction'), $payment);
+        abort_unless($record->invoice?->tdsDeduction !== null, 404);
+
+        try {
+            $tds->withdraw($record->invoice->tdsDeduction, $request->user());
+        } catch (InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'TDS removed. The full amount is due.');
+    }
+
+    public function uploadCertificate(Request $request, int $payment, Tds $tds): RedirectResponse
+    {
+        $this->mayAsClient($request, 'pay');
+        $record = $this->own($request, PaymentRequest::query()->forUser($this->client($request))->with('invoice.tdsDeduction'), $payment);
+        abort_unless($record->invoice?->tdsDeduction !== null, 404);
+
+        $this->validatedInput($request, [
+            'certificate' => ['required', 'file', 'max:5120', 'mimes:pdf'],
+        ], ['certificate.mimes' => 'Upload the Form 16A as a PDF.', 'certificate.max' => 'The PDF can be up to 5 MB.']);
+
+        try {
+            $tds->uploadCertificate($record->invoice->tdsDeduction, $request->user(), $request->file('certificate'));
+        } catch (InvalidArgumentException $e) {
+            return back()->withErrors(['certificate' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Thank you. We will check it against Form 26AS.');
+    }
+
+    public function certificate(Request $request, int $payment): HttpResponse
+    {
+        $record = $this->own($request, PaymentRequest::query()->forUser($this->client($request))->with('invoice.tdsDeduction'), $payment);
+        $path = $record->invoice?->tdsDeduction?->certificate_path;
+        abort_unless($path !== null && Storage::disk('private')->exists($path), 404);
+
+        return response(Storage::disk('private')->get($path), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="form-16a-'.str($record->invoice->number)->replace('/', '-').'.pdf"',
+        ]);
+    }
+
+    /** @return array<string, mixed>|null What the page shows about TDS on this invoice. */
+    protected function tdsFor(Request $request, PaymentRequest $record, ?Invoice $invoice): ?array
+    {
+        if (! $invoice || ! $record->user?->isClient()) {
+            return null;
+        }
+
+        $mayPay = $request->user()->canAsClient('pay');
+        $deduction = $invoice->tdsDeduction;
+
+        return [
+            'deduction' => $deduction ? [
+                'section' => $deduction->sectionLabel(),
+                'rate' => $deduction->rate,
+                'amount' => $deduction->amountLabel(),
+                'quarter' => $deduction->quarter,
+                'dueOn' => $deduction->certificate_due_on->format('j M Y'),
+                'status' => $deduction->status,
+                'statusLabel' => $deduction->statusLabel(),
+                'checkNote' => $deduction->check_note,
+                'hasCertificate' => $deduction->certificate_path !== null,
+                'canWithdraw' => $mayPay && $deduction->status === 'declared' && $invoice->amount_paid === 0,
+                'canUpload' => $mayPay && in_array($deduction->status, ['declared', 'mismatch'], true),
+            ] : null,
+            'sections' => ! $deduction && $mayPay && $record->isPayable() && $invoice->amount_paid === 0
+                ? collect(Tds::sections())->map(fn (array $section, string $key) => [
+                    'value' => $key,
+                    'label' => "{$section['label']}, {$section['rate']}%",
+                    'amount' => Money::display(Tds::amountFor($invoice, $key)),
+                    'net' => Money::display(max(0, $invoice->balance() - Tds::amountFor($invoice, $key))),
+                ])->values()
+                : [],
+        ];
     }
 
     /** Open checkout and hand the browser what the provider needs. */

@@ -83,6 +83,10 @@ class TransactionController extends ClientController
                 'total' => Money::display($record->total),
                 'totalInWords' => $record->totalInWords(),
                 'amountPaid' => Money::display($record->amount_paid),
+                // Settled without a payment (CL14): TDS the client deducted, and credit notes.
+                'tds' => $record->tds_amount ? Money::display($record->tds_amount) : null,
+                'credited' => $record->credited_amount ? Money::display($record->credited_amount) : null,
+                'poNumber' => $record->po_number,
                 'balance' => Money::display($record->balance()),
                 'terms' => $record->terms,
                 'paymentRequestId' => $record->payment_request_id,

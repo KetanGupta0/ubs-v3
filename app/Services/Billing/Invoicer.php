@@ -41,6 +41,8 @@ class Invoicer
                 'user_id' => $request->user_id,
                 'payment_request_id' => $request->id,
                 'number' => $claimed['number'],
+                // The client's purchase order, fixed with the invoice (CL14).
+                'po_number' => $request->po_number,
                 'financial_year' => $claimed['financialYear'],
                 'sequence' => $claimed['sequence'],
                 'billed_to' => $billedTo,
@@ -84,34 +86,62 @@ class Invoicer
             $invoice = $transaction->invoice;
 
             if ($invoice) {
-                $paid = (int) $invoice->transactions()->successful()->sum('amount');
+                $invoice->forceFill(['amount_paid' => (int) $invoice->transactions()->successful()->sum('amount')])->save();
+                $this->settle($invoice);
 
-                $invoice->forceFill([
-                    'amount_paid' => $paid,
-                    'status' => $paid >= $invoice->total ? 'paid' : 'partially_paid',
-                ])->save();
+                return;
             }
 
+            // A request with no invoice yet: settled by its own payments.
             $request = $transaction->paymentRequest;
 
-            if ($request && $request->status === 'pending') {
-                $paid = (int) $request->transactions()->successful()->sum('amount');
-
-                if ($paid >= $request->total) {
-                    $request->forceFill(['status' => 'paid', 'paid_at' => now()])->save();
-
-                    // A course fee settled in full opens the lessons that were
-                    // waiting on it. Here, rather than in whichever screen took
-                    // the money, so a bank transfer recorded by hand opens the
-                    // course exactly as an online payment does.
-                    Enrollment::query()
-                        ->where('payment_request_id', $request->id)
-                        ->where('has_paid', false)
-                        ->get()
-                        ->each(fn (Enrollment $enrolment) => $enrolment->forceFill(['has_paid' => true])->save());
-                }
+            if ($request && $request->status === 'pending' && (int) $request->transactions()->successful()->sum('amount') >= $request->total) {
+                $this->markRequestPaid($request);
             }
         });
+    }
+
+    /**
+     * Work out where an invoice stands from everything that settles it: what
+     * was paid, the TDS the client deducted, and credit notes (CL14). When
+     * nothing is left, its payment request is paid, here and nowhere else.
+     */
+    public function settle(Invoice $invoice): void
+    {
+        if (in_array($invoice->status, ['cancelled', 'refunded'], true)) {
+            return;
+        }
+
+        $covered = $invoice->amount_paid + $invoice->tds_amount + $invoice->credited_amount;
+
+        $invoice->forceFill([
+            'status' => match (true) {
+                $covered >= $invoice->total => 'paid',
+                $covered > 0 => 'partially_paid',
+                default => 'issued',
+            },
+        ])->save();
+
+        $request = $invoice->paymentRequest;
+
+        if ($request && $request->status === 'pending' && $invoice->status === 'paid') {
+            $this->markRequestPaid($request);
+        }
+    }
+
+    protected function markRequestPaid(PaymentRequest $request): void
+    {
+        $request->forceFill(['status' => 'paid', 'paid_at' => now()])->save();
+
+        // A course fee settled in full opens the lessons that were waiting
+        // on it. Here, rather than in whichever screen took the money, so a
+        // bank transfer recorded by hand opens the course exactly as an
+        // online payment does.
+        Enrollment::query()
+            ->where('payment_request_id', $request->id)
+            ->where('has_paid', false)
+            ->get()
+            ->each(fn (Enrollment $enrolment) => $enrolment->forceFill(['has_paid' => true])->save());
     }
 
     /** @return array<string, mixed> */

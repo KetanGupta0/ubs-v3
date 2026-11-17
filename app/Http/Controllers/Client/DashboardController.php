@@ -16,6 +16,7 @@ use App\Models\ProjectUpdate;
 use App\Models\Proposal;
 use App\Models\Subscription;
 use App\Models\SupportTicket;
+use App\Models\TdsDeduction;
 use App\Models\WaitingItem;
 use App\Support\Money;
 use Illuminate\Http\Request;
@@ -277,6 +278,27 @@ class DashboardController extends ClientController
                     'urgent' => $payment->isOverdue(),
                 ];
             });
+
+        // Form 16A for TDS deducted from our invoices (CL14), from a month before it is due.
+        if ($mayPay) {
+            TdsDeduction::query()
+                ->forClient($client)
+                ->awaitingCertificate()
+                // One that did not match is theirs to correct now, whatever the date.
+                ->where(fn ($query) => $query->where('status', 'mismatch')->orWhere('certificate_due_on', '<=', today()->addDays(30)))
+                ->with('invoice:id,number,payment_request_id')
+                ->get()
+                ->each(function (TdsDeduction $deduction) use (&$items) {
+                    $items[] = [
+                        'kind' => 'tds',
+                        'title' => $deduction->status === 'mismatch' ? "Correct the Form 16A for {$deduction->invoice->number}" : "Send the Form 16A for {$deduction->invoice->number}",
+                        'detail' => "{$deduction->amountLabel()} TDS, {$deduction->quarter} · due ".$deduction->certificate_due_on->format('j M Y'),
+                        'href' => "/client/payments/{$deduction->invoice->payment_request_id}",
+                        'action' => 'Upload',
+                        'urgent' => $deduction->status === 'mismatch' || $deduction->certificate_due_on->isPast(),
+                    ];
+                });
+        }
 
         Subscription::query()
             ->forClient($client)

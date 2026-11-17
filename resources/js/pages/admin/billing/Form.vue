@@ -31,6 +31,7 @@ const form = useForm({
     notes: '',
     project_id: null,
     milestone_id: null,
+    po_number: '',
     notify: true,
 });
 
@@ -42,6 +43,15 @@ const milestones = computed(() => {
     const project = props.projects.find((candidate) => candidate.value === Number(form.project_id));
 
     return project?.milestones ?? [];
+});
+
+// The client's purchase order for the project is the default for its invoices (CL14).
+watch(() => form.project_id, (id) => {
+    const project = props.projects.find((candidate) => candidate.value === Number(id));
+
+    if (project?.poNumber && !form.po_number) {
+        form.po_number = project.poNumber;
+    }
 });
 
 // Picking a milestone that carries a price fills the amount in, because typing
@@ -122,6 +132,10 @@ function submit() {
                         />
                     </UiFormField>
                 </div>
+
+                <UiFormField label="Client's PO number" hint="Printed on the invoice. Filled from the project when it has one." :error="form.errors.po_number">
+                    <UiInput v-model="form.po_number" maxlength="60" />
+                </UiFormField>
             </FormSection>
 
             <FormSection title="How much">

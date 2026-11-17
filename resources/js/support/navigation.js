@@ -17,7 +17,7 @@
  * disabled rather than linking nowhere.
  */
 import {
-    CalendarClock, FilePlus2, Bug,
+    CalendarClock, FilePlus2, Bug, Landmark,
     LayoutDashboard, FolderKanban, FileText, Receipt, LifeBuoy, MessagesSquare,
     KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy, UserCheck, Video, Star, Search, Scale, Contact, PanelTop, Images, Type,
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
@@ -65,6 +65,7 @@ export const navigation = {
 
         { group: 'Billing', label: 'Billing', icon: Banknote, href: '/admin/billing', permission: 'billing.view' },
         { group: 'Billing', label: 'Invoices', icon: Receipt, href: '/admin/invoices', permission: 'billing.view' },
+        { group: 'Billing', label: 'TDS register', icon: Landmark, href: '/admin/billing/tds', permission: 'billing.view' },
         { group: 'Billing', label: 'Subscriptions', icon: RefreshCw, href: '/admin/subscriptions', permission: 'billing.view' },
         { group: 'Billing', label: 'API plans', icon: KeyRound, href: '/admin/api-plans', permission: 'api.manage' },
 

@@ -54,6 +54,7 @@
             <div class="right" style="margin-top:8px">
                 <div><span class="label">Number</span> <strong>{{ $invoice->number }}</strong></div>
                 <div><span class="label">Date</span> {{ $invoice->issued_at->format('j M Y') }}</div>
+                @if($invoice->po_number)<div><span class="label">Your PO</span> {{ $invoice->po_number }}</div>@endif
                 @if($invoice->due_on)
                     <div><span class="label">Due</span> {{ $invoice->due_on->format('j M Y') }}</div>
                 @endif

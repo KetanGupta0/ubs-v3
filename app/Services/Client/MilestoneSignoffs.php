@@ -182,6 +182,7 @@ class MilestoneSignoffs
             'payable_type' => ProjectMilestone::class,
             'payable_id' => $milestone->id,
             'title' => "{$project->name}: {$milestone->title}",
+            'po_number' => $project->po_number,
             'description' => 'Raised when the milestone was accepted.',
             'due_on' => today()->addDays((int) config('company.billing.milestone_due_days', 7)),
             'raised_by' => $signoff->requested_by,

@@ -27,6 +27,7 @@ defineProps({
                 description="What is due, and what has already been settled. Every invoice is downloadable before you pay it."
             >
                 <template #actions>
+                    <UiButton href="/client/billing-details" variant="ghost" size="sm">Billing details</UiButton>
                     <UiButton href="/client/transactions" variant="ghost" size="sm">
                         Full history
                         <template #trailing><ArrowRight class="h-3 w-3" /></template>

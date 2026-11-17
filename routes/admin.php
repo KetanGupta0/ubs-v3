@@ -45,6 +45,7 @@ use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\StudentNoticeController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\SupportController;
+use App\Http\Controllers\Admin\TdsController;
 use App\Http\Controllers\Admin\TeamMemberController;
 use Illuminate\Support\Facades\Route;
 
@@ -310,6 +311,8 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
 
         /* ----------------------------------------------- money, both lines */
         Route::middleware('permission:billing.view')->group(function () {
+            Route::get('billing/tds', [TdsController::class, 'index'])->name('billing.tds.index');
+            Route::get('billing/tds/{deduction}/certificate', [TdsController::class, 'certificate'])->whereNumber('deduction')->name('billing.tds.certificate');
             Route::get('billing', [BillingController::class, 'index'])->name('billing.index');
             Route::get('billing/{payment}', [BillingController::class, 'show'])
                 ->whereNumber('payment')
@@ -323,6 +326,7 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('billing', [BillingController::class, 'store'])->name('billing.store');
             Route::post('billing/{payment}/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
             Route::post('billing/{payment}/offline', [BillingController::class, 'recordOffline'])->name('billing.offline');
+            Route::post('billing/tds/{deduction}/check', [TdsController::class, 'check'])->whereNumber('deduction')->name('billing.tds.check');
         });
 
         Route::middleware('permission:billing.refund')->group(function () {

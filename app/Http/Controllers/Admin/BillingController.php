@@ -76,12 +76,14 @@ class BillingController extends Controller
                 ]),
             'projects' => Project::query()
                 ->with('milestones:id,project_id,title,payment_amount')
+                ->select(['id', 'name', 'client_id', 'po_number'])
                 ->orderBy('name')
                 ->get()
                 ->map(fn (Project $project) => [
                     'value' => $project->id,
                     'label' => $project->name,
                     'clientId' => $project->client_id,
+                    'poNumber' => $project->po_number,
                     'milestones' => $project->milestones->map(fn (ProjectMilestone $milestone) => [
                         'value' => $milestone->id,
                         'label' => $milestone->title,
@@ -103,6 +105,7 @@ class BillingController extends Controller
             'notes' => ['nullable', 'string', 'max:2000'],
             'project_id' => ['nullable', 'integer', Rule::exists('projects', 'id')],
             'milestone_id' => ['nullable', 'integer', Rule::exists('project_milestones', 'id')],
+            'po_number' => ['nullable', 'string', 'max:60'],
             'notify' => ['boolean'],
         ]);
 
@@ -121,6 +124,10 @@ class BillingController extends Controller
             'payable_type' => $payable ? $payable::class : null,
             'payable_id' => $payable?->id,
             'title' => $validated['title'],
+            // The client's purchase order (CL14): typed here, else the project's.
+            'po_number' => filled($validated['po_number'] ?? null)
+                ? trim($validated['po_number'])
+                : ($payable instanceof ProjectMilestone ? $payable->project?->po_number : ($payable instanceof Project ? $payable->po_number : null)),
             'description' => $validated['description'] ?? null,
             'due_on' => $validated['due_on'] ?? null,
             'notes' => $validated['notes'] ?? null,

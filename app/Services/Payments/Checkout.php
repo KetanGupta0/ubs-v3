@@ -41,9 +41,14 @@ class Checkout
 
         $invoice = $this->invoicer->issueFor($request);
 
+        $amount = $invoice->balance() ?: $invoice->total;
+
+        // An attempt started before the amount changed (TDS declared since,
+        // say) is not reused: the order would charge the old figure.
         $transaction = $request->transactions()
             ->where('status', 'created')
             ->where('gateway', $this->gateway->name())
+            ->where('amount', $amount)
             ->latest('id')
             ->first();
 
@@ -56,7 +61,7 @@ class Checkout
                 'invoice_id' => $invoice->id,
                 'payment_request_id' => $request->id,
                 'gateway' => $this->gateway->name(),
-                'amount' => $invoice->balance() ?: $invoice->total,
+                'amount' => $amount,
                 'currency' => $invoice->currency,
                 'status' => 'created',
             ]);
