@@ -10,7 +10,7 @@ import { ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import {
     ArrowLeft, CheckCircle2, Circle, ExternalLink, FileText, Clock, AlertTriangle,
-    FileDown, Inbox, ArrowRight, FilePlus2,
+    FileDown, Inbox, ArrowRight, FilePlus2, Bug,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -32,6 +32,8 @@ const props = defineProps({
     waitingTime: { type: String, default: null },
     /** Changes to the scope (CL12). */
     changes: { type: Array, default: () => [] },
+    /** Feedback on staging (CL13): counts and whether this person may report. */
+    feedback: { type: Object, default: () => ({ open: 0, toCheck: 0, total: 0, canReport: false }) },
     milestones: { type: Array, default: () => [] },
     updates: { type: Array, default: () => [] },
     documents: { type: Array, default: () => [] },
@@ -149,6 +151,25 @@ function askForChange() {
                         </Link>
                     </li>
                 </ul>
+            </UiCard>
+
+            <!-- --------------------------------------- feedback on staging -->
+            <UiCard v-if="feedback.total || feedback.canReport">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <Bug class="h-5 w-5 shrink-0" style="color: var(--text-muted)" aria-hidden="true" />
+                        <div>
+                            <p class="text-sm font-semibold">Feedback on staging</p>
+                            <p class="text-xs" style="color: var(--text-muted)">
+                                <template v-if="feedback.total">{{ feedback.open }} open<template v-if="feedback.toCheck"> · {{ feedback.toCheck }} fixed, waiting for you to check</template></template>
+                                <template v-else>Found something on the preview? Report it with a screenshot.</template>
+                            </p>
+                        </div>
+                    </div>
+                    <UiButton :href="`/client/projects/${project.id}/feedback`" size="xs" variant="secondary">
+                        {{ feedback.canReport ? 'Report or follow up' : 'See it' }}
+                    </UiButton>
+                </div>
             </UiCard>
 
             <!-- ------------------------------------------ scope changes -->

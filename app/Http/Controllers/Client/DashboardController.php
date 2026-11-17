@@ -6,6 +6,7 @@ use App\Models\Agreement;
 use App\Models\ChangeRequest;
 use App\Models\ClientMember;
 use App\Models\Document;
+use App\Models\FeedbackItem;
 use App\Models\Invoice;
 use App\Models\Meeting;
 use App\Models\MilestoneSignoff;
@@ -167,6 +168,25 @@ class DashboardController extends ClientController
                     ];
                 }
             });
+
+        // Fixes on staging to check (CL13), for those who report feedback.
+        if ($user->canAsClient('feedback')) {
+            FeedbackItem::query()
+                ->forClient($client)
+                ->where('status', 'fixed')
+                ->with('project:id,name')
+                ->get()
+                ->each(function (FeedbackItem $item) use (&$items) {
+                    $items[] = [
+                        'kind' => 'feedback',
+                        'title' => "Check the fix: {$item->title}",
+                        'detail' => $item->project->name.' · on staging',
+                        'href' => "/client/projects/{$item->project_id}/feedback/{$item->id}",
+                        'action' => 'Check',
+                        'urgent' => false,
+                    ];
+                });
+        }
 
         // Milestones to accept (CL9).
         $mayAccept = $user->canAsClient('accept');

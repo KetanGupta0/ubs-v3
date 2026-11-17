@@ -5,6 +5,7 @@ use App\Http\Controllers\Client\ApiKeyController;
 use App\Http\Controllers\Client\ChangeRequestController;
 use App\Http\Controllers\Client\DashboardController;
 use App\Http\Controllers\Client\DocumentController;
+use App\Http\Controllers\Client\FeedbackController;
 use App\Http\Controllers\Client\MeetingController;
 use App\Http\Controllers\Client\PaymentController;
 use App\Http\Controllers\Client\PeopleController;
@@ -65,6 +66,12 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
             Route::post('projects/{project}/changes/{change}/sign/code', [ChangeRequestController::class, 'signCode'])->whereNumber(['project', 'change'])->name('projects.changes.sign.code');
             Route::post('projects/{project}/changes/{change}/sign', [ChangeRequestController::class, 'sign'])->whereNumber(['project', 'change'])->name('projects.changes.sign');
         });
+        Route::get('projects/{project}/feedback', [FeedbackController::class, 'index'])->whereNumber('project')->name('projects.feedback.index');
+        Route::post('projects/{project}/feedback', [FeedbackController::class, 'store'])->whereNumber('project')->middleware('throttle:20,1')->name('projects.feedback.store');
+        Route::get('projects/{project}/feedback/{item}', [FeedbackController::class, 'show'])->whereNumber(['project', 'item'])->name('projects.feedback.show');
+        Route::get('projects/{project}/feedback/{item}/screenshots/{index}', [FeedbackController::class, 'screenshot'])->whereNumber(['project', 'item', 'index'])->name('projects.feedback.screenshot');
+        Route::post('projects/{project}/feedback/{item}/confirm', [FeedbackController::class, 'confirm'])->whereNumber(['project', 'item'])->name('projects.feedback.confirm');
+        Route::post('projects/{project}/feedback/{item}/comment', [FeedbackController::class, 'comment'])->whereNumber(['project', 'item'])->name('projects.feedback.comment');
         Route::get('projects/{project}/waiting/{item}', [WaitingController::class, 'show'])
             ->whereNumber(['project', 'item'])
             ->name('projects.waiting.show');

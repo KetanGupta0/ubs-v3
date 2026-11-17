@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Client;
 
 use App\Models\ChangeRequest;
 use App\Models\Document;
+use App\Models\FeedbackItem;
 use App\Models\MilestoneSignoff;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
@@ -59,6 +60,14 @@ class ProjectController extends ClientController
             // What we are waiting on them for (CL10), still open or just answered.
             'waiting' => $waiting->forScreen($record->waitingItems()->whereIn('status', ['open', 'answered'])->get(), $waitingTime['items']),
             'waitingTime' => $waitingTime['seconds'] > 0 ? $waitingTime['label'] : null,
+
+            // Feedback on staging (CL13): how much is open, and whether this person may report.
+            'feedback' => [
+                'open' => FeedbackItem::query()->where('project_id', $record->id)->open()->count(),
+                'toCheck' => FeedbackItem::query()->where('project_id', $record->id)->where('status', 'fixed')->count(),
+                'total' => FeedbackItem::query()->where('project_id', $record->id)->count(),
+                'canReport' => $request->user()->canAsClient('feedback'),
+            ],
 
             // Changes to the scope (CL12), newest first.
             'changes' => ChangeRequest::query()->where('project_id', $record->id)->latest('id')->get()
@@ -205,6 +214,9 @@ class ProjectController extends ClientController
                 ->map->toScreen()->reverse()->values(),
             'invoice' => $billed ? ['id' => $billed->id, 'reference' => $billed->reference, 'status' => $billed->status, 'total' => Money::display($billed->total)] : null,
             'canAnswer' => $pending !== null && $request->user()->canAsClient('accept'),
+            // Feedback reported against it and not yet done (CL13).
+            'openFeedback' => FeedbackItem::query()->where('milestone_id', $record->id)->open()->get(['id', 'title', 'status'])
+                ->map(fn (FeedbackItem $item) => ['id' => $item->id, 'title' => $item->title, 'statusLabel' => FeedbackItem::statusLabel($item->status)]),
         ]);
     }
 

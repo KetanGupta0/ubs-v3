@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\DoubtController;
 use App\Http\Controllers\Admin\EnrolmentController;
+use App\Http\Controllers\Admin\FeedbackController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\LegalDocumentController;
@@ -233,6 +234,17 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('change-requests/{changeRequest}/again', [ChangeRequestController::class, 'quoteAgain'])->whereNumber('changeRequest')->name('change-requests.again');
             Route::get('change-requests/{changeRequest}/pdf', [ChangeRequestController::class, 'pdf'])->whereNumber('changeRequest')->name('change-requests.pdf');
             Route::get('change-requests/{changeRequest}/signed', [ChangeRequestController::class, 'signed'])->whereNumber('changeRequest')->name('change-requests.signed');
+        });
+
+        /* ------------------------------------------------ staging feedback */
+        Route::middleware('permission:projects.view')->group(function () {
+            Route::get('feedback', [FeedbackController::class, 'index'])->name('feedback.index');
+            Route::get('feedback/{feedback}', [FeedbackController::class, 'show'])->whereNumber('feedback')->name('feedback.show');
+            Route::get('feedback/{feedback}/screenshots/{index}', [FeedbackController::class, 'screenshot'])->whereNumber(['feedback', 'index'])->name('feedback.screenshot');
+        });
+        Route::middleware('permission:projects.manage')->group(function () {
+            Route::post('feedback/{feedback}/move', [FeedbackController::class, 'move'])->whereNumber('feedback')->name('feedback.move');
+            Route::post('feedback/{feedback}/comment', [FeedbackController::class, 'comment'])->whereNumber('feedback')->name('feedback.comment');
         });
 
         /* --------------------------------------------------------- meetings */

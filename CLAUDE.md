@@ -365,6 +365,12 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   signing transaction, adds the amount to the project's budget, moves its target date and
   adds the work as a milestone carrying the amount, so it is invoiced on acceptance (CL9)
   like any other. A different estimate is a new request (`previous_id`).
+- **Staging feedback is reported by those who may (CL13).** `App\Services\Client\StagingFeedback`:
+  the organisation's technical people and owners (`feedback`) report a bug or a change
+  with up to three screenshots, re-encoded through `ImageUpload` so nothing that came
+  with the file survives, and the milestone it holds up; everybody in it can read. Our
+  side moves an item only along `StagingFeedback::STAFF_MOVES`, and declining needs a
+  reason. A fix is the client's to confirm, or to send back saying what still happens.
 - **The client dashboard leads with what needs them:** items to reply to, milestones to
   accept, proposals and agreements to sign, payments, renewals. Something only another
   role can do still shows, saying whose it is. An overdue invoice whose payment request

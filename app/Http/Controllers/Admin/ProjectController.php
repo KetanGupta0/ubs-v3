@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Models\FeedbackItem;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectUpdate;
@@ -76,6 +77,8 @@ class ProjectController extends Controller
     public function show(Request $request, Project $project, WaitingItems $waiting): Response
     {
         $waitingTime = $waiting->waitingTime($project);
+        $openFeedback = FeedbackItem::query()->where('project_id', $project->id)->open()->whereNotNull('milestone_id')
+            ->selectRaw('milestone_id, count(*) as open')->groupBy('milestone_id')->pluck('open', 'milestone_id');
 
         $project->load(['client:id,name,email', 'manager:id,name', 'solution:id,title', 'milestones.signoffs.requester:id,name', 'milestones.signoffs.decider:id,name']);
 
@@ -119,6 +122,7 @@ class ProjectController extends Controller
                 'signoff' => $milestone->signoffState(),
                 'signoffs' => $milestone->signoffs->map->toScreen()->values(),
                 'lastDeliverables' => $milestone->signoffs->last()?->deliverables ?? [],
+                'openFeedback' => $openFeedback[$milestone->id] ?? 0,
             ]),
             'updates' => $project->updates()
                 ->with('author:id,name')

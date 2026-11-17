@@ -402,6 +402,9 @@ function setStatus(status) {
                                         <UiBadge v-if="milestone.overdue" tone="warning" size="sm">overdue</UiBadge>
                                         <UiBadge v-if="milestone.payment" size="sm">{{ milestone.payment }}</UiBadge>
                                         <UiBadge v-if="milestone.signoff" :tone="signoffTones[milestone.signoff]" size="sm" dot>{{ signoffLabel(milestone) }}</UiBadge>
+                                        <Link v-if="milestone.openFeedback" href="/admin/feedback" class="hover:underline">
+                                            <UiBadge tone="warning" size="sm">{{ milestone.openFeedback }} open feedback</UiBadge>
+                                        </Link>
                                     </p>
                                     <p v-if="lastAnswer(milestone)?.comments" class="mt-1 whitespace-pre-line text-xs" style="color: var(--text-base)">
                                         “{{ lastAnswer(milestone).comments }}” <span style="color: var(--text-muted)">· {{ lastAnswer(milestone).decidedBy }}, {{ lastAnswer(milestone).decidedAt }}</span>

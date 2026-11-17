@@ -28,6 +28,8 @@ const props = defineProps({
     history: { type: Array, default: () => [] },
     invoice: { type: Object, default: null },
     canAnswer: { type: Boolean, default: false },
+    /** Feedback reported against it and not yet done (CL13). */
+    openFeedback: { type: Array, default: () => [] },
 });
 
 const base = `/client/projects/${props.project.id}/milestones/${props.milestone.id}`;
@@ -125,6 +127,17 @@ const states = {
                 <p v-else class="mt-5 border-t pt-4 text-sm" style="border-color: var(--border-subtle); color: var(--text-muted)">
                     An authorised signatory or an owner in your organisation accepts milestones. It has been sent to them.
                 </p>
+            </UiCard>
+
+            <UiCard v-if="openFeedback.length">
+                <h2 class="text-base font-semibold" style="color: var(--text-strong)">Feedback still open on it</h2>
+                <p class="mt-1 text-xs" style="color: var(--text-muted)">Reported against this milestone and not yet done.</p>
+                <ul class="mt-3 space-y-1.5 text-sm">
+                    <li v-for="item in openFeedback" :key="item.id">
+                        <a :href="`/client/projects/${project.id}/feedback/${item.id}`" class="font-medium text-brand-600 hover:underline dark:text-brand-400">{{ item.title }}</a>
+                        <span style="color: var(--text-muted)"> · {{ item.statusLabel }}</span>
+                    </li>
+                </ul>
             </UiCard>
 
             <!-- --------------------------------------------- earlier rounds -->
