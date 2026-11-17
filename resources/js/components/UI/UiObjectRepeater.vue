@@ -12,7 +12,7 @@ import UiRepeater from './UiRepeater.vue';
 
 const props = defineProps({
     modelValue: { type: Array, default: () => [] },
-    /** [{ key, label, type: 'text'|'textarea'|'list', placeholder?, rows? }] */
+    /** [{ key, label, type: 'text'|'textarea'|'list'|'date', placeholder?, rows? }] */
     fields: { type: Array, required: true },
     addLabel: { type: String, default: 'Add another' },
     /** Used as the collapsed heading for each row. */
@@ -125,7 +125,7 @@ function move(index, direction) {
                     <input
                         v-else
                         :value="item[field.key]"
-                        type="text"
+                        :type="field.type === 'date' ? 'date' : 'text'"
                         :placeholder="field.placeholder"
                         class="h-9 w-full rounded-[var(--radius-field)] border bg-[var(--surface)] px-3 text-sm"
                         style="border-color: var(--border-strong); color: var(--text-strong)"

@@ -17,6 +17,7 @@
  * disabled rather than linking nowhere.
  */
 import {
+    CalendarClock,
     LayoutDashboard, FolderKanban, FileText, Receipt, LifeBuoy, MessagesSquare,
     KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy, UserCheck, Video, Star, Search, Scale, Contact, PanelTop, Images, Type,
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
@@ -41,6 +42,7 @@ export const navigation = {
 
         { group: 'Clients', label: 'Clients', icon: Briefcase, href: '/admin/clients', permission: 'clients.view', primary: true },
         { group: 'Clients', label: 'Projects', icon: FolderKanban, href: '/admin/projects', permission: 'projects.view' },
+        { group: 'Clients', label: 'Meetings', icon: CalendarClock, href: '/admin/meetings', permission: 'projects.view' },
         { group: 'Clients', label: 'Proposals', icon: FileSignature, href: '/admin/proposals', permission: 'proposals.manage' },
         { group: 'Clients', label: 'Agreements', icon: ScrollText, href: '/admin/agreements', permission: 'proposals.manage' },
         { group: 'Clients', label: 'Documents', icon: Files, href: '/admin/documents', permission: 'documents.manage' },
@@ -84,6 +86,7 @@ export const navigation = {
     client: [
         { label: 'Overview', icon: LayoutDashboard, href: '/client', primary: true },
         { label: 'Projects', icon: FolderKanban, href: '/client/projects', primary: true },
+        { label: 'Meetings', icon: CalendarClock, href: '/client/meetings' },
         { label: 'Proposals', icon: FileSignature, href: '/client/proposals' },
         { label: 'Agreements', icon: ScrollText, href: '/client/agreements' },
         { label: 'Documents', icon: FileText, href: '/client/documents' },

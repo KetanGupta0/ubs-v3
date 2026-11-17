@@ -25,6 +25,7 @@ use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\LegalDocumentController;
 use App\Http\Controllers\Admin\MediaController;
+use App\Http\Controllers\Admin\MeetingController;
 use App\Http\Controllers\Admin\PageCopyController;
 use App\Http\Controllers\Admin\PeopleController;
 use App\Http\Controllers\Admin\ProjectController;
@@ -218,6 +219,20 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('proposals/{proposal}/items', [ProposalController::class, 'storeItem'])->name('proposals.items.store');
             Route::put('proposals/{proposal}/items/{item}', [ProposalController::class, 'updateItem'])->name('proposals.items.update');
             Route::delete('proposals/{proposal}/items/{item}', [ProposalController::class, 'destroyItem'])->name('proposals.items.destroy');
+        });
+
+        /* --------------------------------------------------------- meetings */
+        Route::middleware('permission:projects.view')->group(function () {
+            Route::get('meetings', [MeetingController::class, 'index'])->name('meetings.index');
+            Route::get('meetings/{meeting}', [MeetingController::class, 'show'])->whereNumber('meeting')->name('meetings.show');
+        });
+        Route::middleware('permission:projects.manage')->group(function () {
+            Route::get('meetings/new', [MeetingController::class, 'create'])->name('meetings.create');
+            Route::post('meetings', [MeetingController::class, 'store'])->name('meetings.store');
+            Route::get('meetings/{meeting}/edit', [MeetingController::class, 'edit'])->whereNumber('meeting')->name('meetings.edit');
+            Route::put('meetings/{meeting}', [MeetingController::class, 'update'])->whereNumber('meeting')->name('meetings.update');
+            Route::post('meetings/{meeting}/cancel', [MeetingController::class, 'cancel'])->whereNumber('meeting')->name('meetings.cancel');
+            Route::put('meetings/{meeting}/minutes', [MeetingController::class, 'saveMinutes'])->whereNumber('meeting')->name('meetings.minutes');
         });
 
         /* ------------------------------------------------------- agreements */

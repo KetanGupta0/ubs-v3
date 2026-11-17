@@ -9,7 +9,7 @@
 import { Head, Link, router } from '@inertiajs/vue3';
 import {
     ArrowRight, FileText, CreditCard, RefreshCw, AlertTriangle,
-    FolderKanban, LifeBuoy, Files, CheckCircle2, Inbox, Flag, PenLine,
+    FolderKanban, LifeBuoy, Files, CheckCircle2, Inbox, Flag, PenLine, CalendarClock, NotebookPen,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -30,6 +30,8 @@ defineProps({
 });
 
 const icons = {
+    meeting: CalendarClock,
+    minutes: NotebookPen,
     waiting: Inbox,
     milestone: Flag,
     proposal: FileText,

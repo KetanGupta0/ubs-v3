@@ -349,6 +349,14 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   their type judged from their bytes. Every step is a `waiting_item_events` row, and the
   time a project waited is the union of the periods blocking items were open, so two
   things asked for at once count once. A request for access says never to type a password.
+- **Minutes are versions, and a published version is permanent (CL11).**
+  `App\Services\Client\Meetings` schedules a meeting and tells the organisation when it
+  is set, moved or called off. Minutes are written as a draft the client cannot see and
+  published after the meeting has started; `MeetingMinutes` then refuses to change or be
+  deleted, whatever code path asks. Anybody in the organisation acknowledges the latest
+  version or says what is wrong, and a correction is the next version, acknowledged
+  afresh. What the client agreed to do becomes a "waiting on you" item, raised once
+  however many versions repeat it.
 - **The client dashboard leads with what needs them:** items to reply to, milestones to
   accept, proposals and agreements to sign, payments, renewals. Something only another
   role can do still shows, saying whose it is. An overdue invoice whose payment request
@@ -361,6 +369,10 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   which fills every declared key. This has caused three separate 500s.
 - **A constrained eager load returns null for anything left out of the select.**
   `with('user:id,name')` then reading `$user->role->value` is a 500, not a blank.
+- **A relation that sorts keeps its order.** `minutes()`, `events()` and `signoffs()`
+  sort oldest first, so `->orderByDesc()` after them only adds a second sort key and
+  `first()` still returns the oldest. Use `reorder('version', 'desc')`. Until November
+  2026 that made a client's acknowledgement land on the version they had disputed.
 
 ## Learning management
 

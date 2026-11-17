@@ -6,6 +6,7 @@ use App\Models\Agreement;
 use App\Models\ClientMember;
 use App\Models\Document;
 use App\Models\Invoice;
+use App\Models\Meeting;
 use App\Models\MilestoneSignoff;
 use App\Models\PaymentRequest;
 use App\Models\Project;
@@ -130,6 +131,40 @@ class DashboardController extends ClientController
                     'action' => 'Reply',
                     'urgent' => $item->due_on !== null && $item->due_on->lte(today()->addDays(2)),
                 ];
+            });
+
+        // Minutes to acknowledge, and meetings in the coming week (CL11).
+        Meeting::query()
+            ->forClient($client)
+            ->where(fn ($query) => $query->where('status', 'held')
+                ->orWhere(fn ($soon) => $soon->where('status', 'scheduled')->whereBetween('starts_at', [now()->subMinutes(30), now()->addDays(7)])))
+            ->with('minutes')
+            ->orderBy('starts_at')
+            ->get()
+            ->each(function (Meeting $meeting) use (&$items) {
+                if ($meeting->status === 'scheduled') {
+                    $items[] = [
+                        'kind' => 'meeting',
+                        'title' => $meeting->title,
+                        'detail' => $meeting->whenLabel(),
+                        'href' => "/client/meetings/{$meeting->id}",
+                        'action' => 'Details',
+                        'urgent' => $meeting->starts_at->lt(now()->addDay()),
+                    ];
+
+                    return;
+                }
+
+                if ($meeting->publishedMinutes()?->awaitsAnswer()) {
+                    $items[] = [
+                        'kind' => 'minutes',
+                        'title' => "Minutes: {$meeting->title}",
+                        'detail' => 'Meeting on '.$meeting->starts_at->format('j M Y').' · please acknowledge them',
+                        'href' => "/client/meetings/{$meeting->id}",
+                        'action' => 'Read',
+                        'urgent' => false,
+                    ];
+                }
             });
 
         // Milestones to accept (CL9).

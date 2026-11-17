@@ -8,6 +8,8 @@
 import { ref, computed, nextTick, onMounted, onBeforeUnmount } from 'vue';
 import { Check, ChevronsUpDown, Search } from 'lucide-vue-next';
 
+import { useField } from '@/composables/useField';
+
 const props = defineProps({
     modelValue: { type: [String, Number, null], default: null },
     /** Array of { value, label, description? }. */
@@ -18,6 +20,9 @@ const props = defineProps({
     invalid: { type: Boolean, default: false },
     disabled: { type: Boolean, default: false },
 });
+
+// The label in UiFormField points at the button, so it names the control.
+const field = useField();
 
 const emit = defineEmits(['update:modelValue']);
 
@@ -81,9 +86,12 @@ onBeforeUnmount(() => document.removeEventListener('click', onDocumentClick));
 <template>
     <div ref="root" class="relative">
         <button
+            :id="field.id"
             type="button"
             :disabled="disabled"
             :aria-expanded="open"
+            :aria-describedby="field.describedBy"
+            :aria-invalid="invalid || field.invalid || undefined"
             aria-haspopup="listbox"
             :class="[
                 'flex h-10 w-full items-center justify-between gap-2 rounded-[var(--radius-field)] border',

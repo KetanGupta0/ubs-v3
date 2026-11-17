@@ -4,6 +4,7 @@ use App\Http\Controllers\Client\AgreementController;
 use App\Http\Controllers\Client\ApiKeyController;
 use App\Http\Controllers\Client\DashboardController;
 use App\Http\Controllers\Client\DocumentController;
+use App\Http\Controllers\Client\MeetingController;
 use App\Http\Controllers\Client\PaymentController;
 use App\Http\Controllers\Client\PeopleController;
 use App\Http\Controllers\Client\ProjectController;
@@ -70,6 +71,12 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
         Route::get('proposals/{proposal}/pdf', [ProposalController::class, 'pdf'])
             ->whereNumber('proposal')
             ->name('proposals.pdf');
+
+        /* --------------------------------------------------------- meetings */
+        Route::get('meetings', [MeetingController::class, 'index'])->name('meetings.index');
+        Route::get('meetings/{meeting}', [MeetingController::class, 'show'])->whereNumber('meeting')->name('meetings.show');
+        Route::post('meetings/{meeting}/acknowledge', [MeetingController::class, 'acknowledge'])->whereNumber('meeting')->name('meetings.acknowledge');
+        Route::post('meetings/{meeting}/dispute', [MeetingController::class, 'dispute'])->whereNumber('meeting')->name('meetings.dispute');
 
         /* ------------------------------------------------------- agreements */
         Route::get('agreements', [AgreementController::class, 'index'])->name('agreements.index');

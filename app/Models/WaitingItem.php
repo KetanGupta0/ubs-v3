@@ -22,6 +22,7 @@ class WaitingItem extends Model
         'access' => 'Access to a system',
         'decision' => 'A decision',
         'information' => 'Information',
+        'action' => 'Agreed in a meeting',
         'other' => 'Something else',
     ];
 
@@ -47,6 +48,12 @@ class WaitingItem extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(User::class, 'client_id');
+    }
+
+    /** The meeting whose minutes it came from, if any (CL11). */
+    public function meeting(): BelongsTo
+    {
+        return $this->belongsTo(Meeting::class);
     }
 
     public function raiser(): BelongsTo
