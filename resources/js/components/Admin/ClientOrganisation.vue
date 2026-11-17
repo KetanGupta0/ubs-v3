@@ -14,6 +14,7 @@ import UiFormField from '@/components/UI/UiFormField.vue';
 import UiInput from '@/components/UI/UiInput.vue';
 import UiModal from '@/components/UI/UiModal.vue';
 import UiSelect from '@/components/UI/UiSelect.vue';
+import { blankForm } from '@/support/forms';
 
 const props = defineProps({
     organisation: { type: Object, required: true },
@@ -26,8 +27,7 @@ const adding = ref(false);
 const form = useForm({ name: '', email: '', mobile: '', role: 'technical' });
 
 function openAdd() {
-    form.reset();
-    form.clearErrors();
+    blankForm(form, { name: '', email: '', mobile: '', role: 'technical' });
     adding.value = true;
 }
 

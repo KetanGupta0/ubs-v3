@@ -19,6 +19,7 @@ import UiModal from '@/components/UI/UiModal.vue';
 import UiSelect from '@/components/UI/UiSelect.vue';
 import UiTextarea from '@/components/UI/UiTextarea.vue';
 import { toast } from '@/support/toast';
+import { blankForm } from '@/support/forms';
 
 const props = defineProps({
     form: { type: Object, required: true },
@@ -50,8 +51,7 @@ const moveForm = useForm({ batch_id: '' });
 
 function open(row) {
     current.value = row;
-    rejectForm.reset();
-    rejectForm.clearErrors();
+    blankForm(rejectForm, { reason: '' });
     moveForm.batch_id = row.batchId ?? '';
     moveForm.clearErrors();
 }

@@ -17,6 +17,7 @@ import UiFormField from '@/components/UI/UiFormField.vue';
 import UiModal from '@/components/UI/UiModal.vue';
 import UiSelect from '@/components/UI/UiSelect.vue';
 import UiTextarea from '@/components/UI/UiTextarea.vue';
+import { blankForm } from '@/support/forms';
 
 defineProps({
     table: { type: Object, required: true },
@@ -40,7 +41,7 @@ const silenceForm = useForm({ for: '1d', reason: '' });
 
 function openSilence(row) {
     silencing.value = row;
-    silenceForm.reset();
+    blankForm(silenceForm, { for: '1d', reason: '' });
 }
 
 const silence = () => silenceForm.post(`/admin/chat/reports/${silencing.value.id}/silence`, { ...keep, onSuccess: () => { silencing.value = null; } });

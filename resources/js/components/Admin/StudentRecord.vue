@@ -16,6 +16,7 @@ import UiTextarea from '@/components/UI/UiTextarea.vue';
 import UiCheckbox from '@/components/UI/UiCheckbox.vue';
 import PerformanceCard from '@/components/Student/PerformanceCard.vue';
 import ActivityHeatmapCard from '@/components/Student/ActivityHeatmapCard.vue';
+import { blankForm } from '@/support/forms';
 
 /**
  * One student's learning, on their admin profile: what they are on and how it
@@ -46,8 +47,7 @@ const noticeOpen = ref(false);
 const noticeForm = useForm({ title: '', body: '', is_pinned: false });
 
 function openNotice() {
-    noticeForm.reset();
-    noticeForm.clearErrors();
+    blankForm(noticeForm, { title: '', body: '', is_pinned: false });
     noticeOpen.value = true;
 }
 

@@ -17,6 +17,7 @@ import UiCheckbox from '@/components/UI/UiCheckbox.vue';
 import UiInput from '@/components/UI/UiInput.vue';
 import UiTextarea from '@/components/UI/UiTextarea.vue';
 import UiProgress from '@/components/UI/UiProgress.vue';
+import { blankForm } from '@/support/forms';
 
 const props = defineProps({
     table: { type: Object, required: true },
@@ -36,14 +37,15 @@ const done = (close) => ({ preserveScroll: true, onSuccess: () => close() });
 /* ------------------------------------------------------------ enrol someone */
 
 const enrolOpen = ref(false);
-const enrolForm = useForm({
+const blankEnrol = {
     student_id: null,
     course_id: null,
     batch_id: null,
     waive_fee: false,
     notify: true,
     over_capacity: false,
-});
+};
+const enrolForm = useForm(structuredClone(blankEnrol));
 
 // Options arrive as { value, label, courseId, full }: the id is `value`.
 const batchesForCourse = (courseId) => props.batches
@@ -64,8 +66,7 @@ const students = ref(props.studentOptions);
 watch(() => props.studentOptions, (list) => { if (list !== null) students.value = list; });
 
 function openEnrol() {
-    enrolForm.reset();
-    enrolForm.clearErrors();
+    blankForm(enrolForm, blankEnrol);
     enrolOpen.value = true;
 
     if (students.value === null) {
@@ -95,11 +96,11 @@ const moveBatchFull = computed(() => isFullBatch(moveForm.batch_id));
 function openManage(row) {
     current.value = row;
     statusForm.status = row.status;
-    moveForm.reset();
-    payForm.reset();
-    payForm.amount = row.balance ? (row.balance / 100).toFixed(2) : null;
-    waiveForm.reset();
-    [statusForm, moveForm, payForm, waiveForm].forEach((form) => form.clearErrors());
+    statusForm.clearErrors();
+    // Each opens empty, not with what was last entered for somebody else.
+    blankForm(moveForm, { batch_id: '', over_capacity: false });
+    blankForm(payForm, { amount: row.balance ? (row.balance / 100).toFixed(2) : null, method: 'bank transfer', note: '' });
+    blankForm(waiveForm, { reason: '' });
 }
 
 const closeManage = () => { current.value = null; };

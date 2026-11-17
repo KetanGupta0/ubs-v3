@@ -272,6 +272,13 @@ Rules for the marketing pages:
   `aria-describedby` and the inputs inject it. Do not pass an id into `UiInput`
   by hand, and keep `inheritAttrs: false` on controls that render a wrapper, or
   the id lands on the wrapper and the label points at nothing.
+- **A dialog that opens empty calls `blankForm()`** (`resources/js/support/forms.js`).
+  Inertia 3 makes whatever was last submitted a form's defaults, so a bare `reset()`
+  as a dialog opens brings back the previous entry. Until November 2026 that refilled
+  a student notice, a registration's rejection reason (which the student reads), an
+  enrolment's payment note and waiver reason, a chat silence reason, an extra attempt
+  grant and a new client member's details with whatever was typed the time before.
+  A `reset()` inside `onSuccess` is fine: it runs before the defaults move.
 
 ## Client module and money
 

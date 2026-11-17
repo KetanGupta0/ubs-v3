@@ -19,6 +19,7 @@ import UiTextarea from '@/components/UI/UiTextarea.vue';
 import UiFormField from '@/components/UI/UiFormField.vue';
 import UiModal from '@/components/UI/UiModal.vue';
 import UiSelect from '@/components/UI/UiSelect.vue';
+import { blankForm } from '@/support/forms';
 
 const props = defineProps({
     attempt: { type: Object, required: true },
@@ -33,8 +34,7 @@ const granting = ref(false);
 const grantForm = useForm({ extra_attempts: '1', reason: '' });
 
 function openGrant() {
-    grantForm.reset();
-    grantForm.clearErrors();
+    blankForm(grantForm, { extra_attempts: '1', reason: '' });
     granting.value = true;
 }
 
