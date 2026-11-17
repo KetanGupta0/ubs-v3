@@ -19,6 +19,7 @@ import UiModal from '@/components/UI/UiModal.vue';
 import UiAvatar from '@/components/UI/UiAvatar.vue';
 import UiTextarea from '@/components/UI/UiTextarea.vue';
 import StudentRecord from '@/components/Admin/StudentRecord.vue';
+import ClientOrganisation from '@/components/Admin/ClientOrganisation.vue';
 
 const props = defineProps({
     role: { type: String, required: true },
@@ -30,6 +31,9 @@ const props = defineProps({
     canSeeBilling: { type: Boolean, default: false },
     canManageStudent: { type: Boolean, default: false },
     canViewAs: { type: Boolean, default: false },
+    organisation: { type: Object, default: null },
+    memberRoles: { type: Array, default: () => [] },
+    canManageClient: { type: Boolean, default: false },
 });
 
 const isStudent = props.role === 'student';
@@ -128,6 +132,13 @@ function resend() {
                         :student-id="person.id"
                         :can-see-billing="canSeeBilling"
                         :can-manage="canManageStudent"
+                    />
+
+                    <ClientOrganisation
+                        v-if="organisation"
+                        :organisation="organisation"
+                        :roles="memberRoles"
+                        :can-manage="canManageClient"
                     />
 
                     <form class="space-y-5" @submit.prevent="save">

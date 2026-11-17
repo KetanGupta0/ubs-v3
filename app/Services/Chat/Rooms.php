@@ -177,12 +177,45 @@ class Rooms
      */
     public function ensureClientRooms(User $client): void
     {
-        $this->forClient($client);
+        // A member of an organisation talks in the organisation's threads.
+        $account = $client->clientAccount();
+
+        $rooms = collect([$this->forClient($account)]);
 
         Project::query()
-            ->where('client_id', $client->id)
+            ->where('client_id', $account->id)
             ->get()
-            ->each(fn (Project $project) => $this->forClient($client, $project));
+            ->each(function (Project $project) use ($account, $rooms) {
+                $rooms->push($this->forClient($account, $project));
+            });
+
+        $this->syncClientMembers($account, $rooms);
+    }
+
+    /**
+     * Everybody in a client organisation is in its threads, and somebody who
+     * has left it is no longer in them (they keep what they read: `left_at`).
+     *
+     * @param  Collection<int, Conversation>|null  $rooms
+     */
+    public function syncClientMembers(User $account, ?Collection $rooms = null): void
+    {
+        $rooms ??= Conversation::query()->where('type', 'client_direct')->where('client_id', $account->id)->get();
+        $memberIds = $account->clientMembers()->joined()->pluck('user_id');
+
+        foreach ($rooms as $room) {
+            foreach ($memberIds as $memberId) {
+                $this->join($room, $memberId, 'member');
+            }
+
+            ConversationParticipant::query()
+                ->where('conversation_id', $room->id)
+                ->where('role', 'member')
+                ->where('user_id', '!=', $account->id)
+                ->whereNotIn('user_id', $memberIds)
+                ->whereNull('left_at')
+                ->update(['left_at' => now()]);
+        }
     }
 
     /** The same, for a student and their batches. */

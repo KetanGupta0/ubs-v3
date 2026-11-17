@@ -42,7 +42,8 @@ class GlobalSearch
 
         $groups = match (true) {
             $user->isAdmin() => $this->forAdmin($user, $term),
-            $user->isClient() => $this->forClient($user, $term),
+            // A member of a client organisation searches its records (CL8).
+            $user->isClient() => $this->forClient($user->clientAccount(), $term),
             default => $this->forStudent($user, $term),
         };
 

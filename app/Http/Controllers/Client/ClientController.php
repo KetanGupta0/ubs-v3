@@ -26,8 +26,24 @@ abstract class ClientController extends Controller
         return $query->where($column, $id)->firstOrFail();
     }
 
+    /**
+     * The account whose records are being read: the organisation this person
+     * belongs to (CL8), or their own. The person themselves is still
+     * `$request->user()`, which is who raised a ticket or made a payment.
+     */
     protected function client(Request $request)
     {
-        return $request->user();
+        return $request->user()->clientAccount();
+    }
+
+    /** Refuse, in words, something this person's role in the organisation does not allow. */
+    protected function mayAsClient(Request $request, string $ability): void
+    {
+        abort_unless($request->user()->canAsClient($ability), 403, match ($ability) {
+            'pay' => 'Only finance or an owner in your organisation can pay.',
+            'approve', 'sign', 'accept' => 'Only an authorised signatory or an owner in your organisation can do this.',
+            'api_keys' => 'Only technical people or an owner in your organisation can manage API keys.',
+            default => 'Your role in the organisation does not allow this.',
+        });
     }
 }

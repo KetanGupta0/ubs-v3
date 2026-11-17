@@ -14,7 +14,10 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Exists;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -25,6 +28,12 @@ use Laravel\Sanctum\HasApiTokens;
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
+    /** Memo for clientAccount(), for the life of this model instance. */
+    protected ?User $resolvedClientAccount = null;
+
+    /** Memo for clientRole(). */
+    protected ?string $resolvedClientRole = null;
+
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
@@ -78,6 +87,159 @@ class User extends Authenticatable implements MustVerifyEmail
     public function wantsReminder(string $kind): bool
     {
         return ! in_array($kind, $this->reminder_preferences['off'] ?? [], true);
+    }
+
+    /* --------------------------------------------- client organisations */
+
+    /** This person's place in a client organisation they joined, if any. */
+    public function clientMembership(): HasOne
+    {
+        return $this->hasOne(ClientMember::class);
+    }
+
+    /** The people this account holder has brought into their organisation. */
+    public function clientMembers(): HasMany
+    {
+        return $this->hasMany(ClientMember::class, 'account_id');
+    }
+
+    /**
+     * The account whose records this person works on: the organisation they
+     * joined, or their own. Every client read starts here (through
+     * `ClientController::client()`), which is how one rule — a client's own
+     * relations are the only way in — covers a whole organisation.
+     */
+    public function clientAccount(): self
+    {
+        if (! $this->isClient()) {
+            return $this;
+        }
+
+        return $this->resolvedClientAccount ??= (function () {
+            $membership = $this->clientMembership()->joined()->first();
+
+            return $membership && $membership->account_id !== $this->id
+                ? ($membership->account ?? $this)
+                : $this;
+        })();
+    }
+
+    /** owner, signatory, finance or technical. An account holder is an owner. */
+    public function clientRole(): ?string
+    {
+        if (! $this->isClient()) {
+            return null;
+        }
+
+        return $this->resolvedClientRole ??= $this->clientMembership()->joined()->value('role') ?? 'owner';
+    }
+
+    /** Whether this person may do something on behalf of their organisation. */
+    public function canAsClient(string $ability): bool
+    {
+        $role = $this->clientRole();
+
+        return $role !== null && ClientMember::roleMay($role, $ability);
+    }
+
+    /** Is this account holder's organisation run from this account (not a member's)? */
+    public function isClientAccountHolder(): bool
+    {
+        return $this->isClient() && $this->clientAccount()->is($this);
+    }
+
+    /**
+     * Everybody who works on this account's records: the holder and every
+     * member who has joined.
+     *
+     * @return array<int, int>
+     */
+    public function organisationUserIds(): array
+    {
+        $account = $this->clientAccount();
+
+        return [$account->id, ...$account->clientMembers()->joined()->pluck('user_id')->all()];
+    }
+
+    /**
+     * Who in the organisation hears about something: invoices go to finance,
+     * proposals and agreements to signatories, the rest to everybody. Owners
+     * hear about what nobody else in a role is there for.
+     *
+     * @return Collection<int, User>
+     */
+    public function clientRecipients(string $purpose = 'all')
+    {
+        if (! $this->isClient()) {
+            return collect([$this]);
+        }
+
+        $account = $this->clientAccount();
+        $members = $account->clientMembers()->joined()->with('user')->get()
+            ->filter(fn (ClientMember $member) => $member->user?->canSignIn());
+
+        $role = match ($purpose) {
+            'billing' => 'finance',
+            'signing' => 'signatory',
+            'technical' => 'technical',
+            default => null,
+        };
+
+        if ($role === null) {
+            return collect([$account])->concat($members->pluck('user'))->unique('id')->values();
+        }
+
+        $inRole = $members->where('role', $role)->pluck('user');
+        $owners = collect([$account])->concat($members->where('role', 'owner')->pluck('user'));
+
+        // Owners always hear about signing and money; for technical matters
+        // they hear only when there is nobody technical to tell.
+        return ($role === 'technical' && $inRole->isNotEmpty() ? $inRole : $inRole->concat($owners))
+            ->unique('id')
+            ->values();
+    }
+
+    /**
+     * Client accounts that hold records: every client except those who joined
+     * somebody else's organisation. What staff pick when they bill, propose or
+     * start a project, so nothing is filed under a member and lost to the
+     * organisation.
+     */
+    public function scopeClientAccounts(Builder $query): Builder
+    {
+        return $query->role(Role::Client)
+            ->whereDoesntHave('clientMembership', fn (Builder $membership) => $membership->whereNotNull('joined_at'));
+    }
+
+    /** The validation rule for a client_id: an account that holds records. */
+    public static function clientAccountRule(): Exists
+    {
+        return Rule::exists('users', 'id')
+            ->where('role', Role::Client->value)
+            ->where(fn ($query) => $query->whereNotIn('id', fn ($members) => $members->select('user_id')->from('client_members')->whereNotNull('joined_at')));
+    }
+
+    /** The organisation's name: the account holder's company, or their name. */
+    public function organisationName(): string
+    {
+        $account = $this->clientAccount();
+
+        return $account->profile?->company ?: $account->name;
+    }
+
+    /**
+     * Whether this client account has anything of its own: an account with
+     * history cannot quietly become somebody else's member.
+     */
+    public function ownsClientRecords(): bool
+    {
+        return $this->projects()->exists()
+            || $this->proposals()->exists()
+            || $this->paymentRequests()->exists()
+            || $this->maintenanceContracts()->exists()
+            || $this->subscriptions()->exists()
+            || $this->apiKeys()->exists()
+            || $this->clientMembers()->exists();
     }
 
     /* ------------------------------------------------------------ relations */

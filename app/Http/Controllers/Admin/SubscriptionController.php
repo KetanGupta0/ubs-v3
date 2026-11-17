@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\ApiKey;
 use App\Models\ApiKeyPlan;
@@ -183,7 +182,7 @@ class SubscriptionController extends Controller
     protected function validated(Request $request): array
     {
         $validated = $this->validatedInput($request, [
-            'client_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', Role::Client->value)],
+            'client_id' => ['required', 'integer', User::clientAccountRule()],
             'name' => ['required', 'string', 'max:160'],
             'description' => ['nullable', 'string', 'max:500'],
             'amount' => ['required', 'numeric', 'min:0'],
@@ -239,7 +238,7 @@ class SubscriptionController extends Controller
     {
         return [
             'clients' => User::query()
-                ->role(Role::Client)
+                ->clientAccounts()
                 ->orderBy('name')
                 ->get(['id', 'name', 'email'])
                 ->map(fn (User $user) => [

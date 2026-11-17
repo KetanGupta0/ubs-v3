@@ -85,6 +85,8 @@ class ApiKeyController extends ClientController
      */
     public function store(Request $request, Invoicer $invoicer): RedirectResponse
     {
+        $this->mayAsClient($request, 'api_keys');
+
         $client = $this->client($request);
 
         $validated = $this->validatedInput($request, [
@@ -136,6 +138,8 @@ class ApiKeyController extends ClientController
     /** Replace a key, keeping the old one alive briefly is not offered: a rotated key is dead. */
     public function rotate(Request $request, int $apiKey): RedirectResponse
     {
+        $this->mayAsClient($request, 'api_keys');
+
         $record = $this->own($request, ApiKey::query()->forClient($this->client($request)), $apiKey);
 
         abort_unless($record->status === 'active', 422, 'Only an active key can be rotated.');
@@ -174,6 +178,8 @@ class ApiKeyController extends ClientController
 
     public function revoke(Request $request, int $apiKey): RedirectResponse
     {
+        $this->mayAsClient($request, 'api_keys');
+
         $record = $this->own($request, ApiKey::query()->forClient($this->client($request)), $apiKey);
 
         $validated = $this->validatedInput($request, [

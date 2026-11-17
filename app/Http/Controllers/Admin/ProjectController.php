@@ -17,6 +17,7 @@ use App\Support\Table\Filter;
 use App\Support\Table\Table;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -233,7 +234,7 @@ class ProjectController extends Controller
         // Only a client visible update can be emailed to the client, whatever
         // the notify box says. An internal note is internal.
         if (($validated['notify'] ?? false) && $update->visible_to_client) {
-            $project->client->notify(new ProjectUpdated($update));
+            Notification::send($project->client->clientRecipients(), new ProjectUpdated($update));
         }
 
         return back()->with('success', 'Update posted.');
@@ -254,7 +255,7 @@ class ProjectController extends Controller
     protected function validated(Request $request, ?Project $project = null): array
     {
         $validated = $this->validatedInput($request, [
-            'client_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', Role::Client->value)],
+            'client_id' => ['required', 'integer', User::clientAccountRule()],
             'name' => ['required', 'string', 'max:160'],
             'solution_id' => ['nullable', 'integer', Rule::exists('solutions', 'id')],
             'summary' => ['nullable', 'string', 'max:500'],
@@ -305,7 +306,7 @@ class ProjectController extends Controller
     {
         return [
             'clients' => User::query()
-                ->role(Role::Client)
+                ->clientAccounts()
                 ->orderBy('name')
                 ->get(['id', 'name', 'email'])
                 ->map(fn (User $user) => [

@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\BillingController;
 use App\Http\Controllers\Admin\CertificateTemplateController;
 use App\Http\Controllers\Admin\ChatReportController;
 use App\Http\Controllers\Admin\ClassScheduleController;
+use App\Http\Controllers\Admin\ClientMemberController;
 use App\Http\Controllers\Admin\CollegeController;
 use App\Http\Controllers\Admin\CollegeDeskController;
 use App\Http\Controllers\Admin\ContentController;
@@ -109,6 +110,13 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::put('{role}s/{user}/status', [PeopleController::class, 'setStatus'])
                 ->whereIn('role', ['client', 'student'])
                 ->name('people.status');
+        });
+
+        /* ------------------------------------------- client organisations */
+        Route::middleware('permission:clients.update')->group(function () {
+            Route::post('clients/{user}/members', [ClientMemberController::class, 'store'])->whereNumber('user')->name('client-members.store');
+            Route::put('clients/{user}/members/{member}', [ClientMemberController::class, 'update'])->whereNumber(['user', 'member'])->name('client-members.update');
+            Route::delete('clients/{user}/members/{member}', [ClientMemberController::class, 'destroy'])->whereNumber(['user', 'member'])->name('client-members.destroy');
         });
 
         /* -------------------------------------------------------- catalogue */

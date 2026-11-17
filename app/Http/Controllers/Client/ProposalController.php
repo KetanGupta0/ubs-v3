@@ -79,6 +79,8 @@ class ProposalController extends ClientController
 
     public function respond(Request $request, int $proposal, Auditor $auditor): RedirectResponse
     {
+        $this->mayAsClient($request, 'approve');
+
         $record = $this->own($request, Proposal::query()
             ->where('client_id', $this->client($request)->id), $proposal);
 

@@ -33,7 +33,10 @@ class Checkout
      */
     public function begin(PaymentRequest $request, User $payer): array
     {
-        abort_unless($request->user_id === $payer->id, 403);
+        // The person paying, or somebody in their organisation (CL8): a
+        // finance member pays the organisation's invoice. Anybody else is
+        // refused, whatever id they sent.
+        abort_unless($request->user_id === $payer->clientAccount()->id, 403);
         abort_unless($request->isPayable(), 422, 'This request is not open for payment.');
 
         $invoice = $this->invoicer->issueFor($request);
@@ -46,7 +49,10 @@ class Checkout
 
         if (! $transaction) {
             $transaction = Transaction::query()->create([
-                'user_id' => $payer->id,
+                // The organisation's, so the ledger is in one place; and who
+                // in it started the payment.
+                'user_id' => $request->user_id,
+                'paid_by' => $payer->id,
                 'invoice_id' => $invoice->id,
                 'payment_request_id' => $request->id,
                 'gateway' => $this->gateway->name(),

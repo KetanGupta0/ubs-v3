@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Models\ClientMember;
 use App\Models\Document;
 use App\Models\Invoice;
 use App\Models\PaymentRequest;
@@ -30,6 +31,19 @@ class DashboardController extends ClientController
         $client = $this->client($request);
 
         return Inertia::render('client/Dashboard', [
+            // Organisations that invited this person (CL8), waiting for a yes.
+            'invitations' => ClientMember::query()
+                ->where('user_id', $request->user()->id)
+                ->pending()
+                ->with('account.profile', 'inviter:id,name')
+                ->get()
+                ->map(fn (ClientMember $membership) => [
+                    'id' => $membership->id,
+                    'organisation' => $membership->account->organisationName(),
+                    'role' => $membership->roleLabel(),
+                    'invitedBy' => $membership->inviter?->name,
+                ]),
+
             'projects' => Project::query()
                 ->forClient($client)
                 ->active()

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\Proposal;
@@ -18,6 +17,7 @@ use App\Support\Table\Filter;
 use App\Support\Table\Table;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -151,7 +151,8 @@ class ProposalController extends Controller
         $proposal->forceFill(['status' => 'sent', 'sent_at' => now()])->save();
         $proposal->quotation?->forceFill(['status' => 'sent'])->save();
 
-        $proposal->client->notify(new ProposalSent($proposal));
+        // To whoever may sign for the client's organisation (CL8).
+        Notification::send($proposal->client->clientRecipients('signing'), new ProposalSent($proposal));
 
         $auditor->action('proposal.sent', $proposal, ['to' => $proposal->client->email], $proposal->number);
 
@@ -303,7 +304,7 @@ class ProposalController extends Controller
     protected function validated(Request $request, ?Proposal $proposal = null): array
     {
         return $request->validate([
-            'client_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', Role::Client->value)],
+            'client_id' => ['required', 'integer', User::clientAccountRule()],
             'project_id' => ['nullable', 'integer', Rule::exists('projects', 'id')],
             'title' => ['required', 'string', 'max:200'],
             'summary' => ['nullable', 'string', 'max:1000'],
@@ -324,7 +325,7 @@ class ProposalController extends Controller
     {
         return [
             'clients' => User::query()
-                ->role(Role::Client)
+                ->clientAccounts()
                 ->orderBy('name')
                 ->get(['id', 'name', 'email'])
                 ->map(fn (User $user) => [

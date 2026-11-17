@@ -91,6 +91,7 @@ export const navigation = {
         { label: 'Subscriptions', icon: RefreshCw, href: '/client/subscriptions' },
         { label: 'API keys', icon: KeyRound, href: '/client/api-keys' },
         { label: 'Reports', icon: BarChart3, href: '/client/reports' },
+        { label: 'People', icon: Users, href: '/client/people' },
         { label: 'Chat', icon: MessagesSquare, href: '/chat', primary: true },
         { label: 'Security', icon: ShieldCheck, href: '/settings/security' },
     ],

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\DocumentFolder;
@@ -62,7 +61,7 @@ class DocumentController extends Controller
                 'at' => $document->created_at->format('j M Y'),
             ]),
             'clients' => User::query()
-                ->role(Role::Client)
+                ->clientAccounts()
                 ->orderBy('name')
                 ->get(['id', 'name'])
                 ->map(fn (User $user) => ['value' => $user->id, 'label' => $user->name]),
@@ -95,7 +94,7 @@ class DocumentController extends Controller
     {
         $validated = $this->validatedInput($request, [
             'file' => ['required', 'file', 'max:25600'],
-            'client_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', Role::Client->value)],
+            'client_id' => ['required', 'integer', User::clientAccountRule()],
             'project_id' => ['nullable', 'integer', Rule::exists('projects', 'id')],
             'folder_id' => ['nullable', 'integer', Rule::exists('document_folders', 'id')],
             'name' => ['nullable', 'string', 'max:160'],
@@ -189,7 +188,7 @@ class DocumentController extends Controller
     public function storeFolder(Request $request): RedirectResponse
     {
         $validated = $request->validate([
-            'client_id' => ['required', 'integer', Rule::exists('users', 'id')->where('role', Role::Client->value)],
+            'client_id' => ['required', 'integer', User::clientAccountRule()],
             'project_id' => ['nullable', 'integer', Rule::exists('projects', 'id')],
             'parent_id' => ['nullable', 'integer', Rule::exists('document_folders', 'id')],
             'name' => ['required', 'string', 'max:80'],

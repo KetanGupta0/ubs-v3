@@ -17,12 +17,15 @@ import UiBadge from '@/components/UI/UiBadge.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import UiModal from '@/components/UI/UiModal.vue';
 import { toast } from '@/support/toast';
+import { useClientRole } from '@/composables/useClientRole';
 
 const props = defineProps({
     payment: { type: Object, required: true },
     invoice: { type: Object, default: null },
     gateway: { type: Object, default: () => ({}) },
 });
+
+const { may } = useClientRole();
 
 const busy = ref(false);
 const simulating = ref(null);
@@ -168,8 +171,11 @@ function simulate(outcome) {
                     {{ payment.notes }}
                 </p>
 
+                <p v-if="payment.payable && !may('pay')" class="mt-5 text-sm" style="color: var(--text-muted)">
+                    Finance or an owner in your organisation pays this; it has been sent to them.
+                </p>
                 <div v-if="payment.payable" class="mt-5 flex flex-wrap gap-2">
-                    <UiButton :loading="busy" @click="pay">
+                    <UiButton v-if="may('pay')" :loading="busy" @click="pay">
                         <template #leading><CreditCard class="h-4 w-4" /></template>
                         Pay {{ payment.total }}
                     </UiButton>

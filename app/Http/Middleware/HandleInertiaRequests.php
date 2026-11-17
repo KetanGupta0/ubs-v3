@@ -95,6 +95,17 @@ class HandleInertiaRequests extends Middleware
                 'permissions' => fn () => $request->user()?->isAdmin()
                     ? $request->user()->permissionKeys()
                     : [],
+
+                // A client's place in their organisation (CL8): the same
+                // presentation-only courtesy; each action is refused on the
+                // server for a role that may not do it.
+                'client' => fn () => $request->user()?->isClient() ? [
+                    'organisation' => $request->user()->organisationName(),
+                    'role' => $request->user()->clientRole(),
+                    'may' => collect(['pay', 'approve', 'sign', 'accept', 'api_keys', 'feedback', 'manage_people'])
+                        ->filter(fn (string $ability) => $request->user()->canAsClient($ability))
+                        ->values(),
+                ] : null,
             ],
 
             /*

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\Role;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
+use App\Models\ClientMember;
 use App\Models\College;
 use App\Models\CredentialDelivery;
 use App\Models\User;
@@ -163,6 +164,11 @@ class PeopleController extends Controller
             'canSeeBilling' => $request->user()->hasPermission('billing.view'),
             'canManageStudent' => $roleEnum === Role::Student && $request->user()->hasPermission('students.update'),
             'canViewAs' => $request->user()->hasPermission('people.view_as'),
+            // A client's organisation (CL8): its people if this is the account,
+            // or which organisation this person works in if they joined one.
+            'organisation' => $roleEnum === Role::Client ? $this->organisationFor($user) : null,
+            'memberRoles' => collect(ClientMember::ROLES)->map(fn (array $role, string $key) => ['value' => $key, 'label' => $role[0]])->values(),
+            'canManageClient' => $request->user()->hasPermission('clients.update'),
             'deliveries' => CredentialDelivery::query()
                 ->where('user_id', $user->id)
                 ->with('creator:id,name')
@@ -392,7 +398,10 @@ class PeopleController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'mobile' => $user->mobile,
-                'organisation' => $user->profile?->college?->name ?? $user->profile?->company,
+                'organisation' => $user->profile?->college?->name
+                    ?? ($user->isClient() && ! $user->isClientAccountHolder()
+                        ? $user->organisationName().' ('.mb_strtolower(ClientMember::ROLES[$user->clientRole()][0] ?? '').')'
+                        : $user->profile?->company),
                 'status' => $user->status->value,
                 'last_login' => $user->last_login_at?->diffForHumans() ?? 'Never',
                 'credentials' => match ($user->latestCredentialDelivery?->status) {
@@ -407,6 +416,36 @@ class PeopleController extends Controller
                 'mustChangePassword' => $user->must_change_password,
                 'neverSignedIn' => $user->last_login_at === null,
             ]);
+    }
+
+    /** @return array<string, mixed> */
+    protected function organisationFor(User $user): array
+    {
+        $account = $user->clientAccount();
+        $account->loadMissing('profile');
+
+        return [
+            'name' => $account->organisationName(),
+            'accountId' => $account->id,
+            'accountName' => $account->name,
+            'isAccount' => $account->is($user),
+            'role' => $user->clientRole(),
+            'members' => $account->clientMembers()
+                ->with('user:id,name,email')
+                ->orderByRaw('joined_at is null')
+                ->orderBy('id')
+                ->get()
+                ->map(fn (ClientMember $member) => [
+                    'id' => $member->id,
+                    'userId' => $member->user_id,
+                    'name' => $member->user?->name,
+                    'email' => $member->user?->email,
+                    'role' => $member->role,
+                    'roleLabel' => $member->roleLabel(),
+                    'pending' => $member->joined_at === null,
+                ])
+                ->values(),
+        ];
     }
 
     /** Only client and student are managed here. Staff have their own screen. */

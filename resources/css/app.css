@@ -87,6 +87,16 @@
    are defined once here instead of with a dark: variant on every element.
    --------------------------------------------------------------------------- */
 @layer base {
+  /*
+   * Tailwind 4 draws a border in the text colour unless told otherwise, so
+   * every `divide-y` list and every bare `border` came out as a dark line.
+   * Until November 2026 forty lists did. A line is subtle unless a component
+   * says it is something else.
+   */
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    border-color: var(--border-subtle);
+  }
+
   :root {
     --surface: #FFFFFF;
     --surface-sunken: #F6F7FB;

@@ -6,7 +6,7 @@
  * tells you how things are; it does not tell you what to do next, and next is
  * the reason somebody signed in.
  */
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import {
     ArrowRight, FileText, CreditCard, RefreshCw, AlertTriangle,
     FolderKanban, LifeBuoy, Files, CheckCircle2,
@@ -21,6 +21,8 @@ import UiProgress from '@/components/UI/UiProgress.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
 
 defineProps({
+    /** Organisations that invited this person, waiting for a yes. */
+    invitations: { type: Array, default: () => [] },
     projects: { type: Array, default: () => [] },
     waitingOnYou: { type: Array, default: () => [] },
     timeline: { type: Array, default: () => [] },
@@ -40,6 +42,24 @@ const icons = {
 
     <AppLayout title="Overview">
         <div class="mx-auto max-w-7xl space-y-6">
+            <!-- ------------------------------------------------ invitations -->
+            <section
+                v-for="invitation in invitations"
+                :key="invitation.id"
+                class="flex flex-wrap items-center gap-3 rounded-[var(--radius-card)] border px-4 py-3.5"
+                style="border-color: var(--color-brand-500); background: var(--surface)"
+            >
+                <span class="min-w-0 flex-1 text-sm">
+                    <span class="font-semibold" style="color: var(--text-strong)">{{ invitation.invitedBy }}</span>
+                    invited you to join <span class="font-semibold" style="color: var(--text-strong)">{{ invitation.organisation }}</span>
+                    as {{ invitation.role.toLowerCase() }}. Joining shows you its projects, documents and invoices.
+                </span>
+                <span class="flex gap-2">
+                    <UiButton size="sm" @click="router.post(`/client/invitations/${invitation.id}/accept`)">Join</UiButton>
+                    <UiButton variant="ghost" size="sm" @click="router.post(`/client/invitations/${invitation.id}/decline`, {}, { preserveScroll: true })">Decline</UiButton>
+                </span>
+            </section>
+
             <!-- ----------------------------------------------- waiting on you -->
             <section v-if="waitingOnYou.length">
                 <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide" style="color: var(--text-muted)">

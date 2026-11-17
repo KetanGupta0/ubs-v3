@@ -4,6 +4,7 @@ use App\Http\Controllers\Client\ApiKeyController;
 use App\Http\Controllers\Client\DashboardController;
 use App\Http\Controllers\Client\DocumentController;
 use App\Http\Controllers\Client\PaymentController;
+use App\Http\Controllers\Client\PeopleController;
 use App\Http\Controllers\Client\ProjectController;
 use App\Http\Controllers\Client\ProposalController;
 use App\Http\Controllers\Client\ReportController;
@@ -104,6 +105,14 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
             ->name('subscriptions.auto-renew');
 
         /* --------------------------------------------------------- API keys */
+        /* ----------------------------------------- people in the organisation */
+        Route::get('people', [PeopleController::class, 'index'])->name('people.index');
+        Route::post('people', [PeopleController::class, 'store'])->middleware('throttle:20,1')->name('people.store');
+        Route::put('people/{member}', [PeopleController::class, 'update'])->whereNumber('member')->name('people.update');
+        Route::delete('people/{member}', [PeopleController::class, 'destroy'])->whereNumber('member')->name('people.destroy');
+        Route::post('invitations/{member}/accept', [PeopleController::class, 'accept'])->whereNumber('member')->name('invitations.accept');
+        Route::post('invitations/{member}/decline', [PeopleController::class, 'decline'])->whereNumber('member')->name('invitations.decline');
+
         Route::get('api-keys', [ApiKeyController::class, 'index'])->name('api-keys.index');
         Route::post('api-keys', [ApiKeyController::class, 'store'])->name('api-keys.store');
         Route::post('api-keys/{apiKey}/rotate', [ApiKeyController::class, 'rotate'])

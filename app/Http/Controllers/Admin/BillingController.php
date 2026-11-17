@@ -22,6 +22,7 @@ use App\Support\Table\Filter;
 use App\Support\Table\Table;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -111,8 +112,12 @@ class BillingController extends Controller
             default => null,
         };
 
+        // Billed to the organisation a client works in (CL8), never to a member,
+        // or the organisation would not see what it owes.
+        $billed = User::query()->findOrFail($validated['user_id']);
+
         $payment = PaymentRequest::query()->create([
-            'user_id' => $validated['user_id'],
+            'user_id' => $billed->clientAccount()->id,
             'payable_type' => $payable ? $payable::class : null,
             'payable_id' => $payable?->id,
             'title' => $validated['title'],
@@ -127,7 +132,8 @@ class BillingController extends Controller
         $invoice = $invoicer->issueFor($payment);
 
         if ($this->boolInput($request, 'notify', true)) {
-            $payment->user->notify(new PaymentRequested($payment, $invoice->number));
+            // To finance in a client organisation (CL8), or the person billed.
+            Notification::send($payment->user->clientRecipients('billing'), new PaymentRequested($payment, $invoice->number));
         }
 
         $auditor->action('payment.requested', $payment, [

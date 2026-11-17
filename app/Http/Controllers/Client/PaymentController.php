@@ -84,6 +84,8 @@ class PaymentController extends ClientController
     /** Open checkout and hand the browser what the provider needs. */
     public function begin(Request $request, int $payment, Checkout $checkout): JsonResponse
     {
+        $this->mayAsClient($request, 'pay');
+
         $record = $this->own($request, PaymentRequest::query()
             ->forUser($this->client($request)), $payment);
 

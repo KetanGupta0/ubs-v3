@@ -285,6 +285,18 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   `->forClient($user)` and ends in `firstOrFail()`, so somebody else's record is
   not found rather than found and refused: a 403 confirms it exists. Route model
   binding is deliberately not used for client owned records.
+- **A client is an organisation (CL8).** The account that holds the records is the
+  organisation; other people join it in `client_members` as owner, signatory,
+  finance or technical. `ClientController::client()` returns
+  `$request->user()->clientAccount()`, which is the one place the rule above widens;
+  the person is still `$request->user()` (who raised a ticket, who paid). The API and
+  search resolve the same way. Everybody in it reads everything; what a role may do
+  is `ClientMember::ABILITIES`, refused on the server with `mayAsClient()` and left
+  off screens through `auth.client.may`. Invoices go to finance, proposals to
+  signatories (`clientRecipients()`). Staff pick and bill `clientAccounts()` only,
+  so nothing is filed under a member. Bringing somebody in never confirms whether an
+  address has an account: `App\Services\Client\Organisation` answers the same, and
+  an existing account has to accept.
 - **The amount comes from the invoice, never from the request.** `Checkout::begin()`
   prices the attempt server side. A checkout that reads its amount from the page
   lets a lakh rupee invoice be settled with one rupee.

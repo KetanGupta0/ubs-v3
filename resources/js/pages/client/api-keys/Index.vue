@@ -23,12 +23,15 @@ import UiBarChart from '@/components/UI/UiBarChart.vue';
 import UiFormField from '@/components/UI/UiFormField.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
 import { toast } from '@/support/toast';
+import { useClientRole } from '@/composables/useClientRole';
 
 const props = defineProps({
     keys: { type: Array, default: () => [] },
     plans: { type: Array, default: () => [] },
     projects: { type: Array, default: () => [] },
 });
+
+const { may } = useClientRole();
 
 const page = usePage();
 
@@ -103,7 +106,7 @@ const statusTones = { active: 'success', revoked: 'danger', rotated: 'neutral', 
                 description="Keys for the products that need them, with the quota each one is using."
             >
                 <template #actions>
-                    <UiButton v-if="plans.length" size="sm" @click="requesting = true">
+                    <UiButton v-if="plans.length && may('api_keys')" size="sm" @click="requesting = true">
                         <template #leading><Plus class="h-3.5 w-3.5" /></template>
                         New key
                     </UiButton>
@@ -138,7 +141,7 @@ const statusTones = { active: 'success', revoked: 'danger', rotated: 'neutral', 
                         </p>
                     </div>
 
-                    <div v-if="key.usable" class="flex items-center gap-1.5">
+                    <div v-if="key.usable && may('api_keys')" class="flex items-center gap-1.5">
                         <UiButton variant="ghost" size="xs" @click="rotate(key)">
                             <template #leading><RotateCw class="h-3 w-3" /></template>
                             Rotate

@@ -28,7 +28,7 @@ class ClientApiController extends Controller
 {
     public function overview(Request $request): JsonResponse
     {
-        $client = $request->user();
+        $client = $request->user()->clientAccount();
 
         return response()->json([
             'totals' => [
@@ -51,7 +51,7 @@ class ClientApiController extends Controller
     {
         return response()->json([
             'data' => Project::query()
-                ->forClient($request->user())
+                ->forClient($request->user()->clientAccount())
                 ->orderByDesc('updated_at')
                 ->get()
                 ->map(fn (Project $project) => $this->projectArray($project)),
@@ -61,7 +61,7 @@ class ClientApiController extends Controller
     public function project(Request $request, int $project): JsonResponse
     {
         $record = Project::query()
-            ->forClient($request->user())
+            ->forClient($request->user()->clientAccount())
             ->with(['milestones', 'manager:id,name'])
             ->findOrFail($project);
 
@@ -97,7 +97,7 @@ class ClientApiController extends Controller
     {
         return response()->json([
             'data' => Document::query()
-                ->where('client_id', $request->user()->id)
+                ->where('client_id', $request->user()->clientAccount()->id)
                 ->current()
                 ->visibleToClient()
                 ->latest('id')
@@ -121,7 +121,7 @@ class ClientApiController extends Controller
     {
         return response()->json([
             'data' => SupportTicket::query()
-                ->forClient($request->user())
+                ->forClient($request->user()->clientAccount())
                 ->latest('id')
                 ->take(100)
                 ->get()
@@ -140,7 +140,7 @@ class ClientApiController extends Controller
 
     public function storeTicket(Request $request): JsonResponse
     {
-        $client = $request->user();
+        $client = $request->user()->clientAccount();
 
         $validated = $this->validatedInput($request, [
             'subject' => ['required', 'string', 'max:200'],
@@ -152,7 +152,7 @@ class ClientApiController extends Controller
         $contract = $client->maintenanceContracts()->active()->first();
 
         $ticket = SupportTicket::query()->create([
-            'requester_id' => $client->id,
+            'requester_id' => $request->user()->id,
             'contract_id' => $contract?->id,
             'project_id' => $validated['project_id']
                 ? Project::query()->forClient($client)->find($validated['project_id'])?->id
@@ -172,7 +172,7 @@ class ClientApiController extends Controller
 
     public function payments(Request $request): JsonResponse
     {
-        $client = $request->user();
+        $client = $request->user()->clientAccount();
 
         return response()->json([
             'pending' => PaymentRequest::query()
@@ -200,7 +200,7 @@ class ClientApiController extends Controller
     {
         return response()->json([
             'data' => Transaction::query()
-                ->forUser($request->user())
+                ->forUser($request->user()->clientAccount())
                 ->with('invoice:id,number')
                 ->latest('id')
                 ->take(100)
@@ -223,7 +223,7 @@ class ClientApiController extends Controller
     {
         return response()->json([
             'data' => Invoice::query()
-                ->forUser($request->user())
+                ->forUser($request->user()->clientAccount())
                 ->latest('id')
                 ->take(100)
                 ->get()

@@ -18,11 +18,14 @@ import UiButton from '@/components/UI/UiButton.vue';
 import UiModal from '@/components/UI/UiModal.vue';
 import UiTextarea from '@/components/UI/UiTextarea.vue';
 import UiFormField from '@/components/UI/UiFormField.vue';
+import { useClientRole } from '@/composables/useClientRole';
 
 const props = defineProps({
     proposal: { type: Object, required: true },
     quotation: { type: Object, default: null },
 });
+
+const { may } = useClientRole();
 
 const responding = ref(null);
 
@@ -169,7 +172,13 @@ const tones = { accepted: 'success', rejected: 'danger', expired: 'neutral', sen
             </UiCard>
 
             <!-- ------------------------------------------------ responding -->
-            <UiCard v-if="proposal.canRespond">
+            <UiCard v-if="proposal.canRespond && !may('approve')">
+                <p class="text-sm" style="color: var(--text-muted)">
+                    An authorised signatory or an owner in your organisation accepts or declines proposals. It has been sent to them.
+                </p>
+            </UiCard>
+
+            <UiCard v-else-if="proposal.canRespond">
                 <p class="text-sm" style="color: var(--text-muted)">
                     Accepting records your agreement with a timestamp. If anything needs changing first, reply to the
                     email instead and we will send a revised version.

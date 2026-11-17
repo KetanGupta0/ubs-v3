@@ -191,8 +191,12 @@ is where most project disputes start. Each item below is recommended. The ones i
 | CL16 | Renewals and expiry: maintenance contracts, hosting, domain, SSL certificates and update windows, with reminders at 30, 14 and 3 days, plus auto-renew where it is a subscription. | Lapsed domains and SSL certificates are emergencies nobody needed. |
 | CL17 | Monthly service report for maintenance clients: tickets against the SLA, uptime for hosted products, work done and hours used against the contract. | It shows the value of a contract at the moment the client decides whether to renew. |
 | CL18 | Satisfaction: a one-question rating when a ticket closes, and a short survey at handover. With the client's written consent, a quote can become a public testimonial. | It feeds the testimonials section honestly, under the no-fabricated-proof rule. |
-| CL19 | WhatsApp notifications through the WhatsApp Business API for key events (proposal sent, invoice due, milestone ready, ticket answered), alongside email, per person with opt-out. | Indian clients read WhatsApp first. |
+| CL19 | WhatsApp notifications through the WhatsApp Business API for key events (proposal sent, invoice due, milestone ready, ticket answered), alongside email, per person with opt-out. | Indian clients read WhatsApp first. **Deferred (owner, 2026-11-17):** later, once a provider and approved templates are chosen. |
 | CL20 | Client-side security: 2FA required for signatories and finance, a list of their own sessions and devices, and an activity log of who in their organisation did what. | A signature or a payment is only as trustworthy as the account that made it. |
+
+*Progress on Step E:*
+- *CL8 built 2026-11-17: a client account is an organisation, and other people join it as owner, authorised signatory, finance or technical (`client_members`). Everybody in it sees its projects, documents, invoices and tickets, through the one `forClient()` rule; only finance or an owner pays, only a signatory or an owner responds to proposals, only technical people or an owner manage API keys, only an owner manages people. Invoices go to finance, proposals to signatories, project updates to everybody. Owners bring people in from People; staff from the client's page. A new address gets an account, an existing empty client account has to accept, and the answer on screen is the same either way. A ticket keeps the person who raised it; a payment belongs to the organisation and records who paid.*
+- *Building it found that every `divide-y` list on the platform drew its lines in the text colour (Tailwind 4 defaults borders to `currentColor`); borders now default to the subtle token.*
 
 Nothing here changes the existing rules:
 - every client read still starts from `forClient()`
@@ -821,7 +825,7 @@ the middle of it.
 | # | Question | Recommendation |
 |---|---|---|
 | X1 | Generation 2 accounts: keep their passwords, or force a change too? | Keep. Their hashes were never published. |
-| X2 | Digital signatures: built-in OTP e-sign, Aadhaar eSign through a provider, or both? | Both: OTP for quotations and proposals, a provider for agreements. Check with a lawyer which agreements need which. |
+| X2 | Digital signatures: built-in OTP e-sign, Aadhaar eSign through a provider, or both? | **Decided 2026-11-17: the built-in OTP e-signature now**, for agreements, proposals and quotations. An Aadhaar eSign provider is added later, once one is chosen; check with a lawyer which agreements need it. |
 | X3 | AI model per feature (Opus 5.5 default; a cheaper model is your choice) | Your call on cost. Quiz review is low volume and batched, so the default costs little there. |
 | X4 | Live camera proctoring | **Decided 2026-11-10:** yes, live only, never recorded (§9.1a). Still open: students under 18 (guardian consent) and students without a webcam. |
 | X10 | Safe Exam Browser for final assessments, on top of browser lockdown? | Yes for final assessments; plain browser lockdown for regular quizzes. |
@@ -831,7 +835,7 @@ the middle of it.
 | X14 | Hostinger plan: SSH access, PHP 8.4, MySQL version, mail and process limits | **Answered 2026-11-12:** Business plan, SSH without root, PHP and MySQL configured, cron available, 100 emails a day. The mail cap means a transactional mail provider is needed before cutover (`docs/HOSTING.md`). |
 | X15 | Transactional mail provider | Needed before cutover, because of the 100 a day cap. Brevo, ZeptoMail or Amazon SES; ask before the cutover step. |
 | X5 | Registration form with an existing email: confirm first, or add directly? | Confirm first. Otherwise anyone can enrol anyone. |
-| X6 | Credentials vault for client handover: build it? | Only if the team hands over credentials through the platform today; it is a security surface. |
+| X6 | Credentials vault for client handover: build it? | **Decided 2026-11-17: no.** The team does not hand credentials over through the platform, so CL7 is not built; the handover pack (CL15) says where credentials were shared, never what they are. |
 | X7 | Festival list: which occasions, and do enquiry senders receive greetings? | National days to everyone who has not opted out; festivals switchable by the admin; enquiry senders included, with unsubscribe. |
 | X8 | Transactional mail provider for bulk sending | Any provider with bounce webhooks and an Indian billing option; credentials in `.env`. |
 | X9 | Demo hosting for live demos: where, and how often reset? | A separate small server, reset nightly. |

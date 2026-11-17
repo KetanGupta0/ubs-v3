@@ -77,9 +77,16 @@ class SupportTicket extends Model
         return $query->whereIn('status', ['open', 'in_progress', 'waiting_on_client']);
     }
 
+    /**
+     * Tickets raised by anybody in this client's organisation. A ticket keeps
+     * the person who raised it as its requester, so "tickets come from the
+     * technical people" stays true, and the whole organisation sees them.
+     */
     public function scopeForClient(Builder $query, User|int $client): Builder
     {
-        return $query->where('requester_id', $client instanceof User ? $client->id : $client);
+        return $client instanceof User
+            ? $query->whereIn('requester_id', $client->organisationUserIds())
+            : $query->where('requester_id', $client);
     }
 
     /** Tickets this person raised, client or student. */

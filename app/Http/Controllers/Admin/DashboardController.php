@@ -90,7 +90,7 @@ class DashboardController extends Controller
         return [
             'openLeads' => Lead::query()->open()->count(),
             'newLeadsThisWeek' => Lead::query()->where('created_at', '>=', now()->subWeek())->count(),
-            'clients' => User::query()->role(Role::Client)->count(),
+            'clients' => User::query()->clientAccounts()->count(),
             'students' => User::query()->role(Role::Student)->count(),
             'publishedSolutions' => Solution::query()->published()->count(),
             'liveOfferings' => Course::query()->publiclyVisible()->count(),
