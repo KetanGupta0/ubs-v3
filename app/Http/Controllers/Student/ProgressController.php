@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Student;
 use App\Models\Announcement;
 use App\Models\Batch;
 use App\Models\Certificate;
+use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\InternshipDocument;
 use App\Models\StudentWarning;
@@ -48,29 +49,73 @@ class ProgressController extends StudentController
     public function leaderboard(Request $request, Leaderboard $leaderboard): Response
     {
         $student = $this->student($request);
+        $board = array_key_exists((string) $request->query('board'), Leaderboard::BOARDS) ? (string) $request->query('board') : 'batch';
 
         $batches = Batch::query()
             ->whereIn('id', $this->enrolledBatchIds($request))
             ->with('course:id,title')
             ->get();
 
-        return Inertia::render('student/Leaderboard', [
-            'boards' => $batches->map(fn (Batch $batch) => [
-                'batchId' => $batch->id,
-                'batch' => $batch->name,
-                'course' => $batch->course?->title,
-                'rows' => $leaderboard->forBatch($batch),
+        $boards = match ($board) {
+            'batch' => $batches->map(fn (Batch $batch) => [
+                'key' => "batch-{$batch->id}",
+                'title' => $batch->name,
+                'subtitle' => $batch->course?->title,
+                'rows' => $leaderboard->forBatch($batch, viewer: $student),
                 'mine' => $leaderboard->standingFor($student, $batch),
             ]),
+            'week' => $batches->map(fn (Batch $batch) => [
+                'key' => "week-{$batch->id}",
+                'title' => $batch->name,
+                'subtitle' => 'Points since Monday',
+                'rows' => $leaderboard->forBatchThisWeek($batch, viewer: $student),
+                'mine' => $leaderboard->standingThisWeek($student, $batch),
+            ]),
+            'course' => Course::query()
+                ->whereIn('id', $this->enrolledCourseIds($request))
+                ->orderBy('title')
+                ->get(['id', 'title'])
+                ->map(fn (Course $course) => [
+                    'key' => "course-{$course->id}",
+                    'title' => $course->title,
+                    'subtitle' => 'Every batch of the course',
+                    'rows' => $leaderboard->forCourse($course, viewer: $student),
+                    'mine' => $leaderboard->standingOnCourse($student, $course),
+                ]),
+            'all' => collect([[
+                'key' => 'all',
+                'title' => 'Everybody',
+                'subtitle' => 'Every student on every course',
+                'rows' => $leaderboard->allTime(viewer: $student),
+                'mine' => $leaderboard->standingOverall($student),
+            ]]),
+        };
+
+        return Inertia::render('student/Leaderboard', [
+            'board' => $board,
+            'tabs' => collect(Leaderboard::BOARDS)->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])->values(),
+            'boards' => $boards->values(),
+            'showName' => $student->show_on_leaderboard,
             'points' => $leaderboard->totalFor($student),
             'howItWorks' => collect(Activity::POINTS)
                 ->filter(fn (int $points) => $points > 0)
                 ->map(fn (int $points, string $source) => [
-                    'source' => str($source)->replace('.', ' ')->ucfirst()->toString(),
+                    'source' => Activity::POINT_LABELS[$source] ?? str($source)->replace('.', ' ')->ucfirst()->toString(),
                     'points' => $points,
                 ])
                 ->values(),
         ]);
+    }
+
+    /** Whether other students see this student's name on the boards. */
+    public function leaderboardVisibility(Request $request): RedirectResponse
+    {
+        $show = $this->boolInput($request, 'show', true);
+        $this->student($request)->forceFill(['show_on_leaderboard' => $show])->save();
+
+        return back()->with('success', $show
+            ? 'Your name shows on the boards again.'
+            : 'Other students now see "A student" in your place. Your place and points are unchanged.');
     }
 
     public function certificates(Request $request): Response

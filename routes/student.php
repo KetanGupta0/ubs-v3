@@ -123,6 +123,7 @@ Route::middleware(['auth', 'password.owned', 'role:student'])
         /* ------------------------------------------- results and standing */
         Route::get('results', [ProgressController::class, 'results'])->name('results');
         Route::get('leaderboard', [ProgressController::class, 'leaderboard'])->name('leaderboard');
+        Route::put('leaderboard/visibility', [ProgressController::class, 'leaderboardVisibility'])->name('leaderboard.visibility');
         Route::get('certificates', [ProgressController::class, 'certificates'])->name('certificates');
         Route::get('certificates/{certificate}/download', [ProgressController::class, 'downloadCertificate'])
             ->whereNumber('certificate')

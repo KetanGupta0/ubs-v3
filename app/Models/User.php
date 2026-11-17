@@ -63,6 +63,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'must_change_password' => 'boolean',
             'is_owner' => 'boolean',
             'reminder_preferences' => 'array',
+            'show_on_leaderboard' => 'boolean',
         ];
     }
 

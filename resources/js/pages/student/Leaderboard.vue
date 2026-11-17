@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
-import { Head, usePage } from '@inertiajs/vue3';
-import { Trophy, Info } from 'lucide-vue-next';
+import { Head, router } from '@inertiajs/vue3';
+import { Trophy, Info, EyeOff } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -9,15 +9,33 @@ import UiCard from '@/components/UI/UiCard.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
 import UiAvatar from '@/components/UI/UiAvatar.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
+import UiSwitch from '@/components/UI/UiSwitch.vue';
+import UiTabs from '@/components/UI/UiTabs.vue';
 
-defineProps({
+const props = defineProps({
+    board: { type: String, default: 'batch' },
+    tabs: { type: Array, default: () => [] },
     boards: { type: Array, default: () => [] },
+    showName: { type: Boolean, default: true },
     points: { type: Number, default: 0 },
     howItWorks: { type: Array, default: () => [] },
 });
 
-const page = usePage();
-const me = computed(() => page.props.auth?.user?.id ?? null);
+const current = computed({
+    get: () => props.board,
+    set: (value) => router.get('/student/leaderboard', { board: value }, { preserveState: true, preserveScroll: true, only: ['board', 'boards'] }),
+});
+
+const empty = computed(() => ({
+    batch: 'Nobody in this batch has earned a point yet. Somebody has to go first.',
+    week: 'Nobody has earned a point this week yet. It starts again every Monday.',
+    course: 'Nobody on this course has earned a point yet.',
+    all: 'No points earned yet.',
+}[props.board]));
+
+function setShowName(value) {
+    router.put('/student/leaderboard/visibility', { show: value }, { preserveScroll: true });
+}
 
 const medal = (rank) => ({ 1: '🥇', 2: '🥈', 3: '🥉' })[rank] ?? null;
 </script>
@@ -36,6 +54,16 @@ const medal = (rank) => ({ 1: '🥇', 2: '🥈', 3: '🥉' })[rank] ?? null;
                 </template>
             </PageHeader>
 
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <UiTabs v-model="current" :tabs="tabs" />
+                <UiSwitch
+                    :model-value="showName"
+                    label="Show my name"
+                    description="Off shows you to other students as A student, in the same place."
+                    @update:model-value="setShowName"
+                />
+            </div>
+
             <UiEmptyState
                 v-if="!boards.length"
                 :icon="Trophy"
@@ -43,42 +71,45 @@ const medal = (rank) => ({ 1: '🥇', 2: '🥈', 3: '🥉' })[rank] ?? null;
                 description="Join a batch and finish your first lesson — points start from there."
             />
 
-            <section v-for="board in boards" :key="board.batchId" class="space-y-3">
+            <section v-for="one in boards" :key="one.key" class="space-y-3">
                 <UiCard padding="p-0">
                     <template #header>
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <div>
-                                <h2 class="text-sm font-semibold">{{ board.batch }}</h2>
-                                <p class="text-xs" style="color: var(--text-muted)">{{ board.course }}</p>
+                                <h2 class="text-sm font-semibold">{{ one.title }}</h2>
+                                <p class="text-xs" style="color: var(--text-muted)">{{ one.subtitle }}</p>
                             </div>
-                            <p v-if="board.mine" class="text-xs" style="color: var(--text-muted)">
-                                You are {{ board.mine.rank }} of {{ board.mine.outOf }}
+                            <p v-if="one.mine" class="text-xs" style="color: var(--text-muted)">
+                                You are {{ one.mine.rank }} of {{ one.mine.outOf }}
                             </p>
                         </div>
                     </template>
 
-                    <p v-if="!board.rows.length" class="px-1 py-4 text-sm" style="color: var(--text-muted)">
-                        Nobody in this batch has earned a point yet. Somebody has to go first.
+                    <p v-if="!one.rows.length" class="px-1 py-4 text-sm" style="color: var(--text-muted)">
+                        {{ empty }}
                     </p>
 
                     <ul v-else class="divide-y" style="border-color: var(--border-subtle)">
                         <li
-                            v-for="row in board.rows"
-                            :key="row.userId"
+                            v-for="(row, index) in one.rows"
+                            :key="index"
                             class="flex items-center gap-3 px-1 py-2.5"
-                            :class="row.userId === me ? 'rounded-[var(--radius-control)] bg-[var(--surface-sunken)]' : ''"
+                            :class="row.me ? 'rounded-[var(--radius-control)] bg-[var(--surface-sunken)]' : ''"
                         >
                             <span class="w-8 shrink-0 text-center text-sm font-semibold tnum">
                                 <span v-if="medal(row.rank)">{{ medal(row.rank) }}</span>
                                 <span v-else style="color: var(--text-muted)">{{ row.rank }}</span>
                             </span>
 
-                            <UiAvatar :name="row.name" :src="row.avatarUrl" size="sm" />
+                            <span v-if="row.hidden" class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full" style="background: var(--surface-sunken)">
+                                <EyeOff class="h-3.5 w-3.5" style="color: var(--text-muted)" />
+                            </span>
+                            <UiAvatar v-else :name="row.name" :src="row.avatarUrl" size="sm" />
 
-                            <span class="min-w-0 flex-1 truncate text-sm">
+                            <span class="min-w-0 flex-1 truncate text-sm" :style="row.hidden ? { color: 'var(--text-muted)' } : {}">
                                 {{ row.name }}
-                                <span v-if="row.userId === me" class="text-xs" style="color: var(--text-muted)">
-                                    · you
+                                <span v-if="row.me" class="text-xs" style="color: var(--text-muted)">
+                                    · you{{ showName ? '' : ' (hidden)' }}
                                 </span>
                             </span>
 
@@ -88,11 +119,11 @@ const medal = (rank) => ({ 1: '🥇', 2: '🥈', 3: '🥉' })[rank] ?? null;
                 </UiCard>
 
                 <p
-                    v-if="board.mine && board.mine.rank > 1"
+                    v-if="one.mine && one.mine.rank > 1"
                     class="px-1 text-xs"
                     style="color: var(--text-muted)"
                 >
-                    {{ board.mine.topPoints - board.mine.points }} points behind the top of this batch.
+                    {{ one.mine.topPoints - one.mine.points }} points behind the top.
                 </p>
             </section>
 

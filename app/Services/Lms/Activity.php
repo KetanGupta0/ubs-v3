@@ -31,6 +31,17 @@ class Activity
         'course.completed' => 100,
     ];
 
+    /** The same rules in words, for the page that explains them. */
+    public const POINT_LABELS = [
+        'lesson.completed' => 'Finishing a lesson',
+        'session.attended' => 'Being at a live class',
+        'quiz.passed' => 'Passing a quiz',
+        'quiz.distinction' => 'A distinction on a quiz, on top',
+        'assignment.submitted' => 'Handing in an assignment',
+        'assignment.onTime' => 'Handing it in on time, on top',
+        'course.completed' => 'Finishing a course',
+    ];
+
     /**
      * Stop recording for the rest of this request.
      *
