@@ -6,11 +6,11 @@
  * team needs somewhere to write "their API is down again" that is not the
  * client's timeline.
  */
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, useForm, router, Link } from '@inertiajs/vue3';
 import {
     ArrowLeft, Pencil, Plus, Trash2, CheckCircle2, Circle, EyeOff, Eye, Send,
-    FileDown,
+    FileDown, ClipboardCheck, Undo2,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -26,6 +26,7 @@ import UiDateInput from '@/components/UI/UiDateInput.vue';
 import UiProgress from '@/components/UI/UiProgress.vue';
 import UiFormField from '@/components/UI/UiFormField.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
+import UiRepeater from '@/components/UI/UiRepeater.vue';
 
 const props = defineProps({
     project: { type: Object, required: true },
@@ -79,6 +80,48 @@ function toggleMilestone(milestone) {
 function deleteMilestone(milestone) {
     if (confirm(`Remove "${milestone.title}"?`)) {
         router.delete(`/admin/projects/${props.project.id}/milestones/${milestone.id}`, { preserveScroll: true });
+    }
+}
+
+/* ----------------------------------------- acceptance by the client (CL9) */
+
+const signoffMilestone = ref(null);
+const signoffForm = useForm({ deliverables: [], note: '' });
+
+const signoffTones = { waiting: 'warning', changes: 'danger', accepted: 'success' };
+
+const deliverablesError = computed(() => signoffForm.errors.deliverables
+    ?? Object.entries(signoffForm.errors).find(([key]) => key.startsWith('deliverables.'))?.[1]);
+
+function signoffLabel(milestone) {
+    return {
+        waiting: 'Waiting for the client',
+        changes: 'Changes asked for',
+        accepted: `Accepted ${milestone.acceptedAt ?? ''}`.trim(),
+    }[milestone.signoff];
+}
+
+function lastAnswer(milestone) {
+    return [...milestone.signoffs].reverse().find((signoff) => signoff.state === 'changes' || signoff.state === 'accepted') ?? null;
+}
+
+function openSignoff(milestone) {
+    signoffMilestone.value = milestone;
+    signoffForm.clearErrors();
+    signoffForm.deliverables = [...(milestone.lastDeliverables ?? [])];
+    signoffForm.note = '';
+}
+
+function submitSignoff() {
+    signoffForm.post(`/admin/projects/${props.project.id}/milestones/${signoffMilestone.value.id}/signoff`, {
+        preserveScroll: true,
+        onSuccess: () => (signoffMilestone.value = null),
+    });
+}
+
+function withdrawSignoff(milestone) {
+    if (confirm(`Withdraw the request to accept "${milestone.title}"? The client can no longer answer it.`)) {
+        router.post(`/admin/projects/${props.project.id}/milestones/${milestone.id}/signoff/withdraw`, {}, { preserveScroll: true });
     }
 }
 
@@ -217,8 +260,9 @@ function setStatus(status) {
                             <li v-for="milestone in milestones" :key="milestone.id" class="flex items-start gap-2.5">
                                 <button
                                     type="button"
-                                    class="mt-0.5 shrink-0"
+                                    class="mt-0.5 shrink-0 disabled:cursor-default"
                                     :aria-label="milestone.complete ? 'Reopen milestone' : 'Mark done'"
+                                    :disabled="Boolean(milestone.acceptedAt)"
                                     @click="toggleMilestone(milestone)"
                                 >
                                     <component
@@ -243,16 +287,56 @@ function setStatus(status) {
                                         <span v-else-if="milestone.dueDateLabel">Due {{ milestone.dueDateLabel }}</span>
                                         <UiBadge v-if="milestone.overdue" tone="warning" size="sm">overdue</UiBadge>
                                         <UiBadge v-if="milestone.payment" size="sm">{{ milestone.payment }}</UiBadge>
+                                        <UiBadge v-if="milestone.signoff" :tone="signoffTones[milestone.signoff]" size="sm" dot>{{ signoffLabel(milestone) }}</UiBadge>
                                     </p>
+                                    <p v-if="lastAnswer(milestone)?.comments" class="mt-1 whitespace-pre-line text-xs" style="color: var(--text-base)">
+                                        “{{ lastAnswer(milestone).comments }}” <span style="color: var(--text-muted)">· {{ lastAnswer(milestone).decidedBy }}, {{ lastAnswer(milestone).decidedAt }}</span>
+                                    </p>
+                                    <details v-if="milestone.signoffs.length" class="mt-1 text-xs" style="color: var(--text-muted)">
+                                        <summary class="cursor-pointer select-none">Acceptance history ({{ milestone.signoffs.length }})</summary>
+                                        <ol class="mt-1.5 space-y-1.5 border-l pl-3" style="border-color: var(--border-subtle)">
+                                            <li v-for="round in milestone.signoffs" :key="round.id">
+                                                Asked {{ round.requestedAt }}<template v-if="round.requestedBy"> by {{ round.requestedBy }}</template>:
+                                                {{ round.deliverables.join('; ') }}.
+                                                <template v-if="round.state === 'withdrawn'"> Withdrawn {{ round.withdrawnAt }}.</template>
+                                                <template v-else-if="round.state === 'waiting'"> Waiting.</template>
+                                                <template v-else> {{ round.state === 'accepted' ? 'Accepted' : 'Changes asked for' }} by {{ round.decidedBy }}, {{ round.decidedAt }}.</template>
+                                            </li>
+                                        </ol>
+                                    </details>
                                 </div>
 
                                 <div class="flex shrink-0 gap-0.5">
-                                    <UiButton variant="ghost" size="xs" icon aria-label="Edit" @click="openMilestone(milestone)">
-                                        <Pencil class="h-3 w-3" />
+                                    <UiButton
+                                        v-if="!milestone.acceptedAt && milestone.signoff !== 'waiting'"
+                                        variant="ghost"
+                                        size="xs"
+                                        icon
+                                        aria-label="Ask the client to accept"
+                                        title="Ask the client to accept"
+                                        @click="openSignoff(milestone)"
+                                    >
+                                        <ClipboardCheck class="h-3 w-3" />
                                     </UiButton>
-                                    <UiButton variant="ghost" size="xs" icon aria-label="Remove" @click="deleteMilestone(milestone)">
-                                        <Trash2 class="h-3 w-3" style="color: var(--color-danger-500)" />
+                                    <UiButton
+                                        v-if="milestone.signoff === 'waiting'"
+                                        variant="ghost"
+                                        size="xs"
+                                        icon
+                                        aria-label="Withdraw the request to accept"
+                                        title="Withdraw the request to accept"
+                                        @click="withdrawSignoff(milestone)"
+                                    >
+                                        <Undo2 class="h-3 w-3" />
                                     </UiButton>
+                                    <template v-if="!milestone.acceptedAt">
+                                        <UiButton variant="ghost" size="xs" icon aria-label="Edit" @click="openMilestone(milestone)">
+                                            <Pencil class="h-3 w-3" />
+                                        </UiButton>
+                                        <UiButton variant="ghost" size="xs" icon aria-label="Remove" @click="deleteMilestone(milestone)">
+                                            <Trash2 class="h-3 w-3" style="color: var(--color-danger-500)" />
+                                        </UiButton>
+                                    </template>
                                 </div>
                             </li>
                         </ul>
@@ -370,7 +454,7 @@ function setStatus(status) {
                     <UiFormField
                         label="Payment (₹)"
                         :error="milestoneForm.errors.payment_amount"
-                        hint="If money is tied to it."
+                        hint="Before tax. Invoiced when the client accepts the milestone."
                     >
                         <UiInput v-model="milestoneForm.payment_amount" type="number" step="0.01" min="0" />
                     </UiFormField>
@@ -381,6 +465,32 @@ function setStatus(status) {
                 <UiButton variant="ghost" @click="closeMilestone">Cancel</UiButton>
                 <UiButton type="submit" form="milestone-form" :loading="milestoneForm.processing">
                     {{ editingMilestone ? 'Save' : 'Add milestone' }}
+                </UiButton>
+            </template>
+        </UiModal>
+
+        <UiModal
+            :open="Boolean(signoffMilestone)"
+            title="Ask the client to accept"
+            :description="signoffMilestone
+                ? `Their signatories and owners are sent this list for ${signoffMilestone.title}.${signoffMilestone.payment ? ` Accepting raises its invoice of ${signoffMilestone.payment} before tax.` : ''}`
+                : ''"
+            @close="signoffMilestone = null"
+        >
+            <form id="signoff-form" class="space-y-4" @submit.prevent="submitSignoff">
+                <UiFormField label="What was delivered" hint="One line each. This is what they accept." :error="deliverablesError" required>
+                    <UiRepeater v-model="signoffForm.deliverables" :max="20" placeholder="Type a deliverable and press Enter" />
+                </UiFormField>
+                <UiFormField label="Note for them" hint="Optional: where to check it, such as the staging address." :error="signoffForm.errors.note">
+                    <UiTextarea v-model="signoffForm.note" :rows="3" />
+                </UiFormField>
+            </form>
+
+            <template #footer>
+                <UiButton variant="ghost" @click="signoffMilestone = null">Cancel</UiButton>
+                <UiButton type="submit" form="signoff-form" :loading="signoffForm.processing" :disabled="!signoffForm.deliverables.length">
+                    <template #leading><Send class="h-3.5 w-3.5" /></template>
+                    Send to the client
                 </UiButton>
             </template>
         </UiModal>

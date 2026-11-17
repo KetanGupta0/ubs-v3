@@ -3,17 +3,21 @@
 namespace App\Http\Controllers\Client;
 
 use App\Models\Document;
+use App\Models\MilestoneSignoff;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
 use App\Models\ProjectUpdate;
 use App\Services\Client\ClientDocuments;
+use App\Services\Client\MilestoneSignoffs;
 use App\Support\Money;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
 use App\Support\Table\Table;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
@@ -45,7 +49,7 @@ class ProjectController extends ClientController
     {
         $record = $this->own($request, Project::query()
             ->forClient($this->client($request))
-            ->with(['solution:id,title,slug', 'manager:id,name,avatar_path']), $project);
+            ->with(['solution:id,title,slug', 'manager:id,name,avatar_path', 'milestones.signoffs']), $project);
 
         return Inertia::render('client/projects/Show', [
             'project' => [
@@ -80,6 +84,9 @@ class ProjectController extends ClientController
                 'overdue' => $milestone->isOverdue(),
                 'progress' => $milestone->progress_percent,
                 'payment' => $milestone->payment_amount ? Money::display($milestone->payment_amount) : null,
+                // Acceptance (CL9): waiting, changes or accepted; null if never asked.
+                'signoff' => $milestone->signoffState(),
+                'acceptedAt' => $milestone->accepted_at?->format('j M Y'),
             ]),
 
             'updates' => $record->updates()
@@ -152,6 +159,104 @@ class ProjectController extends ClientController
     }
 
     /** Where the project stands, as a PDF, as of now (CL3). */
+    /* ------------------------------------------------ milestone acceptance */
+
+    /** A milestone, what we said was delivered, and every answer given on it. */
+    public function milestone(Request $request, int $project, int $milestone): Response
+    {
+        $record = $this->ownMilestone($request, $project, $milestone);
+        $record->load('signoffs.requester:id,name', 'signoffs.decider:id,name');
+
+        $pending = $record->signoffs->first(fn (MilestoneSignoff $signoff) => $signoff->isPending());
+        $billed = $record->billedRequest();
+
+        return Inertia::render('client/projects/Milestone', [
+            'project' => ['id' => $record->project->id, 'name' => $record->project->name, 'code' => $record->project->code, 'stagingUrl' => $record->project->staging_url],
+            'milestone' => [
+                'id' => $record->id,
+                'title' => $record->title,
+                'description' => $record->description,
+                'dueDate' => $record->due_date?->format('j M Y'),
+                'payment' => $record->payment_amount ? Money::display($record->payment_amount) : null,
+                'acceptedAt' => $record->accepted_at?->format('j M Y, g:i a'),
+                'state' => $record->signoffState(),
+            ],
+            'pending' => $pending?->toScreen(),
+            'history' => $record->signoffs->reject(fn (MilestoneSignoff $signoff) => $signoff->isPending() || $signoff->withdrawn_at)
+                ->map->toScreen()->reverse()->values(),
+            'invoice' => $billed ? ['id' => $billed->id, 'reference' => $billed->reference, 'status' => $billed->status, 'total' => Money::display($billed->total)] : null,
+            'canAnswer' => $pending !== null && $request->user()->canAsClient('accept'),
+        ]);
+    }
+
+    public function acceptMilestone(Request $request, int $project, int $milestone, MilestoneSignoffs $signoffs): RedirectResponse
+    {
+        $this->mayAsClient($request, 'accept');
+        $record = $this->ownMilestone($request, $project, $milestone);
+
+        $validated = $this->validatedInput($request, [
+            'comments' => ['nullable', 'string', 'max:2000'],
+            'confirm' => ['accepted'],
+        ], [
+            'confirm.accepted' => 'Confirm that the work listed was delivered.',
+        ]);
+
+        $pending = $record->signoffs()->pending()->first();
+
+        if (! $pending) {
+            return back()->with('error', 'There is nothing waiting for your answer on this milestone.');
+        }
+
+        try {
+            $payment = $signoffs->accept($pending, $request->user(), $validated['comments'], $request);
+        } catch (InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        $billed = $payment ?? $record->billedRequest();
+
+        return back()->with('success', match (true) {
+            $payment !== null => "Accepted. Its invoice {$payment->invoice->number} has been raised and sent to your finance contacts.",
+            $billed !== null => 'Accepted. Its invoice'.($billed->invoice ? " {$billed->invoice->number}" : '').' was raised earlier and is under Payments.',
+            default => 'Accepted. Thank you.',
+        });
+    }
+
+    public function rejectMilestone(Request $request, int $project, int $milestone, MilestoneSignoffs $signoffs): RedirectResponse
+    {
+        $this->mayAsClient($request, 'accept');
+        $record = $this->ownMilestone($request, $project, $milestone);
+
+        $validated = $this->validatedInput($request, [
+            'comments' => ['required', 'string', 'min:10', 'max:2000'],
+        ], [
+            'comments.required' => 'Tell us what needs changing, so we can put it right.',
+            'comments.min' => 'Tell us a little more about what needs changing.',
+        ]);
+
+        $pending = $record->signoffs()->pending()->first();
+
+        if (! $pending) {
+            return back()->with('error', 'There is nothing waiting for your answer on this milestone.');
+        }
+
+        try {
+            $signoffs->reject($pending, $request->user(), $validated['comments'], $request);
+        } catch (InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Sent. We will make the changes and ask you again.');
+    }
+
+    /** A milestone on one of the organisation's own projects, or not found. */
+    protected function ownMilestone(Request $request, int $project, int $milestone): ProjectMilestone
+    {
+        $owned = $this->own($request, Project::query()->forClient($this->client($request)), $project);
+
+        return $owned->milestones()->whereKey($milestone)->firstOrFail()->setRelation('project', $owned);
+    }
+
     public function statusReport(Request $request, int $project, ClientDocuments $documents): HttpResponse
     {
         $record = $this->own($request, Project::query()->forClient($this->client($request)), $project);

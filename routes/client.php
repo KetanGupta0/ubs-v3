@@ -44,6 +44,15 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
         Route::get('projects/{project}/status-report', [ProjectController::class, 'statusReport'])
             ->whereNumber('project')
             ->name('projects.status-report');
+        Route::get('projects/{project}/milestones/{milestone}', [ProjectController::class, 'milestone'])
+            ->whereNumber(['project', 'milestone'])
+            ->name('projects.milestones.show');
+        Route::post('projects/{project}/milestones/{milestone}/accept', [ProjectController::class, 'acceptMilestone'])
+            ->whereNumber(['project', 'milestone'])
+            ->name('projects.milestones.accept');
+        Route::post('projects/{project}/milestones/{milestone}/reject', [ProjectController::class, 'rejectMilestone'])
+            ->whereNumber(['project', 'milestone'])
+            ->name('projects.milestones.reject');
 
         /* -------------------------------------------------------- proposals */
         Route::get('proposals', [ProposalController::class, 'index'])->name('proposals.index');

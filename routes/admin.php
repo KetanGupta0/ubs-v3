@@ -186,6 +186,8 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::put('projects/{project}/milestones/{milestone}', [ProjectController::class, 'updateMilestone'])->name('projects.milestones.update');
             Route::post('projects/{project}/milestones/{milestone}/complete', [ProjectController::class, 'completeMilestone'])->name('projects.milestones.complete');
             Route::delete('projects/{project}/milestones/{milestone}', [ProjectController::class, 'destroyMilestone'])->name('projects.milestones.destroy');
+            Route::post('projects/{project}/milestones/{milestone}/signoff', [ProjectController::class, 'requestSignoff'])->name('projects.milestones.signoff');
+            Route::post('projects/{project}/milestones/{milestone}/signoff/withdraw', [ProjectController::class, 'withdrawSignoff'])->name('projects.milestones.signoff.withdraw');
 
             Route::post('projects/{project}/updates', [ProjectController::class, 'storeUpdate'])->name('projects.updates.store');
             Route::delete('projects/{project}/updates/{update}', [ProjectController::class, 'destroyUpdate'])->name('projects.updates.destroy');

@@ -327,6 +327,13 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   the company. Each signature renders a separate signed copy with a certificate page;
   the PDF as sent is never touched. "Opened" is the first time somebody in the client's
   organisation opened it, never staff and never "view as".
+- **Accepting a milestone raises its invoice, once (CL9).** `App\Services\Client\MilestoneSignoffs`
+  asks the client's signatories to accept a milestone, with the deliverables copied onto
+  the request in `milestone_signoffs`. A signatory or an owner accepts it, or asks for
+  changes with a reason, and every round is kept. Accepting raises the milestone's
+  `payment_amount` (before tax) as a payment request and invoice through the usual path,
+  unless a live one already exists for that milestone, however it was raised. An accepted
+  milestone cannot be edited, reopened or deleted, whatever code path asks.
 - **An API key is shown once.** Only a hash and the prefix are stored. Lost keys
   are rotated, not recovered.
 - **`$request->validate()` drops optional fields the request did not send**, so

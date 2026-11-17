@@ -3,7 +3,8 @@
  * One project, as the client sees it.
  *
  * Read only on purpose. A milestone date is a promise they are owed, so
- * changing it is a conversation, not a form field.
+ * changing it is a conversation, not a form field. The one thing asked of
+ * them here is accepting a milestone, which opens on its own page (CL9).
  */
 import { Head, Link } from '@inertiajs/vue3';
 import {
@@ -140,8 +141,13 @@ defineProps({
                                     }"
                                 />
 
-                                <p class="text-sm font-medium" :class="milestone.complete && 'line-through opacity-70'">
-                                    {{ milestone.title }}
+                                <p class="text-sm font-medium" :class="milestone.complete && !milestone.signoff && 'line-through opacity-70'">
+                                    <Link
+                                        v-if="milestone.signoff"
+                                        :href="`/client/projects/${project.id}/milestones/${milestone.id}`"
+                                        class="hover:underline"
+                                    >{{ milestone.title }}</Link>
+                                    <template v-else>{{ milestone.title }}</template>
                                 </p>
                                 <p v-if="milestone.description" class="mt-0.5 text-xs" style="color: var(--text-muted)">
                                     {{ milestone.description }}
@@ -153,7 +159,17 @@ defineProps({
                                     </span>
                                     <UiBadge v-if="milestone.overdue" tone="warning" size="sm">overdue</UiBadge>
                                     <UiBadge v-if="milestone.payment" size="sm">{{ milestone.payment }}</UiBadge>
+                                    <UiBadge v-if="milestone.signoff === 'accepted'" tone="success" size="sm" dot>Accepted {{ milestone.acceptedAt }}</UiBadge>
+                                    <UiBadge v-else-if="milestone.signoff === 'changes'" tone="neutral" size="sm" dot>Changes asked for</UiBadge>
                                 </p>
+                                <UiButton
+                                    v-if="milestone.signoff === 'waiting'"
+                                    :href="`/client/projects/${project.id}/milestones/${milestone.id}`"
+                                    size="xs"
+                                    class="mt-2"
+                                >
+                                    Review and accept
+                                </UiButton>
                             </li>
                         </ol>
                     </UiCard>

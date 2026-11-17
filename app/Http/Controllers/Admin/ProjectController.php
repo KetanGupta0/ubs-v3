@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Notifications\ProjectUpdated;
 use App\Services\Admin\Auditor;
 use App\Services\Client\ClientDocuments;
+use App\Services\Client\MilestoneSignoffs;
 use App\Support\Money;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
@@ -22,6 +23,7 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\Response as HttpResponse;
 
 /**
@@ -71,7 +73,7 @@ class ProjectController extends Controller
 
     public function show(Request $request, Project $project): Response
     {
-        $project->load(['client:id,name,email', 'manager:id,name', 'solution:id,title', 'milestones']);
+        $project->load(['client:id,name,email', 'manager:id,name', 'solution:id,title', 'milestones.signoffs.requester:id,name', 'milestones.signoffs.decider:id,name']);
 
         return Inertia::render('admin/projects/Show', [
             'project' => [
@@ -108,6 +110,11 @@ class ProjectController extends Controller
                 'progress' => $milestone->progress_percent,
                 'payment' => $milestone->payment_amount ? Money::display($milestone->payment_amount) : null,
                 'paymentValue' => $milestone->payment_amount ? $milestone->payment_amount / 100 : null,
+                // Acceptance by the client (CL9).
+                'acceptedAt' => $milestone->accepted_at?->format('j M Y'),
+                'signoff' => $milestone->signoffState(),
+                'signoffs' => $milestone->signoffs->map->toScreen()->values(),
+                'lastDeliverables' => $milestone->signoffs->last()?->deliverables ?? [],
             ]),
             'updates' => $project->updates()
                 ->with('author:id,name')
@@ -186,6 +193,10 @@ class ProjectController extends Controller
     {
         abort_unless($milestone->project_id === $project->id, 404);
 
+        if ($milestone->isAccepted()) {
+            return back()->with('error', 'The client accepted this milestone, so it stays as they accepted it.');
+        }
+
         $milestone->fill($this->milestoneRules($request))->save();
 
         return back()->with('success', 'Milestone saved.');
@@ -194,6 +205,10 @@ class ProjectController extends Controller
     public function completeMilestone(Request $request, Project $project, ProjectMilestone $milestone): RedirectResponse
     {
         abort_unless($milestone->project_id === $project->id, 404);
+
+        if ($milestone->isAccepted()) {
+            return back()->with('error', 'The client accepted this milestone, so it stays done.');
+        }
 
         $done = $milestone->completed_at === null;
 
@@ -209,9 +224,50 @@ class ProjectController extends Controller
     {
         abort_unless($milestone->project_id === $project->id, 404);
 
+        if ($milestone->isAccepted() || $milestone->signoffs()->whereNotNull('decision')->exists()) {
+            return back()->with('error', 'The client has answered on this milestone, so it is kept as a record.');
+        }
+
         $milestone->delete();
 
         return back()->with('success', 'Milestone removed.');
+    }
+
+    /* ------------------------------------------- acceptance by the client */
+
+    public function requestSignoff(Request $request, Project $project, ProjectMilestone $milestone, MilestoneSignoffs $signoffs): RedirectResponse
+    {
+        abort_unless($milestone->project_id === $project->id, 404);
+
+        $validated = $this->validatedInput($request, [
+            'deliverables' => ['required', 'array', 'min:1', 'max:20'],
+            'deliverables.*' => ['required', 'string', 'max:200'],
+            'note' => ['nullable', 'string', 'max:2000'],
+        ], [
+            'deliverables.required' => 'List what was delivered, so the client knows what they are accepting.',
+            'deliverables.min' => 'List what was delivered, so the client knows what they are accepting.',
+            'deliverables.*.required' => 'Fill in or remove the empty line.',
+        ]);
+
+        try {
+            $signoffs->request($milestone, $request->user(), $validated['deliverables'], $validated['note']);
+        } catch (InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', 'Sent to the client\'s signatories to accept.');
+    }
+
+    public function withdrawSignoff(Request $request, Project $project, ProjectMilestone $milestone, MilestoneSignoffs $signoffs): RedirectResponse
+    {
+        abort_unless($milestone->project_id === $project->id, 404);
+
+        $pending = $milestone->signoffs()->pending()->first();
+        abort_unless($pending !== null, 404);
+
+        $signoffs->withdraw($pending, $request->user());
+
+        return back()->with('success', 'Request withdrawn.');
     }
 
     /* -------------------------------------------------------------- updates */

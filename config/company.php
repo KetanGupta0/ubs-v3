@@ -36,4 +36,12 @@ return [
         // does not reset somebody's password twice.
         'resend_cooldown_minutes' => 15,
     ],
+
+    /*
+    | An invoice raised by the client accepting a milestone (CL9) is due this
+    | many days later. Staff raising one by hand choose the date themselves.
+    */
+    'billing' => [
+        'milestone_due_days' => 7,
+    ],
 ];
