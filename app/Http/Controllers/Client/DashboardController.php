@@ -2,15 +2,18 @@
 
 namespace App\Http\Controllers\Client;
 
+use App\Models\Agreement;
 use App\Models\ClientMember;
 use App\Models\Document;
 use App\Models\Invoice;
+use App\Models\MilestoneSignoff;
 use App\Models\PaymentRequest;
 use App\Models\Project;
 use App\Models\ProjectUpdate;
 use App\Models\Proposal;
 use App\Models\Subscription;
 use App\Models\SupportTicket;
+use App\Models\WaitingItem;
 use App\Support\Money;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -94,47 +97,110 @@ class DashboardController extends ClientController
         ]);
     }
 
-    /** @return array<int, array<string, mixed>> */
+    /**
+     * Everything the organisation owes an answer on, first the ones this
+     * person can act on. Something only another role can do still shows,
+     * saying whose it is, so nobody wonders why the project is waiting.
+     *
+     * @return array<int, array<string, mixed>>
+     */
     protected function waitingOnYou(Request $request): array
     {
         $client = $this->client($request);
+        $user = $request->user();
+        $projects = Project::query()->forClient($client)->select('id');
         $items = [];
 
+        // What we need from them to carry on (CL10). Anybody may reply.
+        WaitingItem::query()
+            ->forClient($client)
+            ->open()
+            ->with('project:id,name')
+            ->orderByRaw('due_on is null')
+            ->orderBy('due_on')
+            ->get()
+            ->each(function (WaitingItem $item) use (&$items) {
+                $items[] = [
+                    'kind' => 'waiting',
+                    'title' => $item->title,
+                    'detail' => $item->project?->name.($item->due_on
+                        ? ($item->isOverdue() ? ' · was wanted by ' : ' · wanted by ').$item->due_on->format('j M Y')
+                        : ''),
+                    'href' => "/client/projects/{$item->project_id}/waiting/{$item->id}",
+                    'action' => 'Reply',
+                    'urgent' => $item->due_on !== null && $item->due_on->lte(today()->addDays(2)),
+                ];
+            });
+
+        // Milestones to accept (CL9).
+        $mayAccept = $user->canAsClient('accept');
+        MilestoneSignoff::query()
+            ->pending()
+            ->whereIn('project_id', $projects)
+            ->with('milestone:id,title,payment_amount', 'project:id,name')
+            ->get()
+            ->each(function (MilestoneSignoff $signoff) use (&$items, $mayAccept) {
+                $items[] = [
+                    'kind' => 'milestone',
+                    'title' => "Accept: {$signoff->milestone->title}",
+                    'detail' => $signoff->project->name.($mayAccept ? '' : ' · for a signatory to accept'),
+                    'href' => "/client/projects/{$signoff->project_id}/milestones/{$signoff->milestone_id}",
+                    'action' => $mayAccept ? 'Review' : 'Read',
+                    'urgent' => $signoff->created_at->lt(now()->subDays(7)),
+                ];
+            });
+
+        // Proposals: accepting one is signing it (CL2).
+        $mayApprove = $user->canAsClient('approve');
         Proposal::query()
             ->where('client_id', $client->id)
             ->awaitingResponse()
             ->get()
-            ->each(function (Proposal $proposal) use (&$items) {
-                if ($proposal->hasExpired()) {
-                    return;
-                }
-
+            ->reject(fn (Proposal $proposal) => $proposal->hasExpired())
+            ->each(function (Proposal $proposal) use (&$items, $mayApprove) {
                 $items[] = [
                     'kind' => 'proposal',
                     'title' => $proposal->title,
-                    'detail' => $proposal->valid_until
-                        ? 'Valid until '.$proposal->valid_until->format('j M Y')
-                        : 'Awaiting your answer',
+                    'detail' => ($proposal->valid_until ? 'Valid until '.$proposal->valid_until->format('j M Y') : 'Awaiting your answer')
+                        .($mayApprove ? '' : ' · for a signatory'),
                     'href' => "/client/proposals/{$proposal->id}",
-                    'action' => 'Read and respond',
+                    'action' => $mayApprove ? 'Read and sign' : 'Read',
                     'urgent' => $proposal->valid_until !== null && $proposal->valid_until->diffInDays(today()) <= 7,
                 ];
             });
 
+        // Agreements waiting for a signature (CL2).
+        $maySign = $user->canAsClient('sign');
+        Agreement::query()
+            ->forClient($client)
+            ->where('status', 'sent')
+            ->get()
+            ->each(function (Agreement $agreement) use (&$items, $maySign) {
+                $items[] = [
+                    'kind' => 'agreement',
+                    'title' => "Sign: {$agreement->title}",
+                    'detail' => $agreement->number.($maySign ? '' : ' · for a signatory'),
+                    'href' => "/client/agreements/{$agreement->id}",
+                    'action' => $maySign ? 'Read and sign' : 'Read',
+                    'urgent' => $agreement->sent_at !== null && $agreement->sent_at->lt(now()->subDays(7)),
+                ];
+            });
+
+        $mayPay = $user->canAsClient('pay');
         PaymentRequest::query()
             ->forUser($client)
             ->pending()
             ->orderBy('due_on')
             ->get()
-            ->each(function (PaymentRequest $payment) use (&$items) {
+            ->each(function (PaymentRequest $payment) use (&$items, $mayPay) {
                 $items[] = [
                     'kind' => 'payment',
                     'title' => $payment->title,
-                    'detail' => $payment->totalLabel().($payment->due_on
-                        ? ' · due '.$payment->due_on->format('j M Y')
-                        : ''),
+                    'detail' => $payment->totalLabel()
+                        .($payment->due_on ? ' · due '.$payment->due_on->format('j M Y') : '')
+                        .($mayPay ? '' : ' · for finance'),
                     'href' => "/client/payments/{$payment->id}",
-                    'action' => 'Pay now',
+                    'action' => $mayPay ? 'Pay now' : 'Read',
                     'urgent' => $payment->isOverdue(),
                 ];
             });
@@ -154,11 +220,15 @@ class DashboardController extends ClientController
                 ];
             });
 
+        // An overdue invoice whose request is still open is already listed
+        // above as a payment; listing it twice reads as two debts.
         Invoice::query()
             ->forUser($client)
             ->unpaid()
             ->whereNotNull('due_on')
             ->whereDate('due_on', '<', today())
+            ->where(fn ($query) => $query->whereNull('payment_request_id')
+                ->orWhereNotIn('payment_request_id', PaymentRequest::query()->forUser($client)->pending()->select('id')))
             ->get()
             ->each(function (Invoice $invoice) use (&$items) {
                 $items[] = [
@@ -171,7 +241,8 @@ class DashboardController extends ClientController
                 ];
             });
 
-        // Urgent first, then in the order they were gathered.
+        // Urgent first, then in the order they were gathered: what is asked
+        // of them, what to accept, sign and pay.
         usort($items, fn ($a, $b) => $b['urgent'] <=> $a['urgent']);
 
         return $items;

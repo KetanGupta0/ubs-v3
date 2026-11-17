@@ -189,6 +189,11 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('projects/{project}/milestones/{milestone}/signoff', [ProjectController::class, 'requestSignoff'])->name('projects.milestones.signoff');
             Route::post('projects/{project}/milestones/{milestone}/signoff/withdraw', [ProjectController::class, 'withdrawSignoff'])->name('projects.milestones.signoff.withdraw');
 
+            Route::post('projects/{project}/waiting', [ProjectController::class, 'storeWaiting'])->name('projects.waiting.store');
+            Route::post('projects/{project}/waiting/{item}/reopen', [ProjectController::class, 'reopenWaiting'])->whereNumber('item')->name('projects.waiting.reopen');
+            Route::post('projects/{project}/waiting/{item}/close', [ProjectController::class, 'closeWaiting'])->whereNumber('item')->name('projects.waiting.close');
+            Route::post('projects/{project}/waiting/{item}/cancel', [ProjectController::class, 'cancelWaiting'])->whereNumber('item')->name('projects.waiting.cancel');
+
             Route::post('projects/{project}/updates', [ProjectController::class, 'storeUpdate'])->name('projects.updates.store');
             Route::delete('projects/{project}/updates/{update}', [ProjectController::class, 'destroyUpdate'])->name('projects.updates.destroy');
         });

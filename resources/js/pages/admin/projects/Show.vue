@@ -10,7 +10,7 @@ import { computed, ref } from 'vue';
 import { Head, useForm, router, Link } from '@inertiajs/vue3';
 import {
     ArrowLeft, Pencil, Plus, Trash2, CheckCircle2, Circle, EyeOff, Eye, Send,
-    FileDown, ClipboardCheck, Undo2,
+    FileDown, ClipboardCheck, Undo2, Inbox, RotateCcw, XCircle,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -27,12 +27,20 @@ import UiProgress from '@/components/UI/UiProgress.vue';
 import UiFormField from '@/components/UI/UiFormField.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
 import UiRepeater from '@/components/UI/UiRepeater.vue';
+import UiSelect from '@/components/UI/UiSelect.vue';
+import WaitingHistory from '@/components/Projects/WaitingHistory.vue';
+import { blankForm } from '@/support/forms';
 
 const props = defineProps({
     project: { type: Object, required: true },
     milestones: { type: Array, default: () => [] },
     updates: { type: Array, default: () => [] },
     statuses: { type: Array, default: () => [] },
+    /** What we are waiting on the client for (CL10). */
+    waiting: { type: Array, default: () => [] },
+    waitingTime: { type: String, default: 'no time' },
+    waitingKinds: { type: Array, default: () => [] },
+    canOpenDocuments: { type: Boolean, default: false },
 });
 
 /* ------------------------------------------------------------- milestones */
@@ -123,6 +131,50 @@ function withdrawSignoff(milestone) {
     if (confirm(`Withdraw the request to accept "${milestone.title}"? The client can no longer answer it.`)) {
         router.post(`/admin/projects/${props.project.id}/milestones/${milestone.id}/signoff/withdraw`, {}, { preserveScroll: true });
     }
+}
+
+/* -------------------------------------------- waiting on the client (CL10) */
+
+const asking = ref(false);
+const blankAsk = { kind: 'assets', title: '', details: '', due_on: '', blocks_work: true };
+const askForm = useForm({ ...blankAsk });
+const reopening = ref(null);
+const reopenForm = useForm({ note: '' });
+const showFinished = ref(false);
+
+const waitingTones = { open: 'warning', answered: 'brand', closed: 'success', cancelled: 'neutral' };
+const waitingLabels = { open: 'Waiting on them', answered: 'They replied', closed: 'Done', cancelled: 'Cancelled' };
+
+const liveWaiting = computed(() => props.waiting.filter((item) => item.status === 'open' || item.status === 'answered'));
+const finishedWaiting = computed(() => props.waiting.filter((item) => item.status === 'closed' || item.status === 'cancelled'));
+
+function openAsk() {
+    blankForm(askForm, blankAsk);
+    asking.value = true;
+}
+
+function submitAsk() {
+    askForm.post(`/admin/projects/${props.project.id}/waiting`, { preserveScroll: true, onSuccess: () => (asking.value = false) });
+}
+
+function waitingStep(item, step) {
+    const question = { close: `Mark "${item.title}" done?`, cancel: `Cancel "${item.title}"? It stops showing as waiting on them.` }[step];
+
+    if (confirm(question)) {
+        router.post(`/admin/projects/${props.project.id}/waiting/${item.id}/${step}`, {}, { preserveScroll: true });
+    }
+}
+
+function openReopen(item) {
+    blankForm(reopenForm, { note: '' });
+    reopening.value = item;
+}
+
+function submitReopen() {
+    reopenForm.post(`/admin/projects/${props.project.id}/waiting/${reopening.value.id}/reopen`, {
+        preserveScroll: true,
+        onSuccess: () => (reopening.value = null),
+    });
 }
 
 /* ---------------------------------------------------------------- updates */
@@ -233,6 +285,68 @@ function setStatus(status) {
                         {{ status.replace('_', ' ') }}
                     </UiButton>
                 </div>
+            </UiCard>
+
+            <!-- ---------------------------------------- waiting on the client -->
+            <UiCard>
+                <template #header>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <h2 class="text-base font-semibold">Waiting on the client</h2>
+                            <p class="text-xs" style="color: var(--text-muted)">Work has waited {{ waitingTime }} in all on things only they could give us.</p>
+                        </div>
+                        <UiButton size="xs" @click="openAsk">
+                            <template #leading><Plus class="h-3 w-3" /></template>
+                            Ask for something
+                        </UiButton>
+                    </div>
+                </template>
+
+                <p v-if="!liveWaiting.length" class="text-sm" style="color: var(--text-muted)">Nothing is waiting on the client.</p>
+                <ul v-else class="divide-y">
+                    <li v-for="item in liveWaiting" :key="item.id" class="py-4 first:pt-0 last:pb-0">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <p class="flex flex-wrap items-center gap-2 text-sm font-medium">
+                                    <Inbox class="h-4 w-4 shrink-0" style="color: var(--text-muted)" aria-hidden="true" />
+                                    {{ item.title }}
+                                    <UiBadge :tone="waitingTones[item.status]" size="sm" dot>{{ waitingLabels[item.status] }}</UiBadge>
+                                    <UiBadge v-if="item.overdue" tone="warning" size="sm">overdue</UiBadge>
+                                </p>
+                                <p class="mt-0.5 text-xs" style="color: var(--text-muted)">
+                                    {{ item.kindLabel }}<template v-if="item.dueOn"> · wanted by {{ item.dueOn }}</template>
+                                    · {{ item.blocksWork ? 'holds work up' : 'does not hold work up' }}<template v-if="item.waited"> · waited {{ item.waited }}</template>
+                                </p>
+                            </div>
+                            <div class="flex shrink-0 gap-1">
+                                <UiButton v-if="item.status === 'answered'" size="xs" variant="secondary" @click="openReopen(item)">
+                                    <template #leading><RotateCcw class="h-3 w-3" /></template>
+                                    Ask again
+                                </UiButton>
+                                <UiButton size="xs" variant="secondary" @click="waitingStep(item, 'close')">
+                                    <template #leading><CheckCircle2 class="h-3 w-3" /></template>
+                                    Done
+                                </UiButton>
+                                <UiButton size="xs" variant="ghost" icon aria-label="Cancel it" title="Cancel it" @click="waitingStep(item, 'cancel')">
+                                    <XCircle class="h-3 w-3" />
+                                </UiButton>
+                            </div>
+                        </div>
+                        <p v-if="item.details" class="mt-2 whitespace-pre-line text-sm">{{ item.details }}</p>
+                        <div class="mt-3">
+                            <WaitingHistory :events="item.events" :file-href="canOpenDocuments ? (id) => `/admin/documents/${id}/download` : null" />
+                        </div>
+                    </li>
+                </ul>
+
+                <details v-if="finishedWaiting.length" class="mt-4 text-sm" :open="showFinished" @toggle="showFinished = $event.target.open">
+                    <summary class="cursor-pointer select-none text-xs" style="color: var(--text-muted)">Finished ({{ finishedWaiting.length }})</summary>
+                    <ul class="mt-2 space-y-1.5">
+                        <li v-for="item in finishedWaiting" :key="item.id" class="text-xs" style="color: var(--text-muted)">
+                            <span class="font-medium" style="color: var(--text-base)">{{ item.title }}</span> · {{ waitingLabels[item.status] }}<template v-if="item.waited"> · waited {{ item.waited }}</template>
+                        </li>
+                    </ul>
+                </details>
             </UiCard>
 
             <div class="grid gap-5 lg:grid-cols-5">
@@ -466,6 +580,59 @@ function setStatus(status) {
                 <UiButton type="submit" form="milestone-form" :loading="milestoneForm.processing">
                     {{ editingMilestone ? 'Save' : 'Add milestone' }}
                 </UiButton>
+            </template>
+        </UiModal>
+
+        <UiModal
+            :open="asking"
+            title="Ask the client for something"
+            description="They are told by email and see it first on their dashboard until they reply."
+            @close="asking = false"
+        >
+            <form id="ask-form" class="space-y-4" @submit.prevent="submitAsk">
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <UiFormField label="What kind" :error="askForm.errors.kind" required>
+                        <UiSelect v-model="askForm.kind" :options="waitingKinds" />
+                    </UiFormField>
+                    <UiFormField label="Wanted by" :error="askForm.errors.due_on">
+                        <UiDateInput v-model="askForm.due_on" />
+                    </UiFormField>
+                </div>
+                <UiFormField label="What we need" :error="askForm.errors.title" required>
+                    <UiInput v-model="askForm.title" maxlength="160" placeholder="Your logo as an SVG, and the brand colours" />
+                </UiFormField>
+                <UiFormField label="Details" hint="Optional: formats, who to ask, why it matters." :error="askForm.errors.details">
+                    <UiTextarea v-model="askForm.details" :rows="3" />
+                </UiFormField>
+                <UiSwitch
+                    v-model="askForm.blocks_work"
+                    label="Work waits for it"
+                    description="Counted as time the project waited on the client until they reply."
+                />
+            </form>
+            <template #footer>
+                <UiButton variant="ghost" @click="asking = false">Cancel</UiButton>
+                <UiButton type="submit" form="ask-form" :loading="askForm.processing" :disabled="!askForm.title.trim()">
+                    <template #leading><Send class="h-3.5 w-3.5" /></template>
+                    Ask
+                </UiButton>
+            </template>
+        </UiModal>
+
+        <UiModal
+            :open="Boolean(reopening)"
+            title="Ask again"
+            :description="reopening ? `Say what is still missing from their reply on ${reopening.title}.` : ''"
+            @close="reopening = null"
+        >
+            <form id="reopen-form" @submit.prevent="submitReopen">
+                <UiFormField label="What is still missing" :error="reopenForm.errors.note" required>
+                    <UiTextarea v-model="reopenForm.note" :rows="4" />
+                </UiFormField>
+            </form>
+            <template #footer>
+                <UiButton variant="ghost" @click="reopening = null">Cancel</UiButton>
+                <UiButton type="submit" form="reopen-form" :loading="reopenForm.processing" :disabled="!reopenForm.note.trim()">Ask again</UiButton>
             </template>
         </UiModal>
 

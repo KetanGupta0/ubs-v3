@@ -105,11 +105,17 @@ class ClientDocuments
     {
         $project->loadMissing(['milestones', 'client.profile']);
 
+        $waiting = app(WaitingItems::class);
+        $waitingTime = $waiting->waitingTime($project);
+
         return Pdf::loadView('documents.status-report', [
             'project' => $project,
             'parties' => $this->parties($project->client),
             'updates' => $project->updates()->where('visible_to_client', true)->latest()->limit(5)->get(),
             'tickets' => $project->tickets()->whereNotIn('status', ['resolved', 'closed'])->latest()->limit(10)->get(),
+            // What the project is waiting on the client for, and for how long in all (CL10).
+            'waiting' => $project->waitingItems()->where('status', 'open')->get(),
+            'waitingTime' => $waitingTime['seconds'] > 0 ? $waitingTime['label'] : null,
         ])->setPaper('a4')->output();
     }
 

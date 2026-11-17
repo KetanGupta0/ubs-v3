@@ -64,6 +64,12 @@ class Project extends Model
         return $this->hasMany(ProjectMilestone::class)->orderBy('sort_order');
     }
 
+    /** What we have asked the client for (CL10), newest first. */
+    public function waitingItems(): HasMany
+    {
+        return $this->hasMany(WaitingItem::class)->latest('id');
+    }
+
     public function updates(): HasMany
     {
         return $this->hasMany(ProjectUpdate::class)->latest('id');

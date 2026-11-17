@@ -334,6 +334,18 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   `payment_amount` (before tax) as a payment request and invoice through the usual path,
   unless a live one already exists for that milestone, however it was raised. An accepted
   milestone cannot be edited, reopened or deleted, whatever code path asks.
+- **What we need from a client is a "waiting on you" item (CL10).**
+  `App\Services\Client\WaitingItems` raises it with a due date and whether work waits
+  for it, and tells the people it concerns: a decision goes to signatories, access to
+  technical people, the rest to everybody. Anybody in the organisation replies, with
+  words, files or both; files join the organisation's documents as "From the client",
+  their type judged from their bytes. Every step is a `waiting_item_events` row, and the
+  time a project waited is the union of the periods blocking items were open, so two
+  things asked for at once count once. A request for access says never to type a password.
+- **The client dashboard leads with what needs them:** items to reply to, milestones to
+  accept, proposals and agreements to sign, payments, renewals. Something only another
+  role can do still shows, saying whose it is. An overdue invoice whose payment request
+  is still open is the same debt and is listed once.
 - **An API key is shown once.** Only a hash and the prefix are stored. Lost keys
   are rotated, not recovered.
 - **`$request->validate()` drops optional fields the request did not send**, so

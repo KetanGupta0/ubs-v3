@@ -9,10 +9,12 @@ use App\Models\ProjectMilestone;
 use App\Models\ProjectUpdate;
 use App\Models\Solution;
 use App\Models\User;
+use App\Models\WaitingItem;
 use App\Notifications\ProjectUpdated;
 use App\Services\Admin\Auditor;
 use App\Services\Client\ClientDocuments;
 use App\Services\Client\MilestoneSignoffs;
+use App\Services\Client\WaitingItems;
 use App\Support\Money;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
@@ -71,8 +73,10 @@ class ProjectController extends Controller
             ->with('success', "Project {$project->code} created.");
     }
 
-    public function show(Request $request, Project $project): Response
+    public function show(Request $request, Project $project, WaitingItems $waiting): Response
     {
+        $waitingTime = $waiting->waitingTime($project);
+
         $project->load(['client:id,name,email', 'manager:id,name', 'solution:id,title', 'milestones.signoffs.requester:id,name', 'milestones.signoffs.decider:id,name']);
 
         return Inertia::render('admin/projects/Show', [
@@ -130,6 +134,12 @@ class ProjectController extends Controller
                     'ago' => $update->created_at->diffForHumans(),
                 ]),
             'statuses' => Project::STATUSES,
+
+            // What we are waiting on the client for (CL10).
+            'waiting' => $waiting->forScreen($project->waitingItems()->get(), $waitingTime['items']),
+            'waitingTime' => $waitingTime['label'],
+            'waitingKinds' => collect(WaitingItem::KINDS)->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values(),
+            'canOpenDocuments' => $request->user()->hasPermission('documents.manage'),
         ]);
     }
 
@@ -268,6 +278,64 @@ class ProjectController extends Controller
         $signoffs->withdraw($pending, $request->user());
 
         return back()->with('success', 'Request withdrawn.');
+    }
+
+    /* ------------------------------------------- waiting on the client */
+
+    public function storeWaiting(Request $request, Project $project, WaitingItems $waiting): RedirectResponse
+    {
+        $validated = $this->validatedInput($request, [
+            'kind' => ['required', Rule::in(array_keys(WaitingItem::KINDS))],
+            'title' => ['required', 'string', 'max:160'],
+            'details' => ['nullable', 'string', 'max:2000'],
+            'due_on' => ['nullable', 'date', 'after_or_equal:today'],
+            'blocks_work' => ['boolean'],
+        ], [
+            'due_on.after_or_equal' => 'A date already gone cannot be a date to send it by.',
+        ]);
+
+        $validated['blocks_work'] = $this->boolInput($request, 'blocks_work', true);
+        $waiting->raise($project, $request->user(), $validated);
+
+        return back()->with('success', 'Asked. The client has been told.');
+    }
+
+    public function reopenWaiting(Request $request, Project $project, int $item, WaitingItems $waiting): RedirectResponse
+    {
+        $record = $project->waitingItems()->findOrFail($item);
+
+        $validated = $this->validatedInput($request, [
+            'note' => ['required', 'string', 'max:2000'],
+        ], [
+            'note.required' => 'Say what is still missing, so they know what to send.',
+        ]);
+
+        return $this->waitingStep(fn () => $waiting->reopen($record, $request->user(), $validated['note']), 'Asked again. They have been told what is missing.');
+    }
+
+    public function closeWaiting(Request $request, Project $project, int $item, WaitingItems $waiting): RedirectResponse
+    {
+        $record = $project->waitingItems()->findOrFail($item);
+
+        return $this->waitingStep(fn () => $waiting->close($record, $request->user()), 'Marked done.');
+    }
+
+    public function cancelWaiting(Request $request, Project $project, int $item, WaitingItems $waiting): RedirectResponse
+    {
+        $record = $project->waitingItems()->findOrFail($item);
+
+        return $this->waitingStep(fn () => $waiting->cancel($record, $request->user()), 'Cancelled. It no longer shows as waiting on them.');
+    }
+
+    protected function waitingStep(callable $step, string $done): RedirectResponse
+    {
+        try {
+            $step();
+        } catch (InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return back()->with('success', $done);
     }
 
     /* -------------------------------------------------------------- updates */

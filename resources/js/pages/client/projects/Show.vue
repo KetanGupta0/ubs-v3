@@ -9,7 +9,7 @@
 import { Head, Link } from '@inertiajs/vue3';
 import {
     ArrowLeft, CheckCircle2, Circle, ExternalLink, FileText, Clock, AlertTriangle,
-    FileDown,
+    FileDown, Inbox, ArrowRight,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -22,6 +22,9 @@ import UiEmptyState from '@/components/UI/UiEmptyState.vue';
 
 defineProps({
     project: { type: Object, required: true },
+    /** What we need from them to carry on (CL10). */
+    waiting: { type: Array, default: () => [] },
+    waitingTime: { type: String, default: null },
     milestones: { type: Array, default: () => [] },
     updates: { type: Array, default: () => [] },
     documents: { type: Array, default: () => [] },
@@ -99,6 +102,37 @@ defineProps({
                         <dd class="font-medium tnum">{{ project.budget }}</dd>
                     </div>
                 </dl>
+            </UiCard>
+
+            <!-- ------------------------------------------- waiting on you -->
+            <UiCard v-if="waiting.length || waitingTime">
+                <template #header>
+                    <div class="flex flex-wrap items-baseline justify-between gap-2">
+                        <h2 class="text-base font-semibold">Waiting on you</h2>
+                        <span v-if="waitingTime" class="text-xs" style="color: var(--text-muted)">
+                            Work on this project has waited {{ waitingTime }} in all on things only you could give us.
+                        </span>
+                    </div>
+                </template>
+
+                <p v-if="!waiting.length" class="text-sm" style="color: var(--text-muted)">Nothing is waiting on you right now.</p>
+                <ul v-else class="divide-y">
+                    <li v-for="item in waiting" :key="item.id">
+                        <Link :href="`/client/projects/${project.id}/waiting/${item.id}`" class="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                            <Inbox class="h-4 w-4 shrink-0" :style="{ color: item.overdue ? 'var(--color-warn-600)' : 'var(--text-muted)' }" aria-hidden="true" />
+                            <span class="min-w-0 flex-1">
+                                <span class="block text-sm font-medium">{{ item.title }}</span>
+                                <span class="block text-xs" style="color: var(--text-muted)">
+                                    {{ item.kindLabel }}<template v-if="item.dueOn"> · {{ item.overdue ? 'was wanted by' : 'wanted by' }} {{ item.dueOn }}</template>
+                                </span>
+                            </span>
+                            <UiBadge v-if="item.status === 'answered'" tone="brand" size="sm" dot>Answered</UiBadge>
+                            <span v-else class="flex shrink-0 items-center gap-1 text-xs font-medium" style="color: var(--color-brand-600)">
+                                Reply <ArrowRight class="h-3 w-3" />
+                            </span>
+                        </Link>
+                    </li>
+                </ul>
             </UiCard>
 
             <div class="grid gap-5 lg:grid-cols-5">

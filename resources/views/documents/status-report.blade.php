@@ -38,11 +38,21 @@
                 <td>{{ $milestone->title }}</td>
                 <td>{{ $milestone->due_date?->format('j M Y') ?? '—' }}</td>
                 <td class="right">{{ (int) $milestone->progress_percent }}%</td>
-                <td>{{ $milestone->completed_at?->format('j M Y') ?? '—' }}</td>
+                <td>{{ $milestone->completed_at?->format('j M Y') ?? '—' }}{{ $milestone->accepted_at ? ', accepted' : '' }}</td>
             </tr>
         @endforeach
         </tbody>
     </table>
+@endif
+
+@if($waiting->isNotEmpty() || $waitingTime)
+    <h2>Waiting on you</h2>
+    @if($waiting->isNotEmpty())
+        <ul>@foreach($waiting as $item)<li>{{ $item->title }}{{ $item->due_on ? ', wanted by '.$item->due_on->format('j M Y') : '' }}</li>@endforeach</ul>
+    @endif
+    @if($waitingTime)
+        <p class="muted">Work on this project has waited {{ $waitingTime }} in all on things only you could give us.</p>
+    @endif
 @endif
 
 <h2>Recent updates</h2>

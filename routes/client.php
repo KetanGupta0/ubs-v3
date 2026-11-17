@@ -12,6 +12,7 @@ use App\Http\Controllers\Client\ReportController;
 use App\Http\Controllers\Client\SubscriptionController;
 use App\Http\Controllers\Client\SupportController;
 use App\Http\Controllers\Client\TransactionController;
+use App\Http\Controllers\Client\WaitingController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -53,6 +54,13 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
         Route::post('projects/{project}/milestones/{milestone}/reject', [ProjectController::class, 'rejectMilestone'])
             ->whereNumber(['project', 'milestone'])
             ->name('projects.milestones.reject');
+        Route::get('projects/{project}/waiting/{item}', [WaitingController::class, 'show'])
+            ->whereNumber(['project', 'item'])
+            ->name('projects.waiting.show');
+        Route::post('projects/{project}/waiting/{item}/answer', [WaitingController::class, 'answer'])
+            ->whereNumber(['project', 'item'])
+            ->middleware('throttle:20,1')
+            ->name('projects.waiting.answer');
 
         /* -------------------------------------------------------- proposals */
         Route::get('proposals', [ProposalController::class, 'index'])->name('proposals.index');

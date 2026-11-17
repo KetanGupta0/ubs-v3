@@ -9,6 +9,7 @@ use App\Models\ProjectMilestone;
 use App\Models\ProjectUpdate;
 use App\Services\Client\ClientDocuments;
 use App\Services\Client\MilestoneSignoffs;
+use App\Services\Client\WaitingItems;
 use App\Support\Money;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
@@ -45,13 +46,19 @@ class ProjectController extends ClientController
         ]);
     }
 
-    public function show(Request $request, int $project): Response
+    public function show(Request $request, int $project, WaitingItems $waiting): Response
     {
         $record = $this->own($request, Project::query()
             ->forClient($this->client($request))
             ->with(['solution:id,title,slug', 'manager:id,name,avatar_path', 'milestones.signoffs']), $project);
 
+        $waitingTime = $waiting->waitingTime($record);
+
         return Inertia::render('client/projects/Show', [
+            // What we are waiting on them for (CL10), still open or just answered.
+            'waiting' => $waiting->forScreen($record->waitingItems()->whereIn('status', ['open', 'answered'])->get(), $waitingTime['items']),
+            'waitingTime' => $waitingTime['seconds'] > 0 ? $waitingTime['label'] : null,
+
             'project' => [
                 'id' => $record->id,
                 'code' => $record->code,
