@@ -19,7 +19,7 @@ const props = defineProps({
 
 const reply = useForm({ body: '' });
 const closing = ref(false);
-const closeForm = useForm({ satisfaction: 5 });
+const closeForm = useForm({ satisfaction: 5, satisfaction_comment: '' });
 
 function send() {
     reply.post(`/client/tickets/${props.ticket.id}/reply`, {
@@ -151,11 +151,16 @@ function close() {
                                 background: closeForm.satisfaction === score ? 'var(--color-brand-500)' : 'transparent',
                                 color: closeForm.satisfaction === score ? '#fff' : 'var(--text-base)',
                             }"
+                            :aria-pressed="closeForm.satisfaction === score"
+                            :aria-label="`${score} out of 5`"
                             @click="closeForm.satisfaction = score"
                         >
                             {{ score }}
                         </button>
                     </div>
+                </UiFormField>
+                <UiFormField class="mt-4" label="Anything to add" hint="Optional." :error="closeForm.errors.satisfaction_comment">
+                    <UiTextarea v-model="closeForm.satisfaction_comment" :rows="3" maxlength="1000" />
                 </UiFormField>
             </form>
 

@@ -224,6 +224,7 @@ function setStatus(status) {
                         <template #leading><ArrowLeft class="h-3.5 w-3.5" /></template>
                         All projects
                     </UiButton>
+                    <UiButton :href="`/admin/projects/${project.id}/handover`" variant="secondary" size="sm">Handover</UiButton>
                     <UiButton :href="`/admin/projects/${project.id}/status-report`" :inertia="false" variant="secondary" size="sm">
                         <template #leading><FileDown class="h-3.5 w-3.5" /></template>
                         Status report

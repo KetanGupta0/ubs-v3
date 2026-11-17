@@ -8,6 +8,7 @@ use App\Http\Controllers\Client\CreditNoteController;
 use App\Http\Controllers\Client\DashboardController;
 use App\Http\Controllers\Client\DocumentController;
 use App\Http\Controllers\Client\FeedbackController;
+use App\Http\Controllers\Client\HandoverController;
 use App\Http\Controllers\Client\MeetingController;
 use App\Http\Controllers\Client\PaymentController;
 use App\Http\Controllers\Client\PeopleController;
@@ -61,6 +62,9 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
         Route::post('projects/{project}/milestones/{milestone}/reject', [ProjectController::class, 'rejectMilestone'])
             ->whereNumber(['project', 'milestone'])
             ->name('projects.milestones.reject');
+        Route::get('projects/{project}/handover', [HandoverController::class, 'show'])->whereNumber('project')->name('projects.handover');
+        Route::post('projects/{project}/handover/acknowledge', [HandoverController::class, 'acknowledge'])->whereNumber('project')->name('projects.handover.acknowledge');
+        Route::post('projects/{project}/handover/survey', [HandoverController::class, 'survey'])->whereNumber('project')->name('projects.handover.survey');
         Route::post('projects/{project}/changes', [ChangeRequestController::class, 'store'])->whereNumber('project')->name('projects.changes.store');
         Route::get('projects/{project}/changes/{change}', [ChangeRequestController::class, 'show'])->whereNumber(['project', 'change'])->name('projects.changes.show');
         Route::get('projects/{project}/changes/{change}/pdf', [ChangeRequestController::class, 'pdf'])->whereNumber(['project', 'change'])->name('projects.changes.pdf');

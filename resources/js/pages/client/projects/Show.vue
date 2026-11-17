@@ -34,6 +34,8 @@ const props = defineProps({
     changes: { type: Array, default: () => [] },
     /** Feedback on staging (CL13): counts and whether this person may report. */
     feedback: { type: Object, default: () => ({ open: 0, toCheck: 0, total: 0, canReport: false }) },
+    /** The handover pack, once published (CL15). */
+    handover: { type: Object, default: null },
     milestones: { type: Array, default: () => [] },
     updates: { type: Array, default: () => [] },
     documents: { type: Array, default: () => [] },
@@ -151,6 +153,20 @@ function askForChange() {
                         </Link>
                     </li>
                 </ul>
+            </UiCard>
+
+            <!-- -------------------------------------------- handover pack -->
+            <UiCard v-if="handover">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <p class="text-sm font-semibold">Handover pack</p>
+                        <p class="text-xs" style="color: var(--text-muted)">Where the code is, deploying it, licences, training and the warranty.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <UiBadge v-if="!handover.acknowledged" tone="warning" size="sm" dot>To acknowledge</UiBadge>
+                        <UiButton :href="`/client/projects/${project.id}/handover`" size="xs" variant="secondary">Open</UiButton>
+                    </div>
+                </div>
             </UiCard>
 
             <!-- --------------------------------------- feedback on staging -->

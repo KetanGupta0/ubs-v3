@@ -24,6 +24,7 @@ use App\Http\Controllers\Admin\DocumentController;
 use App\Http\Controllers\Admin\DoubtController;
 use App\Http\Controllers\Admin\EnrolmentController;
 use App\Http\Controllers\Admin\FeedbackController;
+use App\Http\Controllers\Admin\HandoverController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\LegalDocumentController;
@@ -37,6 +38,7 @@ use App\Http\Controllers\Admin\RegistrationFormController;
 use App\Http\Controllers\Admin\RenewalController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\ReviewController;
+use App\Http\Controllers\Admin\SatisfactionController;
 use App\Http\Controllers\Admin\SeoController;
 use App\Http\Controllers\Admin\ServiceController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -196,6 +198,8 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('projects/{project}/milestones/{milestone}/signoff', [ProjectController::class, 'requestSignoff'])->name('projects.milestones.signoff');
             Route::post('projects/{project}/milestones/{milestone}/signoff/withdraw', [ProjectController::class, 'withdrawSignoff'])->name('projects.milestones.signoff.withdraw');
 
+            Route::get('projects/{project}/handover', [HandoverController::class, 'edit'])->name('projects.handover.edit');
+            Route::put('projects/{project}/handover', [HandoverController::class, 'update'])->name('projects.handover.update');
             Route::post('projects/{project}/waiting', [ProjectController::class, 'storeWaiting'])->name('projects.waiting.store');
             Route::post('projects/{project}/waiting/{item}/reopen', [ProjectController::class, 'reopenWaiting'])->whereNumber('item')->name('projects.waiting.reopen');
             Route::post('projects/{project}/waiting/{item}/close', [ProjectController::class, 'closeWaiting'])->whereNumber('item')->name('projects.waiting.close');
@@ -249,6 +253,12 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
         Route::middleware('permission:projects.manage')->group(function () {
             Route::post('feedback/{feedback}/move', [FeedbackController::class, 'move'])->whereNumber('feedback')->name('feedback.move');
             Route::post('feedback/{feedback}/comment', [FeedbackController::class, 'comment'])->whereNumber('feedback')->name('feedback.comment');
+        });
+
+        /* ----------------------------------------------------- satisfaction */
+        Route::middleware('permission:support.manage')->group(function () {
+            Route::get('satisfaction', [SatisfactionController::class, 'index'])->name('satisfaction.index');
+            Route::post('satisfaction/{survey}/testimonial', [SatisfactionController::class, 'testimonial'])->whereNumber('survey')->name('satisfaction.testimonial');
         });
 
         /* --------------------------------------------------------- renewals */

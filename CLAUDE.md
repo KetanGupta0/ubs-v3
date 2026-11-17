@@ -399,6 +399,13 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   site down, goes to our side too. A subscription set to renew itself is billed on its
   date, before tax at the usual rate, under a row lock so it is billed once, and moved
   on a period. Notes on a renewal say where access is kept, never what it is (X6).
+- **A handover says where access was shared, never what it is (CL15, X6).**
+  `App\Services\Client\Handovers` refuses on save anything that looks like a password,
+  key or token (`SECRET_PATTERNS`), and publishing fixes what the client sees as a
+  revision in `published_content`, so later edits are drafts until published again. A
+  signatory or an owner acknowledges each revision. After that a short survey (CL18)
+  asks for a rating; a quote becomes a testimonial draft only with the client's written
+  consent, credited exactly as they gave, and is published by a person.
 - **An API key is shown once.** Only a hash and the prefix are stored. Lost keys
   are rotated, not recovered.
 - **`$request->validate()` drops optional fields the request did not send**, so

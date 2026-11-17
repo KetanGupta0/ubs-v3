@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Client;
 use App\Models\ChangeRequest;
 use App\Models\Document;
 use App\Models\FeedbackItem;
+use App\Models\Handover;
 use App\Models\MilestoneSignoff;
 use App\Models\Project;
 use App\Models\ProjectMilestone;
@@ -68,6 +69,11 @@ class ProjectController extends ClientController
                 'total' => FeedbackItem::query()->where('project_id', $record->id)->count(),
                 'canReport' => $request->user()->canAsClient('feedback'),
             ],
+
+            // The handover pack, once published (CL15).
+            'handover' => ($handover = Handover::query()->where('project_id', $record->id)->whereNotNull('published_at')->first())
+                ? ['acknowledged' => $handover->isAcknowledged(), 'revision' => $handover->revision]
+                : null,
 
             // Changes to the scope (CL12), newest first.
             'changes' => ChangeRequest::query()->where('project_id', $record->id)->latest('id')->get()

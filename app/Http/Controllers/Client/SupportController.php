@@ -202,6 +202,7 @@ class SupportController extends ClientController
 
         $validated = $this->validatedInput($request, [
             'satisfaction' => ['nullable', 'integer', 'min:1', 'max:5'],
+            'satisfaction_comment' => ['nullable', 'string', 'max:1000'],
         ]);
 
         $record->forceFill([
@@ -209,6 +210,8 @@ class SupportController extends ClientController
             'closed_at' => now(),
             'resolved_at' => $record->resolved_at ?? now(),
             'satisfaction' => $validated['satisfaction'] ?? null,
+            // A word with the rating (CL18), read on our Satisfaction page.
+            'satisfaction_comment' => filled($validated['satisfaction_comment'] ?? null) ? trim($validated['satisfaction_comment']) : null,
         ])->save();
 
         return back()->with('success', 'Ticket closed. Thank you.');

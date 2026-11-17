@@ -7,6 +7,7 @@ use App\Models\ChangeRequest;
 use App\Models\ClientMember;
 use App\Models\Document;
 use App\Models\FeedbackItem;
+use App\Models\Handover;
 use App\Models\Invoice;
 use App\Models\MaintenanceContract;
 use App\Models\Meeting;
@@ -186,6 +187,22 @@ class DashboardController extends ClientController
                         'detail' => $item->project->name.' · on staging',
                         'href' => "/client/projects/{$item->project_id}/feedback/{$item->id}",
                         'action' => 'Check',
+                        'urgent' => false,
+                    ];
+                });
+        }
+
+        // A handover pack to acknowledge (CL15).
+        if ($user->canAsClient('accept')) {
+            Handover::query()->whereNotNull('published_at')->whereIn('project_id', $projects)->with('project:id,name')->get()
+                ->reject(fn (Handover $handover) => $handover->isAcknowledged())
+                ->each(function (Handover $handover) use (&$items) {
+                    $items[] = [
+                        'kind' => 'handover',
+                        'title' => "Handover: {$handover->project->name}",
+                        'detail' => 'Read it and acknowledge it',
+                        'href' => "/client/projects/{$handover->project_id}/handover",
+                        'action' => 'Read',
                         'urgent' => false,
                     ];
                 });
