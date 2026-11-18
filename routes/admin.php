@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\ClientMemberController;
 use App\Http\Controllers\Admin\CollegeController;
 use App\Http\Controllers\Admin\CollegeDeskController;
 use App\Http\Controllers\Admin\ContentController;
+use App\Http\Controllers\Admin\CouponController;
 use App\Http\Controllers\Admin\CourseBuilderController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\CredentialsController;
@@ -28,8 +29,10 @@ use App\Http\Controllers\Admin\HandoverController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\LegalDocumentController;
+use App\Http\Controllers\Admin\LicenceController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MeetingController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageCopyController;
 use App\Http\Controllers\Admin\PeopleController;
 use App\Http\Controllers\Admin\ProjectController;
@@ -375,6 +378,27 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('billing/{payment}/offline', [BillingController::class, 'recordOffline'])->name('billing.offline');
             Route::post('billing/tds/{deduction}/check', [TdsController::class, 'check'])->whereNumber('deduction')->name('billing.tds.check');
             Route::post('invoices/{invoice}/credit-notes', [CreditNoteController::class, 'store'])->whereNumber('invoice')->name('credit-notes.store');
+        });
+
+        /* ------------------------------------------------------------- shop */
+        Route::middleware('permission:orders.view')->group(function () {
+            Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+            Route::get('orders/{order}', [OrderController::class, 'show'])->whereNumber('order')->name('orders.show');
+            Route::get('licences', [LicenceController::class, 'index'])->name('licences.index');
+        });
+        Route::middleware('permission:orders.manage')->group(function () {
+            Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])->whereNumber('order')->name('orders.cancel');
+            Route::post('licences/{licence}/revoke', [LicenceController::class, 'revoke'])->whereNumber('licence')->name('licences.revoke');
+            Route::post('licences/{licence}/restore', [LicenceController::class, 'restore'])->whereNumber('licence')->name('licences.restore');
+            Route::put('licences/{licence}/extend', [LicenceController::class, 'extend'])->whereNumber('licence')->name('licences.extend');
+            Route::delete('licences/{licence}/sites/{activation}', [LicenceController::class, 'releaseSite'])->whereNumber(['licence', 'activation'])->name('licences.release');
+        });
+        Route::middleware('permission:coupons.manage')->group(function () {
+            Route::get('coupons', [CouponController::class, 'index'])->name('coupons.index');
+            Route::post('coupons', [CouponController::class, 'store'])->name('coupons.store');
+            Route::put('coupons/{coupon}', [CouponController::class, 'update'])->whereNumber('coupon')->name('coupons.update');
+            Route::post('coupons/{coupon}/toggle', [CouponController::class, 'toggle'])->whereNumber('coupon')->name('coupons.toggle');
+            Route::delete('coupons/{coupon}', [CouponController::class, 'destroy'])->whereNumber('coupon')->name('coupons.destroy');
         });
 
         Route::middleware('permission:billing.refund')->group(function () {

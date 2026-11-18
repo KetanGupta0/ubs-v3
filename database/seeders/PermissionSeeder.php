@@ -62,6 +62,11 @@ class PermissionSeeder extends Seeder
                 'billing.manage' => 'Raise payment requests and issue invoices',
                 'billing.refund' => 'Process refunds',
             ],
+            'Shop' => [
+                'orders.view' => 'View shop orders and licences',
+                'orders.manage' => 'Cancel orders, and withdraw, restore or extend licences',
+                'coupons.manage' => 'Create and change discount codes',
+            ],
             'Settings' => [
                 'settings.view' => 'View settings',
                 'settings.manage' => 'Change settings',

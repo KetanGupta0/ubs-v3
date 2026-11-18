@@ -488,6 +488,11 @@ the selling page of a solution in the admin catalogue, and Orders in the client 
 - **A demo is the owner's to host (X9).** Its sign in is public by design. Opening it is a
   plain link and records nothing; asking for a walkthrough, with consent ticked, is the only
   way it becomes a lead (`interest` `demo`).
+- **Our side of it is under Billing:** Shop orders, Licences and Discount codes, with
+  `orders.view`, `orders.manage` (cancel an unpaid order, withdraw, restore or extend a
+  licence, free a site) and `coupons.manage`, and the Shop sales report. A code somebody used
+  keeps its name and is switched off, never deleted; a licence's updates are extended, never
+  cut short (withdraw it instead). The key never appears on our side.
 - **Throttles in the shop carry a prefix** (`throttle:6,1,checkout-code`). An unnamed throttle
   shares one count per address with every other unnamed one, so applying two codes would
   have used up the attempts at asking for a checkout code.

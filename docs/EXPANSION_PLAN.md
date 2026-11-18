@@ -342,6 +342,15 @@ figures.
   counted, for versions inside the update window. The software checks its key at
   `/api/v1/licences/check` (`docs/LICENCE_API.md`). A full refund withdraws the licences
   and stops the plans; unpaid orders lapse after a week and free their codes.*
+- *Our side built 2026-11-18, under Billing: Shop orders (each with its lines, codes,
+  payment, invoice, licences and plans, and the work it leaves for us to arrange),
+  Licences (sites, update windows, last check; withdraw, restore, extend, free a site) and
+  Discount codes, with three new permissions, `orders.view`, `orders.manage` and
+  `coupons.manage`. The Shop sales report shows what sold before tax by month and by
+  product, what codes gave away, and orders placed and never paid. Opening a live demo
+  records nothing; a visitor who asks for a walkthrough and agrees to be contacted becomes
+  a lead marked "Live demo".*
+- *Step F is complete.*
 
 ---
 

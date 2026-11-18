@@ -18,6 +18,7 @@ class ReportLibrary
     public const REPORTS = [
         RevenueReport::class,
         ReceivablesReport::class,
+        SalesReport::class,
         ProjectHealthReport::class,
         BatchPerformanceReport::class,
         AttendanceReport::class,

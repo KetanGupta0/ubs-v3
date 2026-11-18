@@ -70,6 +70,9 @@ export const navigation = {
         { group: 'Billing', label: 'Invoices', icon: Receipt, href: '/admin/invoices', permission: 'billing.view' },
         { group: 'Billing', label: 'TDS register', icon: Landmark, href: '/admin/billing/tds', permission: 'billing.view' },
         { group: 'Billing', label: 'Subscriptions', icon: RefreshCw, href: '/admin/subscriptions', permission: 'billing.view' },
+        { group: 'Billing', label: 'Shop orders', icon: ShoppingBag, href: '/admin/orders', permission: 'orders.view' },
+        { group: 'Billing', label: 'Licences', icon: BadgeCheck, href: '/admin/licences', permission: 'orders.view' },
+        { group: 'Billing', label: 'Discount codes', icon: TicketPercent, href: '/admin/coupons', permission: 'coupons.manage' },
         { group: 'Billing', label: 'API plans', icon: KeyRound, href: '/admin/api-plans', permission: 'api.manage' },
 
         { group: 'Website', label: 'Solutions', icon: Package, href: '/admin/solutions', permission: 'catalogue.view' },
