@@ -46,6 +46,15 @@ return [
     ],
 
     /*
+    | Signing, accepting and paying for a client organisation need two-step
+    | sign in (CL20): a signature or a payment is only as trustworthy as the
+    | account that made it. On unless switched off for an install.
+    */
+    'clients' => [
+        'two_factor_to_commit' => (bool) env('CLIENT_TWO_FACTOR_REQUIRED', true),
+    ],
+
+    /*
     | TDS a client may declare on one of our invoices (CL14), by section, at
     | the rate for a resident company deducting from us. Rates change with
     | Finance Acts: change them here, never in the code that applies them.

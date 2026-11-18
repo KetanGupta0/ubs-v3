@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Client\ActivityController;
 use App\Http\Controllers\Client\AgreementController;
 use App\Http\Controllers\Client\ApiKeyController;
 use App\Http\Controllers\Client\BillingDetailsController;
@@ -155,6 +156,7 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
             ->whereNumber('payment')
             ->name('payments.show');
         Route::get('statement', StatementController::class)->name('statement');
+        Route::get('activity', ActivityController::class)->name('activity');
         Route::get('renewals', RenewalController::class)->name('renewals');
         Route::get('credit-notes/{creditNote}/pdf', [CreditNoteController::class, 'pdf'])->whereNumber('creditNote')->name('credit-notes.pdf');
         Route::get('billing-details', [BillingDetailsController::class, 'edit'])->name('billing-details.edit');

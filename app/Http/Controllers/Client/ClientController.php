@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
@@ -45,5 +46,13 @@ abstract class ClientController extends Controller
             'api_keys' => 'Only technical people or an owner in your organisation can manage API keys.',
             default => 'Your role in the organisation does not allow this.',
         });
+
+        // Signing, accepting and paying commit the organisation, so they need
+        // two-step sign in (CL20); a stolen password alone cannot do them.
+        abort_if(
+            in_array($ability, User::COMMITTING_ABILITIES, true) && $request->user()->needsTwoFactorToCommit(),
+            403,
+            'Turn on two-step sign in under Security first. Signing and paying for your organisation need it.',
+        );
     }
 }

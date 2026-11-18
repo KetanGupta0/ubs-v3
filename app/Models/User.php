@@ -449,6 +449,21 @@ class User extends Authenticatable implements MustVerifyEmail
             : $this->permissions->pluck('key')->all();
     }
 
+    /** Abilities that commit an organisation: they need two-step sign in (CL20). */
+    public const COMMITTING_ABILITIES = ['sign', 'approve', 'accept', 'pay'];
+
+    /**
+     * Somebody who may sign or pay for a client organisation but has not
+     * turned on two-step sign in, while the install requires it (CL20).
+     */
+    public function needsTwoFactorToCommit(): bool
+    {
+        return $this->isClient()
+            && config('company.clients.two_factor_to_commit', true)
+            && ! $this->hasTwoFactorEnabled()
+            && collect(self::COMMITTING_ABILITIES)->contains(fn (string $ability) => $this->canAsClient($ability));
+    }
+
     public function hasTwoFactorEnabled(): bool
     {
         return $this->twoFactorSecret?->isConfirmed() ?? false;

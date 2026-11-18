@@ -413,6 +413,14 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   rather than counted as missed. Uptime, hours used and the work done are written in by
   our side; publishing files the PDF in the client's documents, and a published report
   is never redrafted.
+- **Signing and paying for an organisation need two-step sign in (CL20).** `mayAsClient()`
+  refuses `User::COMMITTING_ABILITIES` (sign, approve, accept, pay) to anybody without it
+  while `company.clients.two_factor_to_commit` is on (`CLIENT_TWO_FACTOR_REQUIRED`, on by
+  default), and the layout says so before anybody is refused. The suite runs with it off
+  (`phpunit.xml`) and `ClientSecurityTest` tests the rule itself. Owners see who in their
+  organisation did what at `/client/activity`, from the audit log by their own people
+  only, with payments and sign ins; everybody manages their own sessions and devices
+  under Security.
 - **An API key is shown once.** Only a hash and the prefix are stored. Lost keys
   are rotated, not recovered.
 - **`$request->validate()` drops optional fields the request did not send**, so

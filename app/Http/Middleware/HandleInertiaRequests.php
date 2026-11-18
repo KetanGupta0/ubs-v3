@@ -105,6 +105,8 @@ class HandleInertiaRequests extends Middleware
                     'may' => collect(['pay', 'approve', 'sign', 'accept', 'api_keys', 'feedback', 'manage_people'])
                         ->filter(fn (string $ability) => $request->user()->canAsClient($ability))
                         ->values(),
+                    // Signing and paying wait for two-step sign in (CL20).
+                    'needsTwoFactor' => $request->user()->needsTwoFactorToCommit(),
                 ] : null,
             ],
 

@@ -300,6 +300,21 @@ onMounted(() => {
                 </UiButton>
             </div>
 
+            <!--
+                Somebody who may sign or pay for a client organisation without
+                two-step sign in (CL20): the server refuses those actions until
+                it is on, so say so before they find out by being refused.
+            -->
+            <div
+                v-if="page.props.auth?.client?.needsTwoFactor && !page.props.viewingAs"
+                role="status"
+                class="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2 text-sm sm:px-6"
+                style="background: color-mix(in oklab, var(--color-brand-500) 10%, var(--surface)); border-color: var(--border-subtle); color: var(--text-strong)"
+            >
+                <span>To sign or pay for {{ page.props.auth.client.organisation }}, turn on two-step sign in. It takes a minute.</span>
+                <UiButton href="/settings/security" size="xs" variant="secondary">Turn it on</UiButton>
+            </div>
+
             <main class="flex-1 px-4 py-5 pb-28 sm:px-6 sm:py-6 lg:pb-8">
                 <slot />
             </main>

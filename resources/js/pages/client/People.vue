@@ -65,6 +65,7 @@ const roleOptions = props.roles.map((role) => ({ value: role.value, label: role.
                 description="Everybody here sees the organisation's projects, documents and invoices. What they may do depends on their role."
             >
                 <template v-if="canManage" #actions>
+                    <UiButton href="/client/activity" variant="secondary" size="sm">Who did what</UiButton>
                     <UiButton size="sm" @click="openInvite">
                         <template #leading><UserPlus class="h-3.5 w-3.5" /></template>
                         Add a person
