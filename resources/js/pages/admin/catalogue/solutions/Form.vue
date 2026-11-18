@@ -7,7 +7,7 @@
  */
 import { computed } from 'vue';
 import { Head, useForm, router } from '@inertiajs/vue3';
-import { ArrowLeft, ExternalLink, Trash2 } from 'lucide-vue-next';
+import { ArrowLeft, ExternalLink, ShoppingCart, Trash2 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -96,6 +96,10 @@ function destroy() {
                     >
                         <template #leading><ExternalLink class="h-3.5 w-3.5" /></template>
                         {{ solution.is_published ? 'View live' : 'Preview' }}
+                    </UiButton>
+                    <UiButton v-if="isEdit" :href="`/admin/solutions/${solution.id}/selling`" variant="ghost" size="sm">
+                        <template #leading><ShoppingCart class="h-3.5 w-3.5" /></template>
+                        Selling
                     </UiButton>
                     <UiButton type="submit" size="sm" :loading="form.processing">
                         {{ isEdit ? 'Save' : 'Create' }}

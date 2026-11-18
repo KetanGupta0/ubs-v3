@@ -93,6 +93,14 @@ final class Money
         return self::paise($paise ?? 0)->format();
     }
 
+    /** A price on a catalogue page: whole rupees when there are no paise, "₹49,999". */
+    public static function price(int $paise): string
+    {
+        $amount = self::paise($paise)->amount();
+
+        return '₹'.(str_ends_with($amount, '.00') ? substr($amount, 0, -3) : $amount);
+    }
+
     /** Tax on an amount, rounded to the nearest paisa once. */
     public static function taxOn(int $paise, float $rate): int
     {

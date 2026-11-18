@@ -31,6 +31,7 @@ class OneTimeCodeNotification extends Notification implements ShouldQueue
             OtpPurpose::VerifyMobile => 'confirm your mobile number',
             OtpPurpose::ResetPassword => 'reset your password',
             OtpPurpose::Sign => 'sign a document with your name',
+            OtpPurpose::Checkout => 'confirm your email address and finish your order',
         };
 
         return (new MailMessage)

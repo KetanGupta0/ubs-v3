@@ -81,6 +81,47 @@ class AccountCreator
     }
 
     /**
+     * A client account for somebody buying from the shop (CL6).
+     *
+     * The same door as every other account, recorded the same way, but with
+     * nothing to send: they have just proved the address with a code, so the
+     * account starts verified and without a password. They sign in with a
+     * code, or set a password under Security when they want one, the way an
+     * account made with Google does.
+     *
+     * @param  array<string, mixed>  $attributes  name, email, mobile, company.
+     */
+    public function createForBuyer(array $attributes): User
+    {
+        $user = DB::transaction(function () use ($attributes) {
+            $user = User::query()->create([
+                'name' => $attributes['name'],
+                'email' => $attributes['email'],
+                'mobile' => $attributes['mobile'] ?? null,
+                'password' => null,
+                'role' => Role::Client,
+                'status' => UserStatus::Active,
+                'must_change_password' => false,
+            ]);
+
+            $user->forceFill(['email_verified_at' => now()])->save();
+
+            $user->profile()->create(array_filter([
+                'company' => $attributes['company'] ?? null,
+            ], fn ($value) => $value !== null && $value !== ''));
+
+            return $user;
+        });
+
+        $this->auditor->actingAs($user)->action('account.created', $user, [
+            'role' => Role::Client->value,
+            'via' => 'checkout',
+        ]);
+
+        return $user;
+    }
+
+    /**
      * Issue a fresh temporary password and send it again.
      *
      * Used when the first message did not arrive, and for accounts brought

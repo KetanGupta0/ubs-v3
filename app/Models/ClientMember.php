@@ -20,7 +20,7 @@ class ClientMember extends Model
         'owner' => ['Owner', 'Everything, including who else is in the organisation.'],
         'signatory' => ['Authorised signatory', 'Signs agreements, accepts proposals and milestones.'],
         'finance' => ['Finance', 'Receives invoices and pays them.'],
-        'technical' => ['Technical', 'Raises tickets, gives feedback on builds, manages API keys.'],
+        'technical' => ['Technical', 'Raises tickets, gives feedback on builds, manages API keys and licences.'],
     ];
 
     /** What each role may do. Everybody may view and raise tickets. */
@@ -28,7 +28,7 @@ class ClientMember extends Model
         'owner' => ['*'],
         'signatory' => ['sign', 'approve', 'accept'],
         'finance' => ['pay'],
-        'technical' => ['api_keys', 'feedback'],
+        'technical' => ['api_keys', 'feedback', 'licences'],
     ];
 
     protected $fillable = ['account_id', 'user_id', 'role', 'invited_by', 'joined_at'];

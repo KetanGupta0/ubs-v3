@@ -18,6 +18,7 @@ use App\Services\Billing\BillingDocuments;
 use App\Services\Billing\CreditNotes;
 use App\Services\Billing\Invoicer;
 use App\Services\Payments\Checkout;
+use App\Services\Shop\Orders;
 use App\Support\Money;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
@@ -291,7 +292,7 @@ class BillingController extends Controller
         return back()->with('success', "Refund {$refund->reference} recorded. Process it with the provider, then mark it done.");
     }
 
-    public function completeRefund(Refund $refund, Auditor $auditor): RedirectResponse
+    public function completeRefund(Request $request, Refund $refund, Auditor $auditor, Orders $orders): RedirectResponse
     {
         abort_unless($refund->status === 'pending', 422, 'This refund is already settled.');
 
@@ -306,6 +307,9 @@ class BillingController extends Controller
         }
 
         $auditor->action('payment.refunded', $refund, label: $refund->reference);
+
+        // An order refunded in full withdraws its licences and plans (§4).
+        $orders->refundSettled($transaction->fresh(), $request->user());
 
         return back()->with('success', 'Refund marked as processed.');
     }

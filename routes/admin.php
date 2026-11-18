@@ -46,6 +46,7 @@ use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SiteMenuController;
 use App\Http\Controllers\Admin\SitePageController;
 use App\Http\Controllers\Admin\SolutionController;
+use App\Http\Controllers\Admin\SolutionSellingController;
 use App\Http\Controllers\Admin\StaffController;
 use App\Http\Controllers\Admin\StatementController;
 use App\Http\Controllers\Admin\StudentNoticeController;
@@ -146,6 +147,20 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::put('solutions/{solution:id}', [SolutionController::class, 'update'])->name('solutions.update');
             Route::post('solutions/{solution:id}/publish', [SolutionController::class, 'togglePublished'])->name('solutions.publish');
             Route::delete('solutions/{solution:id}', [SolutionController::class, 'destroy'])->name('solutions.destroy');
+
+            // How a solution is sold (§4): demo, licence tiers, plans, add-ons, code.
+            Route::get('solutions/{solution:id}/selling', [SolutionSellingController::class, 'show'])->name('solutions.selling');
+            Route::put('solutions/{solution:id}/selling', [SolutionSellingController::class, 'update'])->name('solutions.selling.update');
+            Route::post('solutions/{solution:id}/tiers', [SolutionSellingController::class, 'storeTier'])->name('solutions.tiers.store');
+            Route::put('solutions/{solution:id}/tiers/{tier}', [SolutionSellingController::class, 'updateTier'])->whereNumber('tier')->name('solutions.tiers.update');
+            Route::delete('solutions/{solution:id}/tiers/{tier}', [SolutionSellingController::class, 'destroyTier'])->whereNumber('tier')->name('solutions.tiers.destroy');
+            Route::post('solutions/{solution:id}/addons', [SolutionSellingController::class, 'storeAddon'])->name('solutions.addons.store');
+            Route::put('solutions/{solution:id}/addons/{addon}', [SolutionSellingController::class, 'updateAddon'])->whereNumber('addon')->name('solutions.addons.update');
+            Route::delete('solutions/{solution:id}/addons/{addon}', [SolutionSellingController::class, 'destroyAddon'])->whereNumber('addon')->name('solutions.addons.destroy');
+            Route::post('solutions/{solution:id}/versions', [SolutionSellingController::class, 'storeVersion'])->name('solutions.versions.store');
+            Route::put('solutions/{solution:id}/versions/{version}', [SolutionSellingController::class, 'updateVersion'])->whereNumber('version')->name('solutions.versions.update');
+            Route::delete('solutions/{solution:id}/versions/{version}', [SolutionSellingController::class, 'destroyVersion'])->whereNumber('version')->name('solutions.versions.destroy');
+            Route::get('solutions/{solution:id}/versions/{version}/download', [SolutionSellingController::class, 'downloadVersion'])->whereNumber('version')->name('solutions.versions.download');
 
             Route::get('courses/new', [CourseController::class, 'create'])->name('courses.create');
             Route::post('courses', [CourseController::class, 'store'])->name('courses.store');

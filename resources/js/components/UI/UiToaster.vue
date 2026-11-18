@@ -28,12 +28,19 @@ const tones = {
 
 // Server side flash messages become toasts automatically, so a controller only
 // has to call ->with('success', '...') and the feedback appears.
+//
+// Each response that carries messages gives them an id. A partial reload keeps
+// the previous page's flash without sending it again, and until November 2026
+// that showed the last toast a second time: changing the state on the cart
+// repeated "is in your cart". A message is shown once per id.
 const page = usePage();
+let shown = null;
 
 watch(
     () => page.props.flash,
     (flash) => {
-        if (!flash) return;
+        if (!flash?.id || flash.id === shown) return;
+        shown = flash.id;
         if (flash.success) push(flash.success, { tone: 'success' });
         if (flash.error) push(flash.error, { tone: 'danger' });
         if (flash.warning) push(flash.warning, { tone: 'warning' });

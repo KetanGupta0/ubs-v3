@@ -4,10 +4,12 @@ namespace App\Services\Billing;
 
 use App\Models\Enrollment;
 use App\Models\Invoice;
+use App\Models\Order;
 use App\Models\PaymentRequest;
 use App\Models\Setting;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\Shop\Orders;
 use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 
@@ -28,13 +30,19 @@ class Invoicer
             return $existing;
         }
 
+        // An order was priced, discounted and its tax split when it was
+        // placed (§4); its invoice says exactly that, line by line.
+        $order = $request->payable_type === Order::class ? $request->payable?->loadMissing('items') : null;
+
         $user = $request->user;
-        $billedTo = $this->billedTo($user);
-        $placeOfSupply = $billedTo['state'] ?? null;
+        $billedTo = $order ? $this->billedToFor($order) : $this->billedTo($user);
+        $placeOfSupply = $order ? $order->place_of_supply : ($billedTo['state'] ?? null);
 
-        $breakup = $this->gst()->for($request->subtotal, (float) $request->tax_rate, $placeOfSupply);
+        $breakup = $order
+            ? ['components' => $order->tax_breakup, 'total' => $order->tax]
+            : $this->gst()->for($request->subtotal, (float) $request->tax_rate, $placeOfSupply);
 
-        return DB::transaction(function () use ($request, $billedTo, $placeOfSupply, $breakup) {
+        return DB::transaction(function () use ($request, $billedTo, $placeOfSupply, $breakup, $order) {
             $claimed = $this->numbers->next();
 
             $invoice = Invoice::query()->create([
@@ -47,10 +55,11 @@ class Invoicer
                 'sequence' => $claimed['sequence'],
                 'billed_to' => $billedTo,
                 'billed_from' => $this->billedFrom(),
-                'subtotal' => $request->subtotal,
+                'subtotal' => $order ? $order->subtotal : $request->subtotal,
+                'discount' => $order ? $order->discount : 0,
                 'tax_breakup' => $breakup['components'],
                 'tax' => $breakup['total'],
-                'total' => $request->subtotal + $breakup['total'],
+                'total' => $order ? $order->total : $request->subtotal + $breakup['total'],
                 'currency' => $request->currency,
                 'place_of_supply' => $placeOfSupply,
                 'status' => 'issued',
@@ -59,13 +68,27 @@ class Invoicer
                 'terms' => Setting::get('invoicing.terms'),
             ]);
 
-            $invoice->items()->create([
-                'description' => $request->title,
-                'quantity' => 1,
-                'unit_price' => $request->subtotal,
-                'tax_rate' => $request->tax_rate,
-                'amount' => $request->subtotal,
-            ]);
+            if ($order) {
+                foreach ($order->items as $index => $item) {
+                    $invoice->items()->create([
+                        'description' => $item->description,
+                        'hsn_sac' => $item->sac_code,
+                        'quantity' => $item->quantity,
+                        'unit_price' => $item->unit_price,
+                        'tax_rate' => $order->tax_rate,
+                        'amount' => $item->amount,
+                        'sort_order' => $index,
+                    ]);
+                }
+            } else {
+                $invoice->items()->create([
+                    'description' => $request->title,
+                    'quantity' => 1,
+                    'unit_price' => $request->subtotal,
+                    'tax_rate' => $request->tax_rate,
+                    'amount' => $request->subtotal,
+                ]);
+            }
 
             // The request's own total is refreshed from the invoice, because the
             // tax split can round differently from a flat percentage and the two
@@ -142,6 +165,13 @@ class Invoicer
             ->where('has_paid', false)
             ->get()
             ->each(fn (Enrollment $enrolment) => $enrolment->forceFill(['has_paid' => true])->save());
+
+        // An order delivers what was bought the moment it is paid, however the
+        // money came in (§4). Resolved here rather than injected: ordering
+        // depends on pricing, which depends on this class.
+        if ($request->payable_type === Order::class && $request->payable) {
+            app(Orders::class)->fulfil($request->payable);
+        }
     }
 
     /** @return array<string, mixed> */
@@ -159,6 +189,24 @@ class Invoicer
             'state' => $profile?->state,
             'postal_code' => $profile?->postal_code,
             'gstin' => $profile?->gstin,
+        ];
+    }
+
+    /** Who an order bills: the details the buyer confirmed at checkout. */
+    protected function billedToFor(Order $order): array
+    {
+        $billing = $order->billing ?? [];
+
+        return [
+            'name' => $billing['name'] ?? $order->client?->organisationName(),
+            'contact' => $billing['contact'] ?? null,
+            'email' => $billing['email'] ?? null,
+            'mobile' => $billing['mobile'] ?? null,
+            'address' => $billing['address'] ?? null,
+            'city' => $billing['city'] ?? null,
+            'state' => $billing['state'] ?? null,
+            'postal_code' => $billing['postal_code'] ?? null,
+            'gstin' => $billing['gstin'] ?? null,
         ];
     }
 

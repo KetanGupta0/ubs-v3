@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\Chat\ChatApiController;
 use App\Http\Controllers\Api\V1\Client\ClientApiController;
+use App\Http\Controllers\Api\V1\LicenceCheckController;
 use App\Http\Controllers\Api\V1\Student\StudentApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,14 @@ use Illuminate\Support\Facades\Route;
 */
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
+    /*
+     * Software we sold checks its licence key here (X18). The key is the
+     * credential, so there is no token; it is throttled by address instead.
+     */
+    Route::post('licences/check', LicenceCheckController::class)
+        ->middleware('throttle:licence-checks')
+        ->name('licences.check');
+
     Route::prefix('auth')->name('auth.')->group(function () {
         Route::post('login', [AuthController::class, 'login'])
             ->middleware('throttle:20,1')

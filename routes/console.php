@@ -16,6 +16,9 @@ Schedule::command('renewals:remind')->dailyAt('09:00');
 // Last month's service reports, drafted for a person to finish (CL17).
 Schedule::command('service-reports:draft')->monthlyOn(1, '06:15');
 
+// Shop orders left unpaid lapse, and free the codes they held (§4).
+Schedule::command('shop:expire-orders')->dailyAt('03:40');
+
 /*
  * Hourly, so a report set for seven in the morning arrives at seven. Each
  * schedule decides for itself whether it is due.

@@ -90,6 +90,56 @@ class LeadController extends Controller
         ]);
     }
 
+    /**
+     * Somebody opening a product's live demo asked us to get in touch (§4).
+     *
+     * Opening the demo itself records nothing: it is a plain link. Only a
+     * visitor who fills this in, and agrees to be contacted, becomes a lead,
+     * with the product they were trying.
+     */
+    public function demo(Request $request, Solution $solution): RedirectResponse
+    {
+        abort_unless($solution->is_published && $solution->offers('demo'), 404);
+
+        $request->merge([
+            'email' => mb_strtolower(trim((string) $request->input('email'))),
+            'mobile' => $request->filled('mobile') ? Identifier::normaliseMobile((string) $request->input('mobile')) : null,
+        ]);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:120'],
+            'email' => ['required', 'string', 'email', 'max:255'],
+            'mobile' => ['nullable', 'string', 'regex:/^\+\d{10,15}$/'],
+            'company' => ['nullable', 'string', 'max:160'],
+            'note' => ['nullable', 'string', 'max:1000'],
+            'consent' => ['accepted'],
+            'website' => ['prohibited'],
+        ], [
+            'mobile.regex' => 'Enter a valid mobile number, including the country code.',
+            'consent.accepted' => 'Tick this so we may get in touch about it.',
+            'website.prohibited' => 'That submission could not be accepted.',
+        ]);
+
+        $lead = Lead::query()->create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'mobile' => $validated['mobile'] ?? null,
+            'company' => $validated['company'] ?? null,
+            'message' => trim("Opened the live demo of {$solution->title} and asked us to get in touch.\n\n".($validated['note'] ?? '')),
+            'interest' => 'demo',
+            'solution_id' => $solution->id,
+            'source_page' => "/solutions/{$solution->slug}",
+            'referrer' => $request->headers->get('referer'),
+            'status' => 'new',
+            'ip_address' => $request->ip(),
+            'user_agent' => str($request->userAgent() ?? '')->limit(500)->toString(),
+        ]);
+
+        $this->notify($lead);
+
+        return back()->with('success', 'Thanks. Try the demo, and we will be in touch within one working day.');
+    }
+
     protected function idFor(string $model, ?string $slug): ?int
     {
         return $slug ? $model::query()->where('slug', $slug)->value('id') : null;

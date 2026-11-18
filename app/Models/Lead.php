@@ -88,6 +88,7 @@ class Lead extends Model
     public function subject(): string
     {
         return match (true) {
+            $this->interest === 'demo' => 'Live demo: '.($this->solution?->title ?? 'unknown'),
             (bool) $this->solution_id => 'Solution: '.($this->solution?->title ?? 'unknown'),
             (bool) $this->service_id => 'Service: '.($this->service?->title ?? 'unknown'),
 

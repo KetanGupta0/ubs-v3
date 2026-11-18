@@ -34,7 +34,7 @@ class CreditNotes
     {
         $credited = (int) CreditNote::query()->where('invoice_id', $invoice->id)->sum('subtotal');
 
-        return max(0, $invoice->subtotal - $credited);
+        return max(0, $invoice->taxable() - $credited);
     }
 
     /** @param  int  $taxable  Paise, before tax. */

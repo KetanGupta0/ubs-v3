@@ -88,4 +88,9 @@ Route::post('/enquiries', [LeadController::class, 'store'])
     ->middleware('throttle:6,1')
     ->name('enquiries.store');
 
+// Opening a live demo and asking us to get in touch: a lead only with consent (§4).
+Route::post('/solutions/{solution}/demo', [LeadController::class, 'demo'])
+    ->middleware('throttle:6,1,demo')
+    ->name('solutions.demo');
+
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');

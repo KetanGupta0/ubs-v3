@@ -11,6 +11,7 @@ use App\Http\Controllers\Client\DocumentController;
 use App\Http\Controllers\Client\FeedbackController;
 use App\Http\Controllers\Client\HandoverController;
 use App\Http\Controllers\Client\MeetingController;
+use App\Http\Controllers\Client\OrderController;
 use App\Http\Controllers\Client\PaymentController;
 use App\Http\Controllers\Client\PeopleController;
 use App\Http\Controllers\Client\ProjectController;
@@ -149,6 +150,17 @@ Route::middleware(['auth', 'password.owned', 'role:client'])
         Route::post('tickets/{ticket}/close', [SupportController::class, 'close'])
             ->whereNumber('ticket')
             ->name('tickets.close');
+
+        /* ------------------------------------------- orders and licences */
+        Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('orders/{order}', [OrderController::class, 'show'])->whereNumber('order')->name('orders.show');
+        Route::post('orders/{order}/cancel', [OrderController::class, 'cancel'])->whereNumber('order')->name('orders.cancel');
+        Route::middleware('throttle:20,1,licences')->group(function () {
+            Route::post('licences/{licence}/key', [OrderController::class, 'issueKey'])->whereNumber('licence')->name('licences.key');
+            Route::post('licences/{licence}/key/rotate', [OrderController::class, 'rotateKey'])->whereNumber('licence')->name('licences.rotate');
+            Route::delete('licences/{licence}/sites/{activation}', [OrderController::class, 'releaseSite'])->whereNumber(['licence', 'activation'])->name('licences.release');
+            Route::post('licences/{licence}/versions/{version}/download', [OrderController::class, 'download'])->whereNumber(['licence', 'version'])->name('licences.download');
+        });
 
         /* --------------------------------------------------------- payments */
         Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');

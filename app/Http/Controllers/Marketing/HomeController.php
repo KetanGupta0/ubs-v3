@@ -24,7 +24,7 @@ class HomeController extends Controller
             'featuredSolutions' => Solution::query()
                 ->published()
                 ->where('is_featured', true)
-                ->with('category')
+                ->with('category', 'tiers')
                 ->orderBy('sort_order')
                 ->limit(4)
                 ->get()

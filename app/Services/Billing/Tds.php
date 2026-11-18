@@ -41,7 +41,7 @@ class Tds
     {
         $rate = (float) (self::sections()[$section]['rate'] ?? 0);
 
-        return (int) round($invoice->subtotal * $rate / 100);
+        return (int) round($invoice->taxable() * $rate / 100);
     }
 
     public function declare(PaymentRequest $request, User $member, string $section): TdsDeduction
@@ -74,7 +74,7 @@ class Tds
                 'client_id' => $locked->user_id,
                 'section' => $section,
                 'rate' => (float) self::sections()[$section]['rate'],
-                'base' => $locked->subtotal,
+                'base' => $locked->taxable(),
                 'amount' => $amount,
                 'quarter' => $quarter['quarter'],
                 'certificate_due_on' => $quarter['due'],

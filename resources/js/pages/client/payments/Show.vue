@@ -153,9 +153,9 @@ function simulate(outcome) {
         <div class="mx-auto max-w-2xl space-y-5">
             <PageHeader :title="payment.title" :description="payment.description">
                 <template #actions>
-                    <UiButton href="/client/payments" variant="ghost" size="sm">
+                    <UiButton :href="payment.orderId ? `/client/orders/${payment.orderId}` : '/client/payments'" variant="ghost" size="sm">
                         <template #leading><ArrowLeft class="h-3.5 w-3.5" /></template>
-                        Back
+                        {{ payment.orderId ? 'The order' : 'Back' }}
                     </UiButton>
                 </template>
             </PageHeader>
@@ -183,7 +183,7 @@ function simulate(outcome) {
 
                 <dl class="mt-5 space-y-1.5 border-t pt-4 text-sm" style="border-color: var(--border-subtle)">
                     <div class="flex justify-between">
-                        <dt style="color: var(--text-muted)">Subtotal</dt>
+                        <dt style="color: var(--text-muted)">{{ payment.orderId ? 'Taxable value' : 'Subtotal' }}</dt>
                         <dd class="tnum">{{ payment.subtotal }}</dd>
                     </div>
                     <div class="flex justify-between">
@@ -200,11 +200,11 @@ function simulate(outcome) {
                     {{ payment.notes }}
                 </p>
 
-                <p v-if="payment.payable && !may('pay')" class="mt-5 text-sm" style="color: var(--text-muted)">
+                <p v-if="payment.payable && !(payment.canPay ?? may('pay'))" class="mt-5 text-sm" style="color: var(--text-muted)">
                     Finance or an owner in your organisation pays this; it has been sent to them.
                 </p>
                 <div v-if="payment.payable" class="mt-5 flex flex-wrap gap-2">
-                    <UiButton v-if="may('pay')" :loading="busy" @click="pay">
+                    <UiButton v-if="payment.canPay ?? may('pay')" :loading="busy" @click="pay">
                         <template #leading><CreditCard class="h-4 w-4" /></template>
                         Pay {{ toPay }}
                     </UiButton>

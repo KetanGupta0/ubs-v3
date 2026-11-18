@@ -44,6 +44,7 @@ abstract class ClientController extends Controller
             'pay' => 'Only finance or an owner in your organisation can pay.',
             'approve', 'sign', 'accept' => 'Only an authorised signatory or an owner in your organisation can do this.',
             'api_keys' => 'Only technical people or an owner in your organisation can manage API keys.',
+            'licences' => 'Only technical people or an owner in your organisation can use licences.',
             default => 'Your role in the organisation does not allow this.',
         });
 

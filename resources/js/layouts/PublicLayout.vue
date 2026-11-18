@@ -8,7 +8,7 @@
  */
 import { computed, ref, onMounted, onBeforeUnmount } from 'vue';
 import { Link, usePage } from '@inertiajs/vue3';
-import { Menu, X, ArrowUpRight } from 'lucide-vue-next';
+import { Menu, X, ArrowUpRight, ShoppingCart } from 'lucide-vue-next';
 
 import BrandLogo from '@/components/Brand/BrandLogo.vue';
 import ContactDetails from '@/components/Marketing/ContactDetails.vue';
@@ -50,6 +50,7 @@ const fallbackMenus = {
 };
 
 const menus = computed(() => page.props.menus ?? fallbackMenus);
+const cartCount = computed(() => Number(page.props.cart ?? 0));
 const site = computed(() => page.props.site ?? { legalName: 'Unboundbyte Solutions Private Limited' });
 const registration = computed(() => Object.entries(site.value.registration ?? {}).map(([name, value]) => `${name} ${value}`));
 const links = computed(() => menus.value.header);
@@ -120,7 +121,20 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
                         <UiButton variant="ghost" size="sm" href="/login">Sign in</UiButton>
                     </span>
 
-                    <UiButton size="sm" href="/contact">
+                    <!-- Only once something is in it: an empty cart is not worth a place in the header. -->
+                    <Link
+                        v-if="cartCount > 0"
+                        href="/cart"
+                        class="relative inline-flex h-9 w-9 items-center justify-center rounded-lg transition hover:bg-[var(--surface-sunken)]"
+                        style="color: var(--text-base)"
+                        :aria-label="`Your cart, ${cartCount} ${cartCount === 1 ? 'product' : 'products'}`"
+                    >
+                        <ShoppingCart class="h-5 w-5" />
+                        <span class="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand-600 px-1 text-[10px] font-semibold text-white tnum">{{ cartCount }}</span>
+                    </Link>
+
+                    <!-- On a phone with something in the cart, the cart takes this place; Contact is in the menu. -->
+                    <UiButton size="sm" href="/contact" :class="cartCount > 0 ? 'max-sm:hidden' : ''">
                         Start a project
                         <template #trailing><ArrowUpRight class="h-3.5 w-3.5" /></template>
                     </UiButton>

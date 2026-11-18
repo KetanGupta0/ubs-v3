@@ -55,6 +55,24 @@ return [
     ],
 
     /*
+    | Selling products (§4). Source code is kept on the hosting's private disk
+    | (X16), so uploads are capped; PHP's own upload_max_filesize and
+    | post_max_size must allow at least this much. Download links are signed
+    | and expire, and each licence may fetch each version a limited number of
+    | times. An unpaid order lapses after a while; a coupon it holds is held
+    | for it for a shorter while, so an abandoned checkout does not use up a
+    | limited code.
+    */
+    'shop' => [
+        'max_upload_mb' => (int) env('SHOP_MAX_UPLOAD_MB', 100),
+        'download_link_minutes' => 10,
+        'downloads_per_version' => 10,
+        'order_expiry_days' => 7,
+        'coupon_hold_minutes' => 120,
+        'licence_check_hours' => 24,
+    ],
+
+    /*
     | TDS a client may declare on one of our invoices (CL14), by section, at
     | the rate for a resident company deducting from us. Rates change with
     | Finance Acts: change them here, never in the code that applies them.

@@ -121,6 +121,10 @@
             <td>Discount</td>
             <td class="right">− {{ $money($invoice->discount) }}</td>
         </tr>
+        <tr>
+            <td>Taxable value</td>
+            <td class="right">{{ $money($invoice->taxable()) }}</td>
+        </tr>
     @endif
     @foreach($invoice->tax_breakup ?? [] as $component)
         <tr>

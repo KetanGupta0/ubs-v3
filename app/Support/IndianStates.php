@@ -58,4 +58,24 @@ class IndianStates
 
         return $code === false ? null : (string) $code;
     }
+
+    /** Why a GSTIN does not belong to the state chosen with it, or null when it does. */
+    public static function gstinRefusal(?string $gstin, string $state): ?string
+    {
+        if (! $gstin || substr($gstin, 0, 2) === self::codeOf($state)) {
+            return null;
+        }
+
+        $registered = self::CODES[substr($gstin, 0, 2)] ?? null;
+
+        return $registered
+            ? "This GSTIN is registered in {$registered}. Choose that state, or check the number."
+            : 'The first two digits of a GSTIN are a state code, and these are not one.';
+    }
+
+    /** @return array<int, array{value: string, label: string}> */
+    public static function options(): array
+    {
+        return collect(self::CODES)->map(fn (string $name) => ['value' => $name, 'label' => $name])->values()->all();
+    }
 }

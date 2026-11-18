@@ -323,6 +323,26 @@ figures.
 - **Admin:** products and offerings, licence tiers, add-ons, coupons, orders, licence
   management, and a sales report in `ReportLibrary`.
 
+*Progress on Step F (decisions X9, X16, X17, X18 on 2026-11-18):*
+- *Products, cart, checkout, licences and the check API built 2026-11-18. A solution's
+  Selling page sets what it is offered as (built to order, the source code, a hosted plan,
+  a live demo), the demo's address and public sign in, licence tiers (sites, months of
+  updates and support), plans, add-ons (work we deliver, or months of support or updates),
+  and every version of the code as a zip on private storage with its SHA-256. The product
+  page shows prices before GST, the demo, and a panel to choose a tier and add-ons into the
+  cart; the catalogue card says "From ₹… + GST" and "Live demo". The cart prices everything
+  on the server, with GST split by the buyer's state, and takes discount codes (percentage
+  or amount, limits on uses, per account, first order, minimum, dates, products,
+  stacking). A guest checks out by proving their email with a code, which signs them in or
+  opens a client account (CL6). Placing the order raises its payment request; the invoice
+  has a line per item with its SAC and the discount. Paid, by card or recorded by hand,
+  the order issues licences and starts plans, and both sides are told. Orders in the
+  client portal (CL5) show each order, its invoice and its licences (CL4): the key, shown
+  once and replaced if lost, the sites using it, and downloads through links that expire,
+  counted, for versions inside the update window. The software checks its key at
+  `/api/v1/licences/check` (`docs/LICENCE_API.md`). A full refund withdraws the licences
+  and stops the plans; unpaid orders lapse after a week and free their codes.*
+
 ---
 
 ## 5. Course registration forms without signing in
@@ -852,4 +872,7 @@ the middle of it.
 | X6 | Credentials vault for client handover: build it? | **Decided 2026-11-17: no.** The team does not hand credentials over through the platform, so CL7 is not built; the handover pack (CL15) says where credentials were shared, never what they are. |
 | X7 | Festival list: which occasions, and do enquiry senders receive greetings? | National days to everyone who has not opted out; festivals switchable by the admin; enquiry senders included, with unsubscribe. |
 | X8 | Transactional mail provider for bulk sending | Any provider with bounce webhooks and an Indian billing option; credentials in `.env`. |
-| X9 | Demo hosting for live demos: where, and how often reset? | A separate small server, reset nightly. |
+| X9 | Demo hosting for live demos: where, and how often reset? | **Decided 2026-11-18:** the owner hosts each demo on its own subdomain and resets it nightly. This application only links to it with the demo sign in, and records a lead only when the visitor asks to be contacted. |
+| X16 | Where source code downloads are kept | **Decided 2026-11-18:** on the hosting itself, in private storage, with a size cap per file and signed links that expire. |
+| X17 | Fixed prices: GST included or added? | **Decided 2026-11-18:** added. A product's price is before tax, as B2B buyers expect; the cart and invoice add GST, split CGST and SGST or IGST by the buyer's state. |
+| X18 | Licence keys: recorded only, or checked online by the software? | **Decided 2026-11-18:** both. Keys are recorded and revoked on refund, and a verification API lets the software check a key and the site it runs on, activating sites up to the tier's limit. |

@@ -71,6 +71,12 @@ class Invoice extends Model
         return $query->where('user_id', $user instanceof User ? $user->id : $user);
     }
 
+    /** The value tax was charged on: the subtotal less any discount on the invoice. */
+    public function taxable(): int
+    {
+        return max(0, $this->subtotal - $this->discount);
+    }
+
     public function scopeUnpaid(Builder $query): Builder
     {
         return $query->whereIn('status', ['issued', 'partially_paid']);

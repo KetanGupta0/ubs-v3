@@ -10,7 +10,7 @@ import { ref, computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
 import {
     ArrowLeft, Check, Clock, IndianRupee, Layers, Plug, Smartphone,
-    Target, KeyRound, ChevronDown,
+    Target, KeyRound, ChevronDown, MonitorPlay, ShoppingCart,
 } from 'lucide-vue-next';
 
 import PublicLayout from '@/layouts/PublicLayout.vue';
@@ -19,15 +19,29 @@ import MockScreen from '@/components/Marketing/MockScreen.vue';
 import SolutionCard from '@/components/Marketing/SolutionCard.vue';
 import SectionHeading from '@/components/Marketing/SectionHeading.vue';
 import EnquiryForm from '@/components/Marketing/EnquiryForm.vue';
+import BuyPanel from '@/components/Shop/BuyPanel.vue';
+import DemoPanel from '@/components/Shop/DemoPanel.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import { accentFor } from '@/support/accents';
 
 const props = defineProps({
     solution: { type: Object, required: true },
+    offer: { type: Object, required: true },
     related: { type: Array, default: () => [] },
     seo: { type: Object, required: true },
 });
+
+/** Sold as it is, at a fixed price (§4), as well as or instead of built to order. */
+const sold = computed(() => props.offer.licences.length > 0 || props.offer.plans.length > 0);
+
+/** The numbers a buyer is looking for. */
+const facts = computed(() => [
+    { icon: Layers, label: 'Modules', value: `${props.solution.modules.length}` },
+    { icon: Clock, label: 'Typical build', value: props.solution.timeline },
+    { icon: IndianRupee, label: 'Indicative budget', value: props.solution.priceBand },
+    { icon: ShoppingCart, label: 'Ready made, from', value: props.solution.fromPrice ? `${props.solution.fromPrice} + GST` : null },
+].filter((fact) => fact.value));
 
 const tone = computed(() => accentFor(props.solution.accent));
 
@@ -75,14 +89,10 @@ const paragraphs = computed(() =>
                         <p class="mt-3 text-lg" style="color: var(--text-base)">{{ solution.tagline }}</p>
                         <p class="mt-4 text-base leading-relaxed" style="color: var(--text-muted)">{{ solution.summary }}</p>
 
-                        <!-- The three numbers a buyer is looking for. -->
-                        <dl class="mt-7 grid gap-3 sm:grid-cols-3">
+                        <!-- The numbers a buyer is looking for. -->
+                        <dl class="mt-7 grid gap-3" :class="facts.length === 4 ? 'sm:grid-cols-2' : 'sm:grid-cols-3'">
                             <div
-                                v-for="fact in [
-                                    { icon: Layers, label: 'Modules', value: `${solution.modules.length}` },
-                                    { icon: Clock, label: 'Typical build', value: solution.timeline },
-                                    { icon: IndianRupee, label: 'Indicative budget', value: solution.priceBand },
-                                ].filter((f) => f.value)"
+                                v-for="fact in facts"
                                 :key="fact.label"
                                 class="rounded-xl border p-3.5"
                                 :style="{ borderColor: 'var(--border-subtle)', background: tone.softer }"
@@ -97,14 +107,22 @@ const paragraphs = computed(() =>
                             </div>
                         </dl>
 
-                        <p class="mt-3 text-xs" style="color: var(--text-muted)">
-                            Indicative only. A real figure comes after a short discovery call and
-                            arrives as a written proposal with the scope stated.
+                        <p v-if="solution.priceBand" class="mt-3 text-xs" style="color: var(--text-muted)">
+                            The budget is indicative only. A real figure for a build comes after a short
+                            discovery call and arrives as a written proposal with the scope stated.<template v-if="sold"> The ready made price is the price.</template>
                         </p>
 
-                        <div class="mt-7 flex flex-col gap-3 sm:flex-row">
-                            <UiButton size="lg" href="#enquire" :inertia="false">Ask about this</UiButton>
-                            <UiButton size="lg" variant="secondary" href="/solutions">
+                        <div class="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+                            <UiButton v-if="sold" size="lg" href="#buy" :inertia="false">
+                                <template #leading><ShoppingCart class="h-4 w-4" /></template>
+                                Buy it
+                            </UiButton>
+                            <UiButton v-if="offer.demo" size="lg" :variant="sold ? 'secondary' : 'primary'" href="#demo" :inertia="false">
+                                <template #leading><MonitorPlay class="h-4 w-4" /></template>
+                                Try the live demo
+                            </UiButton>
+                            <UiButton size="lg" :variant="sold || offer.demo ? 'secondary' : 'primary'" href="#enquire" :inertia="false">Ask about this</UiButton>
+                            <UiButton v-if="!sold && !offer.demo" size="lg" variant="secondary" href="/solutions">
                                 <template #leading><ArrowLeft class="h-4 w-4" /></template>
                                 Back to catalogue
                             </UiButton>
@@ -122,6 +140,26 @@ const paragraphs = computed(() =>
                         </p>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- ------------------------------------------------------- live demo -->
+        <section v-if="offer.demo" id="demo" class="mx-auto max-w-7xl scroll-mt-24 px-4 pt-14 sm:px-6 lg:px-8">
+            <h2 class="text-2xl font-semibold">Live demo</h2>
+            <div class="mt-5">
+                <DemoPanel :solution="solution" :demo="offer.demo" />
+            </div>
+        </section>
+
+        <!-- ------------------------------------------------------------- buy -->
+        <section v-if="sold" id="buy" class="mx-auto max-w-7xl scroll-mt-24 px-4 pt-14 sm:px-6 lg:px-8">
+            <h2 class="text-2xl font-semibold">Buy it ready made</h2>
+            <p class="mt-2 max-w-3xl text-sm" style="color: var(--text-muted)">
+                Prices are before GST. Pay online, download the code and your licence key straight away, and get
+                updates for as long as your licence says.<template v-if="offer.customBuild"> Need it changed for you? Add customisation hours, or ask us below.</template>
+            </p>
+            <div class="mt-6">
+                <BuyPanel :solution="solution" :offer="offer" />
             </div>
         </section>
 
@@ -305,7 +343,7 @@ const paragraphs = computed(() =>
             <div class="grid gap-10 lg:grid-cols-12">
                 <div v-if="solution.modules?.length" class="lg:col-span-7">
                     <h2 class="text-2xl font-semibold">What is in it</h2>
-                    <p class="mt-2 text-sm" style="color: var(--text-muted)">
+                    <p v-if="offer.customBuild" class="mt-2 text-sm" style="color: var(--text-muted)">
                         We build the modules you need and leave out the ones you do not. Nobody
                         pays for something they will never open.
                     </p>

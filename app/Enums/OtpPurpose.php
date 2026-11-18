@@ -9,6 +9,7 @@ enum OtpPurpose: string
     case VerifyEmail = 'verify_email';
     case ResetPassword = 'reset_password';
     case Sign = 'sign';
+    case Checkout = 'checkout';
 
     /** How long a code stays usable. */
     public function lifetimeMinutes(): int
@@ -18,6 +19,7 @@ enum OtpPurpose: string
             self::VerifyMobile, self::VerifyEmail => 15,
             self::ResetPassword => 15,
             self::Sign => 10,
+            self::Checkout => 10,
         };
     }
 }

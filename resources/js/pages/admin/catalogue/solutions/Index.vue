@@ -1,6 +1,6 @@
 <script setup>
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus, Eye, EyeOff, Pencil, ExternalLink } from 'lucide-vue-next';
+import { ExternalLink, Eye, EyeOff, Pencil, Plus, ShoppingCart } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -78,6 +78,9 @@ function togglePublished(id) {
 
                         <UiDropdownItem :href="`/admin/solutions/${row.id}/edit`">
                             <Pencil class="h-4 w-4" /> Edit
+                        </UiDropdownItem>
+                        <UiDropdownItem :href="`/admin/solutions/${row.id}/selling`">
+                            <ShoppingCart class="h-4 w-4" /> Selling
                         </UiDropdownItem>
                         <UiDropdownItem :href="`/solutions/${row.slug}`" :inertia="false">
                             <ExternalLink class="h-4 w-4" /> {{ row.published ? 'View on the site' : 'Preview' }}

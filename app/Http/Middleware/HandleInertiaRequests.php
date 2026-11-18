@@ -5,9 +5,11 @@ namespace App\Http\Middleware;
 use App\Models\LegalDocument;
 use App\Models\SiteMenu;
 use App\Services\Auth\Impersonation;
+use App\Services\Shop\CartStore;
 use App\Support\PageCopy;
 use App\Support\SiteIdentity;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -56,6 +58,14 @@ class HandleInertiaRequests extends Middleware
              */
             'site' => fn () => SiteIdentity::forPublic(),
 
+            /*
+             * How many products are in the cart, for the header (§4). Staff
+             * and students cannot buy, so they are not asked about one.
+             */
+            'cart' => fn () => $request->user() && ! $request->user()->isClient()
+                ? 0
+                : app(CartStore::class)->count($request->user()),
+
             /* Staff looking at a fixed page's unpublished wording, so the page can say so. */
             'copyPreview' => fn () => PageCopy::previewing(),
 
@@ -102,7 +112,7 @@ class HandleInertiaRequests extends Middleware
                 'client' => fn () => $request->user()?->isClient() ? [
                     'organisation' => $request->user()->organisationName(),
                     'role' => $request->user()->clientRole(),
-                    'may' => collect(['pay', 'approve', 'sign', 'accept', 'api_keys', 'feedback', 'manage_people'])
+                    'may' => collect(['pay', 'approve', 'sign', 'accept', 'api_keys', 'feedback', 'licences', 'manage_people'])
                         ->filter(fn (string $ability) => $request->user()->canAsClient($ability))
                         ->values(),
                     // Signing and paying wait for two-step sign in (CL20).
@@ -121,6 +131,12 @@ class HandleInertiaRequests extends Middleware
              * lingering.
              */
             'flash' => [
+                // Which response the messages came with. A partial reload keeps
+                // the last page's flash without sending it again, and the
+                // toaster shows a message only for an id it has not seen.
+                'id' => fn () => collect(['success', 'error', 'info', 'warning'])->contains(fn (string $key) => $request->session()->has($key))
+                    ? (string) Str::uuid()
+                    : null,
                 'success' => fn () => $request->session()->get('success'),
                 'error' => fn () => $request->session()->get('error'),
                 'info' => fn () => $request->session()->get('info'),
@@ -133,6 +149,8 @@ class HandleInertiaRequests extends Middleware
                 'recoveryCodes' => fn () => $request->session()->get('recoveryCodes'),
                 'issuedApiKey' => fn () => $request->session()->get('issuedApiKey'),
                 'registrationSent' => fn () => $request->session()->get('registrationSent'),
+                'checkoutCodeSentTo' => fn () => $request->session()->get('checkoutCodeSentTo'),
+                'issuedLicenceKey' => fn () => $request->session()->get('issuedLicenceKey'),
             ],
 
             'ziggy' => fn () => [

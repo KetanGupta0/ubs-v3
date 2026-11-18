@@ -62,6 +62,6 @@ function toggle(event) {
             </span>
         </span>
 
-        <span v-if="label" class="text-sm" style="color: var(--text-base)">{{ label }}</span>
+        <span v-if="label || $slots.label" class="text-sm" style="color: var(--text-base)"><slot name="label">{{ label }}</slot></span>
     </label>
 </template>

@@ -92,6 +92,13 @@ class AppServiceProvider extends ServiceProvider
          * limit is loose; the limit per email is what stops one address being
          * sent a confirmation over and over.
          */
+        // Licence checks (X18): a site checks about once a day, so this is
+        // generous for an office behind one address and tight for guessing.
+        RateLimiter::for('licence-checks', fn (Request $request) => [
+            Limit::perMinute(30)->by('minute:'.$request->ip()),
+            Limit::perHour(300)->by('hour:'.$request->ip()),
+        ]);
+
         RateLimiter::for('registrations', fn (Request $request) => [
             Limit::perMinute(40)->by('ip:'.$request->ip()),
             Limit::perHour(5)->by('email:'.mb_strtolower(trim((string) $request->input('email')))),

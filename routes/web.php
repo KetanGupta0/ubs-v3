@@ -8,6 +8,7 @@ use App\Http\Controllers\VerificationController;
 use Illuminate\Support\Facades\Route;
 
 require __DIR__.'/marketing.php';
+require __DIR__.'/shop.php';
 require __DIR__.'/auth.php';
 require __DIR__.'/admin.php';
 require __DIR__.'/client.php';

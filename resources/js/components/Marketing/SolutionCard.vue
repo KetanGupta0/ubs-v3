@@ -8,7 +8,7 @@
  */
 import { computed } from 'vue';
 import { Link } from '@inertiajs/vue3';
-import { ArrowUpRight, Layers, Clock, IndianRupee } from 'lucide-vue-next';
+import { ArrowUpRight, Layers, Clock, IndianRupee, ShoppingCart } from 'lucide-vue-next';
 
 import { accentFor } from '@/support/accents';
 import MockScreen from './MockScreen.vue';
@@ -52,6 +52,13 @@ const tone = computed(() => accentFor(props.solution.accent));
                         >
                             Featured
                         </span>
+                        <span
+                            v-if="solution.hasDemo"
+                            class="rounded-full border px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide"
+                            :style="{ borderColor: tone.border, color: tone.solid }"
+                        >
+                            Live demo
+                        </span>
                     </p>
                     <h3 class="mt-1.5 text-lg font-semibold leading-snug">{{ solution.title }}</h3>
                 </div>
@@ -83,6 +90,11 @@ const tone = computed(() => accentFor(props.solution.accent));
                     <IndianRupee class="h-3.5 w-3.5" aria-hidden="true" />
                     <dt class="sr-only">Indicative budget</dt>
                     <dd class="tnum">{{ solution.priceBand }}</dd>
+                </div>
+                <div v-if="solution.fromPrice" class="flex items-center gap-1.5 font-medium" style="color: var(--text-strong)">
+                    <ShoppingCart class="h-3.5 w-3.5" aria-hidden="true" />
+                    <dt class="sr-only">Ready to buy</dt>
+                    <dd class="tnum">From {{ solution.fromPrice }} + GST</dd>
                 </div>
             </dl>
 

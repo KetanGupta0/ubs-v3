@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Models\Invoice;
+use App\Models\Order;
 use App\Models\PaymentRequest;
 use App\Models\Transaction;
 use App\Services\Billing\Invoicer;
@@ -65,6 +66,8 @@ class PaymentController extends ClientController
         return Inertia::render('client/payments/Show', [
             'payment' => [
                 ...$this->card($record),
+                'canPay' => $this->isOwnOrder($request, $record) || $request->user()->canAsClient('pay'),
+                'orderId' => $record->payable_type === Order::class ? $record->payable_id : null,
                 'description' => $record->description,
                 'notes' => $record->notes,
                 'subtotal' => Money::display($record->subtotal),
@@ -191,10 +194,14 @@ class PaymentController extends ClientController
     /** Open checkout and hand the browser what the provider needs. */
     public function begin(Request $request, int $payment, Checkout $checkout): JsonResponse
     {
-        $this->mayAsClient($request, 'pay');
-
         $record = $this->own($request, PaymentRequest::query()
             ->forUser($this->client($request)), $payment);
+
+        // Whoever placed an order pays for it with their own card (§4); paying
+        // the organisation's invoices is finance's, with two-step sign in.
+        if (! $this->isOwnOrder($request, $record)) {
+            $this->mayAsClient($request, 'pay');
+        }
 
         $started = $checkout->begin($record, $request->user());
 
@@ -223,9 +230,24 @@ class PaymentController extends ClientController
             return back()->with('error', $result->failureReason ?? 'The payment did not go through.');
         }
 
+        $payable = $transaction->paymentRequest?->payable;
+
+        if ($payable instanceof Order) {
+            return redirect("/client/orders/{$payable->id}")
+                ->with('success', 'Payment received. Thank you. What you bought is below.');
+        }
+
         return redirect()
             ->route('client.transactions.index')
             ->with('success', 'Payment received. Your receipt is ready to download.');
+    }
+
+    /** An order this person placed, waiting for their payment. */
+    protected function isOwnOrder(Request $request, PaymentRequest $record): bool
+    {
+        return $record->payable_type === Order::class
+            && $record->payable instanceof Order
+            && $record->payable->user_id === $request->user()->id;
     }
 
     /** @return array<string, mixed> */

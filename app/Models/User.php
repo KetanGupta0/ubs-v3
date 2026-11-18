@@ -399,6 +399,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $query->where('role', $role instanceof Role ? $role->value : $role);
     }
 
+    /** Staff who hold a permission, and the owner, who holds every one. */
+    public function scopeHoldingPermission(Builder $query, string $key): Builder
+    {
+        return $query->where('role', Role::Admin)->where(fn (Builder $q) => $q
+            ->where('is_owner', true)
+            ->orWhereHas('permissions', fn (Builder $permission) => $permission->where('key', $key)));
+    }
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', UserStatus::Active->value);

@@ -68,6 +68,9 @@ have their LIKE wildcards escaped. Keep it that way when adding tables.
 **Toasts come from flash messages.** A controller calling
 `->with('success', '…')` surfaces a toast automatically. Only reach for
 `toast.success(…)` in the client for feedback that never touched the server.
+Each response carrying messages gives them a `flash.id`, and a toast shows once
+per id: a partial reload keeps the last page's flash, and until November 2026
+that repeated the last toast.
 
 ## Layouts
 
@@ -150,8 +153,10 @@ Rules for the marketing pages:
   About and the mentors on Training come from `/admin/team`, nobody is seeded,
   and `PeopleGrid` renders nothing, heading included, until a real person is
   added.
-- **Prices are bands, never figures.** A number on a catalogue page is a guess
-  presented as a price. Every band is captioned as indicative.
+- **A figure only for what is sold at that figure.** Building to order is shown as a
+  band, captioned as indicative, because a number there would be a guess presented
+  as a price. Source code by licence tier and hosted plans are sold at their price,
+  so they show it, always "+ GST" (X17); see Shop below.
 - **Course visibility is enforced server side.** Anything marked `lms_only`
   must not appear in a listing, must 404 by URL, and must stay out of the
   sitemap. There are tests for all three.
@@ -434,6 +439,59 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   `first()` still returns the oldest. Use `reorder('version', 'desc')`. Until November
   2026 that made a client's acknowledgement land on the version they had disputed.
 
+## Shop
+
+`routes/shop.php`, `App\Http\Controllers\Shop\*`, `App\Services\Shop`, `resources/js/pages/shop`,
+the selling page of a solution in the admin catalogue, and Orders in the client portal.
+
+- **What a solution is offered as is `Solution::OFFERINGS`:** built to order, the source
+  code by licence tier, hosted as a plan, a live demo. `offers()` says whether the site
+  really offers one: switched on with nothing on sale behind it (no live tier, no demo
+  address) offers nothing. Prices are paise before tax (X17).
+- **The cart holds choices, never prices.** `CartStore` keeps it in the session for a guest
+  and on the account once signed in (`MergeGuestCart`, on `Login`, whichever way in).
+  `Pricing::quote()` prices it from the catalogue every time and is the only sum: the cart
+  shows it, and `Orders::place()` makes the order from it and refuses when the total is not
+  the one the buyer was shown. What went off sale is taken out and said so once.
+- **Codes are the server's (`Coupons`).** Checked when the cart is priced and again, with the
+  coupon rows locked, when the order is placed. A use held by an unpaid order counts for
+  `shop.coupon_hold_minutes`, so an abandoned checkout frees a limited code by itself. Codes
+  combine only if each is stackable; each applies to what is left of its lines, so a stack
+  never takes more than a line is worth, and every line carries its share to the paisa.
+- **One way into an account at checkout (CL6).** A guest asks for a code by email, and the
+  answer and the message are the same for any address. The code, once typed, signs a client
+  in through `LoginPipeline`, makes a new client through `AccountCreator::createForBuyer()`
+  (verified, no password: they sign in by code), and turns away staff and student
+  addresses. Only a client account places an order.
+- **An order is paid like everything else.** It raises a payment request whose payable is the
+  order; the invoice is issued when paying starts, a line per item with its SAC, the order's
+  discount and its frozen tax split. Whoever placed an order may pay it without the finance
+  role or two-step sign in: they pay with their own card. `Invoicer::markRequestPaid()` calls
+  `Orders::fulfil()`, so money recorded by hand delivers an order as an online payment does.
+  Unpaid orders lapse after `shop.order_expiry_days` (`shop:expire-orders`), and an order
+  with a payment started in the last half hour cannot be cancelled by the buyer.
+- **A licence key is shown once (CL4).** Made the first time somebody asks, stored as the
+  SHA-256 of its letters and digits (dashes, case and I/L/O typos do not matter), handed over
+  in the `issuedLicenceKey` flash. A lost key is replaced and the old one stops working; the
+  sites keep their places. Technical people, owners and whoever bought it use keys, sites
+  and downloads (`licences`).
+- **Downloads are signed links that expire (X16).** The portal makes one for a licence, a
+  version and a person; the download checks again, counts it (`shop.downloads_per_version`)
+  and streams from the private disk. A licence downloads what was released inside its update
+  window. A version somebody downloaded is withdrawn, never deleted.
+- **Software checks its key at `POST /api/v1/licences/check` (X18).** An unknown key and a key
+  for another product get the same answer; a site takes a place the first time it checks, up
+  to the tier's limit; development hosts take none; the answer says when to ask again (a
+  day). `docs/LICENCE_API.md` is what the products' developers read.
+- **A refund of the whole order withdraws what it gave** (`Orders::refundSettled()`, when a
+  refund completes): licences are revoked, plans stop renewing. Part of it changes nothing.
+- **A demo is the owner's to host (X9).** Its sign in is public by design. Opening it is a
+  plain link and records nothing; asking for a walkthrough, with consent ticked, is the only
+  way it becomes a lead (`interest` `demo`).
+- **Throttles in the shop carry a prefix** (`throttle:6,1,checkout-code`). An unnamed throttle
+  shares one count per address with every other unnamed one, so applying two codes would
+  have used up the attempts at asking for a checkout code.
+
 ## Learning management
 
 `routes/student.php`, `App\Http\Controllers\Student\*`, `resources/js/pages/student`,
@@ -622,7 +680,7 @@ group), `resources/js/pages/admin/reports`, `resources/js/components/Charts`.
 ## Not yet built
 
 Phases 8 and 9 in the plan. Navigation entries that render as "Soon" are
-deliberate placeholders, wired but not yet routed. Coupons, instalments,
+deliberate placeholders, wired but not yet routed. Instalments,
 calendar invitations, message search, push notifications to a phone, a visual
 filter builder and a report designer are named in the plan and are not built;
 see the "what landed differently" notes under Phases 5, 6 and 7 in

@@ -57,12 +57,8 @@ class BillingDetailsController extends ClientController
             'postal_code.regex' => 'A PIN code is six digits.',
         ]);
 
-        if ($validated['gstin'] && substr($validated['gstin'], 0, 2) !== IndianStates::codeOf($validated['state'])) {
-            $registered = IndianStates::CODES[substr($validated['gstin'], 0, 2)] ?? null;
-
-            throw ValidationException::withMessages(['gstin' => $registered
-                ? "This GSTIN is registered in {$registered}. Choose that state, or check the number."
-                : 'The first two digits of a GSTIN are a state code, and these are not one.']);
+        if ($refusal = IndianStates::gstinRefusal($validated['gstin'], $validated['state'])) {
+            throw ValidationException::withMessages(['gstin' => $refusal]);
         }
 
         $account = $this->client($request);

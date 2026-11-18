@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
+use App\Models\ProductAddon;
+use App\Models\ProductTier;
 use App\Models\Solution;
 use App\Models\SolutionCategory;
+use App\Services\Billing\Invoicer;
 use App\Support\Preview;
 use App\Support\Seo;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,7 +33,7 @@ class SolutionController extends Controller
 
         $solutions = Solution::query()
             ->published()
-            ->with('category')
+            ->with('category', 'tiers')
             ->when($filters['q'], fn (Builder $q, string $term) => $this->search($q, $term))
             ->when($filters['category'], fn (Builder $q, string $slug) => $q->whereHas(
                 'category',
@@ -75,9 +78,10 @@ class SolutionController extends Controller
     {
         $previewing = Preview::unpublished($solution->is_published);
 
-        $solution->load('category');
+        $solution->load('category', 'tiers', 'addons', 'latestVersion');
 
         return Inertia::render('marketing/solutions/Show', [
+            'offer' => $this->offer($solution),
             'solution' => [
                 ...$solution->toCardArray(),
                 'description' => $solution->description,
@@ -95,7 +99,7 @@ class SolutionController extends Controller
                 ->published()
                 ->where('solution_category_id', $solution->solution_category_id)
                 ->whereKeyNot($solution->getKey())
-                ->with('category')
+                ->with('category', 'tiers')
                 ->orderBy('sort_order')
                 ->limit(3)
                 ->get()
@@ -105,17 +109,92 @@ class SolutionController extends Controller
                 $solution->seo['title'] ?? $solution->title,
                 $solution->seo['description'] ?? $solution->summary,
                 "/solutions/{$solution->slug}",
-                [
-                    '@context' => 'https://schema.org',
-                    '@type' => 'Service',
-                    'name' => $solution->title,
-                    'description' => $solution->summary,
-                    'provider' => ['@type' => 'Organization', 'name' => 'Unboundbyte Solutions Private Limited'],
-                    'areaServed' => 'IN',
-                    'serviceType' => $solution->category?->name,
-                ],
+                $this->structuredData($solution),
             ), $previewing),
         ]);
+    }
+
+    /**
+     * What the page offers beyond building it to order (§4): a live demo the
+     * owner hosts (X9), the source code by licence tier, hosted plans, and
+     * add-ons. Prices are before tax and say so (X17).
+     *
+     * @return array<string, mixed>
+     */
+    protected function offer(Solution $solution): array
+    {
+        $licences = $solution->offers('source_code') ? $solution->activeTiers('licence') : collect();
+        $plans = $solution->offers('subscription') ? $solution->activeTiers('plan') : collect();
+        $addons = $solution->isSold()
+            ? $solution->addons->where('is_active', true)
+                // Months on a licence mean nothing to somebody buying a plan.
+                ->filter(fn (ProductAddon $addon) => $licences->isNotEmpty() || ! $addon->needsLicence())
+                ->values()
+            : collect();
+        $version = $solution->offers('source_code') ? $solution->latestVersion : null;
+
+        return [
+            'customBuild' => $solution->offers('custom_build'),
+            'demo' => $solution->offers('demo') ? [
+                'url' => $solution->demo_url,
+                'username' => $solution->demo_username,
+                'password' => $solution->demo_password,
+                'notes' => $solution->demo_notes,
+            ] : null,
+            'licences' => $licences->map->toOffer()->values(),
+            'plans' => $plans->map->toOffer()->values(),
+            'addons' => $addons->map->toOffer()->values(),
+            'latestVersion' => $version ? [
+                'version' => $version->version,
+                'releasedOn' => $version->released_on->format('j M Y'),
+            ] : null,
+            'taxRate' => app(Invoicer::class)->defaultTaxRate(),
+        ];
+    }
+
+    /** A product with prices when it is sold as it is; a service when it is only built to order. */
+    protected function structuredData(Solution $solution): array
+    {
+        $provider = ['@type' => 'Organization', 'name' => 'Unboundbyte Solutions Private Limited'];
+
+        if (! $solution->isSold()) {
+            return [
+                '@context' => 'https://schema.org',
+                '@type' => 'Service',
+                'name' => $solution->title,
+                'description' => $solution->summary,
+                'provider' => $provider,
+                'areaServed' => 'IN',
+                'serviceType' => $solution->category?->name,
+            ];
+        }
+
+        $tiers = collect()
+            ->merge($solution->offers('source_code') ? $solution->activeTiers('licence') : [])
+            ->merge($solution->offers('subscription') ? $solution->activeTiers('plan') : []);
+
+        return [
+            '@context' => 'https://schema.org',
+            '@type' => 'SoftwareApplication',
+            'name' => $solution->title,
+            'description' => $solution->summary,
+            'applicationCategory' => 'BusinessApplication',
+            'operatingSystem' => implode(', ', $solution->platforms ?? []) ?: 'Web',
+            'publisher' => $provider,
+            'offers' => $tiers->map(fn (ProductTier $tier) => [
+                '@type' => 'Offer',
+                'name' => $tier->lineName(),
+                'price' => number_format($tier->price / 100, 2, '.', ''),
+                'priceCurrency' => 'INR',
+                'priceSpecification' => [
+                    '@type' => 'UnitPriceSpecification',
+                    'price' => number_format($tier->price / 100, 2, '.', ''),
+                    'priceCurrency' => 'INR',
+                    'valueAddedTaxIncluded' => false,
+                ],
+                'availability' => 'https://schema.org/InStock',
+            ])->values()->all(),
+        ];
     }
 
     /** @return array<string, string|null> */

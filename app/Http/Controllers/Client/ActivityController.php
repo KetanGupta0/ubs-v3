@@ -45,6 +45,11 @@ class ActivityController extends ClientController
         'handover.acknowledged' => 'Acknowledged a handover',
         'meeting.minutes_acknowledged' => 'Acknowledged meeting minutes',
         'meeting.minutes_disputed' => 'Asked for a correction to minutes',
+        'order.placed' => 'Placed an order',
+        'order.cancelled' => 'Cancelled an order',
+        'licence.key_issued' => 'Made a licence key',
+        'licence.key_rotated' => 'Replaced a licence key',
+        'licence.site_released' => 'Freed a site on a licence',
     ];
 
     public function __invoke(Request $request): Response|HttpResponse

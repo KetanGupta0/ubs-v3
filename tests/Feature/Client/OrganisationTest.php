@@ -118,9 +118,9 @@ it('lets each role do its own part, and says who can when it cannot', function (
         ->assertInertia(fn ($page) => $page
             ->where('auth.client.role', 'technical')
             ->where('auth.client.organisation', 'Acme Logistics')
-            ->where('auth.client.may', ['api_keys', 'feedback']));
+            ->where('auth.client.may', ['api_keys', 'feedback', 'licences']));
     $this->actingAs($this->acme)->get('/client')
-        ->assertInertia(fn ($page) => $page->where('auth.client.role', 'owner')->where('auth.client.may', fn ($may) => count($may) === 7));
+        ->assertInertia(fn ($page) => $page->where('auth.client.role', 'owner')->where('auth.client.may', fn ($may) => count($may) === 8));
 });
 
 it('sends invoices to finance and proposals to signatories, with owners always told', function () {
