@@ -30,6 +30,7 @@ class MaintenanceContract extends Model
             'starts_on' => 'date',
             'ends_on' => 'date',
             'reminders_sent' => 'array',
+            'included_hours' => 'float',
         ];
     }
 

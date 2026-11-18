@@ -33,6 +33,7 @@ const form = useForm({
     response_hours: props.contract?.response_hours ?? 24,
     resolution_hours: props.contract?.resolution_hours ?? 72,
     included_tickets: props.contract?.included_tickets ?? null,
+    included_hours: props.contract?.included_hours ?? null,
     amount: props.contract?.amount ?? null,
     billing_interval: props.contract?.billing_interval ?? 'yearly',
     status: props.contract?.status ?? 'active',
@@ -152,6 +153,14 @@ function destroy() {
                         hint="Leave blank for unlimited."
                     >
                         <UiInput v-model="form.included_tickets" type="number" min="1" />
+                    </UiFormField>
+
+                    <UiFormField
+                        label="Hours included a month"
+                        :error="form.errors.included_hours"
+                        hint="Shown against the hours used in the monthly service report. Blank if not counted."
+                    >
+                        <UiInput v-model="form.included_hours" type="number" min="0.5" step="0.5" />
                     </UiFormField>
 
                     <UiFormField label="Amount (₹)" required :error="form.errors.amount">

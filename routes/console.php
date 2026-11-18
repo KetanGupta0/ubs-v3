@@ -13,6 +13,8 @@ Artisan::command('inspire', function () {
  * their desk and can do something about it.
  */
 Schedule::command('renewals:remind')->dailyAt('09:00');
+// Last month's service reports, drafted for a person to finish (CL17).
+Schedule::command('service-reports:draft')->monthlyOn(1, '06:15');
 
 /*
  * Hourly, so a report set for seven in the morning arrives at seven. Each

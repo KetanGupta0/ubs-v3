@@ -41,6 +41,7 @@ use App\Http\Controllers\Admin\ReviewController;
 use App\Http\Controllers\Admin\SatisfactionController;
 use App\Http\Controllers\Admin\SeoController;
 use App\Http\Controllers\Admin\ServiceController;
+use App\Http\Controllers\Admin\ServiceReportController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SiteMenuController;
 use App\Http\Controllers\Admin\SitePageController;
@@ -259,6 +260,14 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
         Route::middleware('permission:support.manage')->group(function () {
             Route::get('satisfaction', [SatisfactionController::class, 'index'])->name('satisfaction.index');
             Route::post('satisfaction/{survey}/testimonial', [SatisfactionController::class, 'testimonial'])->whereNumber('survey')->name('satisfaction.testimonial');
+        });
+
+        /* -------------------------------------------------- service reports */
+        Route::middleware('permission:support.manage')->group(function () {
+            Route::get('service-reports', [ServiceReportController::class, 'index'])->name('service-reports.index');
+            Route::get('service-reports/{serviceReport}', [ServiceReportController::class, 'show'])->whereNumber('serviceReport')->name('service-reports.show');
+            Route::put('service-reports/{serviceReport}', [ServiceReportController::class, 'update'])->whereNumber('serviceReport')->name('service-reports.update');
+            Route::get('service-reports/{serviceReport}/preview', [ServiceReportController::class, 'preview'])->whereNumber('serviceReport')->name('service-reports.preview');
         });
 
         /* --------------------------------------------------------- renewals */

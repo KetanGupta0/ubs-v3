@@ -406,6 +406,13 @@ plus `App\Services\Billing` and `App\Services\Payments`.
   signatory or an owner acknowledges each revision. After that a short survey (CL18)
   asks for a rating; a quote becomes a testimonial draft only with the client's written
   consent, credited exactly as they gave, and is published by a person.
+- **A service report is worked out, then finished by a person (CL17).** `service-reports:draft`
+  drafts last month's report for every contract on the 1st, with the ticket figures from
+  `App\Services\Client\ServiceReports`: response and resolution judged against the
+  times copied onto each ticket, and a ticket still open but not yet due left undecided
+  rather than counted as missed. Uptime, hours used and the work done are written in by
+  our side; publishing files the PDF in the client's documents, and a published report
+  is never redrafted.
 - **An API key is shown once.** Only a hash and the prefix are stored. Lost keys
   are rotated, not recovered.
 - **`$request->validate()` drops optional fields the request did not send**, so
