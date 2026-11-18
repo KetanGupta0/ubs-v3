@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Enums\AuthEvent;
 use App\Http\Controllers\Controller;
 use App\Models\AuthAuditLog;
+use App\Models\MailSuppression;
 use App\Services\Auth\AuthAuditor;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
@@ -38,6 +39,8 @@ class SecurityController extends Controller
                 'mobileVerified' => $user->mobile_verified_at !== null,
                 'googleLinked' => $user->socialAccounts()->where('provider', 'google')->exists(),
             ],
+            // Greetings and announcements (§8). Staff are never sent them.
+            'promotionalMail' => $user->isAdmin() ? null : ['receiving' => ! MailSuppression::has($user->email)],
             'sessions' => $this->sessions($request),
             'devices' => $user->tokens()
                 ->latest('last_used_at')

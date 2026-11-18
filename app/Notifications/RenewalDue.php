@@ -48,6 +48,7 @@ class RenewalDue extends Notification implements ShouldQueue
     {
         return [
             'kind' => 'subscription.renewal',
+            'title' => "{$this->subscription->name} renews on {$this->subscription->renews_on->format('j M Y')}",
             'name' => $this->subscription->name,
             'renewsOn' => $this->subscription->renews_on->toDateString(),
             'url' => '/client/subscriptions',

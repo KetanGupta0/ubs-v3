@@ -17,7 +17,7 @@
  * disabled rather than linking nowhere.
  */
 import {
-    CalendarClock, FilePlus2, Bug, Landmark, CalendarSync, Smile, FileBarChart, ShoppingBag, TicketPercent, BadgeCheck,
+    CalendarClock, FilePlus2, Bug, Landmark, CalendarSync, Smile, FileBarChart, ShoppingBag, TicketPercent, BadgeCheck, Send, PartyPopper, MailX,
     LayoutDashboard, FolderKanban, FileText, Receipt, LifeBuoy, MessagesSquare,
     KeyRound, RefreshCw, GraduationCap, CalendarCheck, ClipboardList, Trophy, UserCheck, Video, Star, Search, Scale, Contact, PanelTop, Images, Type,
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
@@ -85,6 +85,9 @@ export const navigation = {
         { group: 'Website', label: 'Team and mentors', icon: Contact, href: '/admin/team', permission: 'content.manage' },
         { group: 'Website', label: 'Search wording', icon: Search, href: '/admin/seo', permission: 'content.manage' },
         { group: 'Website', label: 'Legal documents', icon: Scale, href: '/admin/legal', permission: 'legal.manage' },
+        { group: 'Website', label: 'Announcements', icon: Send, href: '/admin/mail/broadcasts', permission: 'mail.broadcast' },
+        { group: 'Website', label: 'Greetings', icon: PartyPopper, href: '/admin/mail/occasions', permission: 'mail.occasions' },
+        { group: 'Website', label: 'Do not mail', icon: MailX, href: '/admin/mail/suppressions', permission: 'mail.broadcast' },
 
         { group: 'Administration', label: 'Staff', icon: UserCog, href: '/admin/staff', permission: 'staff.manage' },
         { group: 'Administration', label: 'Settings', icon: Settings, href: '/admin/settings', permission: 'settings.view' },

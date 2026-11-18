@@ -584,6 +584,31 @@ So the allowed media types are already exactly what was asked for.
   - every send goes through `Auditor`
   - a cap on how many promotional mails one address gets per week
 
+*Progress on Step G (decisions X7, X8, X19 on 2026-11-18):*
+- *Built 2026-11-18. Website → Announcements: write a message with the reader's name in
+  it and a picture from the media library, choose who it is for (students, clients and
+  their people, enquiry senders; narrowed by course, batch, college, enrolment, what an
+  enquiry was about, when people joined, never signed in) with a live count, preview it,
+  send yourself a test, and send now, at a time, or keep a draft. Website → Greetings:
+  the days and their greetings; the three national days are there switched off, and a
+  festival's date is confirmed each year, with a reminder a month before. Each send shows
+  who it was for, what went, and why the rest did not.*
+- *Everybody with an account sees the message among their notifications at once. The mail
+  goes from the scheduler within a daily budget kept under Hostinger's 100 a day (60 by
+  default, leaving room for codes, receipts and reminders), people without an account
+  first; nobody gets more than two a week, and a greeting not sent by the end of its day
+  is not sent. Every mail says why it came and stops them in one click, mail apps'
+  unsubscribe buttons included; account holders also have a switch under Security.
+  Website → Do not mail lists everybody who stopped them, and takes a bounced address by
+  hand until a provider reports bounces.*
+- *The privacy policy's version 2 is drafted in the panel (Legal documents) for the owner
+  to read and publish. Until it is published and they are switched on under
+  Announcements, people who only sent an enquiry get nothing.*
+- *Building it found that the bell in the header was a picture: notifications were written
+  to the database and never shown. The bell now shows how many are unread and the latest
+  few, and `/notifications` lists them all.*
+- *Step G is complete.*
+
 ---
 
 ## 9. AI features
@@ -879,9 +904,10 @@ the middle of it.
 | X15 | Transactional mail provider | Needed before cutover, because of the 100 a day cap. Brevo, ZeptoMail or Amazon SES; ask before the cutover step. |
 | X5 | Registration form with an existing email: confirm first, or add directly? | Confirm first. Otherwise anyone can enrol anyone. |
 | X6 | Credentials vault for client handover: build it? | **Decided 2026-11-17: no.** The team does not hand credentials over through the platform, so CL7 is not built; the handover pack (CL15) says where credentials were shared, never what they are. |
-| X7 | Festival list: which occasions, and do enquiry senders receive greetings? | National days to everyone who has not opted out; festivals switchable by the admin; enquiry senders included, with unsubscribe. |
-| X8 | Transactional mail provider for bulk sending | Any provider with bounce webhooks and an Indian billing option; credentials in `.env`. |
+| X7 | Festival list: which occasions, and do enquiry senders receive greetings? | **Decided 2026-11-18:** the admin sets the occasions; the three national days are seeded switched off, and nothing else is. Enquiry senders receive greetings, with unsubscribe, once privacy policy version 2 is published. |
+| X8 | Transactional mail provider for bulk sending | **Decided 2026-11-18: Hostinger's mail for now.** The code stays provider neutral: promotional mail goes out within a daily budget under the 100 a day cap, leaving room for service mail, and a provider is added later through `.env`. Bounces are suppressed by hand until a provider's webhook can report them. |
 | X9 | Demo hosting for live demos: where, and how often reset? | **Decided 2026-11-18:** the owner hosts each demo on its own subdomain and resets it nightly. This application only links to it with the demo sign in, and records a lead only when the visitor asks to be contacted. |
 | X16 | Where source code downloads are kept | **Decided 2026-11-18:** on the hosting itself, in private storage, with a size cap per file and signed links that expire. |
 | X17 | Fixed prices: GST included or added? | **Decided 2026-11-18:** added. A product's price is before tax, as B2B buyers expect; the cart and invoice add GST, split CGST and SGST or IGST by the buyer's state. |
 | X18 | Licence keys: recorded only, or checked online by the software? | **Decided 2026-11-18:** both. Keys are recorded and revoked on refund, and a verification API lets the software check a key and the site it runs on, activating sites up to the tier's limit. |
+| X19 | Privacy policy version 2, before any greeting goes out | **Decided 2026-11-18:** drafted in the panel by us, reviewed and published by the owner. |

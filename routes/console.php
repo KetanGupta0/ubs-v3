@@ -19,6 +19,12 @@ Schedule::command('service-reports:draft')->monthlyOn(1, '06:15');
 // Shop orders left unpaid lapse, and free the codes they held (§4).
 Schedule::command('shop:expire-orders')->dailyAt('03:40');
 
+// Greetings and announcements go out a few at a time, inside a daily budget
+// below the hosting's mail cap (§8, X8); once a day, unconfirmed festival
+// dates are asked about.
+Schedule::command('mail:send-promotional')->everyFiveMinutes()->withoutOverlapping(10);
+Schedule::command('mail:send-promotional', ['--remind'])->dailyAt('10:20');
+
 /*
  * Hourly, so a report set for seven in the morning arrives at seven. Each
  * schedule decides for itself whether it is due.

@@ -46,6 +46,7 @@ class TicketRaised extends Notification implements ShouldQueue
     {
         return [
             'kind' => 'ticket.raised',
+            'title' => "New ticket {$this->ticket->reference}: {$this->ticket->subject}",
             'reference' => $this->ticket->reference,
             'subject' => $this->ticket->subject,
             'client' => $this->ticket->client->name,

@@ -72,6 +72,13 @@ Each response carrying messages gives them a `flash.id`, and a toast shows once
 per id: a partial reload keeps the last page's flash, and until November 2026
 that repeated the last toast.
 
+**Notifications are seen in the platform as well as by mail.** Whatever a
+notification writes to the `database` channel appears under the bell in the
+header and at `/notifications`; opening one marks it read and goes to its `url`.
+Give every `toArray()` a `title` and a `url` that is a path on this site. Until
+November 2026 the bell was a picture with a dot that never went out, and
+nothing written to the database was ever shown.
+
 ## Layouts
 
 `PublicLayout` for marketing pages. `AppLayout` for everything behind a login;
@@ -496,6 +503,42 @@ the selling page of a solution in the admin catalogue, and Orders in the client 
 - **Throttles in the shop carry a prefix** (`throttle:6,1,checkout-code`). An unnamed throttle
   shares one count per address with every other unnamed one, so applying two codes would
   have used up the attempts at asking for a checkout code.
+
+## Mail: greetings and announcements
+
+`App\Services\Mail`, `App\Http\Controllers\Mail`, the mail screens under Website in the
+admin panel (`/admin/mail/*`), `mail:send-promotional` in the scheduler.
+
+- **Promotional mail is kept apart from service mail.** Greetings and announcements go
+  only through a send (`MailCampaign`); they read the do-not-mail list
+  (`MailSuppression`, by address) and nothing else does, so stopping them never stops a
+  sign in code, a receipt or a reminder.
+- **Hostinger's mail allows 100 a day in all (X8),** so promotional mail has its own
+  daily budget (`MAIL_PROMOTIONAL_DAILY_LIMIT`, 60 by default) and goes out from the
+  scheduler a few at a time, greetings before announcements and people without an
+  account first, because mail is their only way to hear. Nobody gets more than
+  `company.mail.promotional_per_week` in a week. Raise the budget when a provider is set
+  up. Everybody with an account sees the same message among their notifications as soon
+  as a send starts, whatever the budget.
+- **A send fixes who it is for when it starts** (`Campaigns::start()`), one address once,
+  from `Audience` filters; the list and the weekly limit are checked again just before
+  each mail goes. Staff are never in an audience.
+- **Every one says why it came and how to stop it.** The footer names the reason; the
+  link is signed over the path (`signed:relative`) and never expires; opening it shows one
+  button, because mail scanners open links; the `List-Unsubscribe` headers let a mail app
+  post straight to it (RFC 8058), which is why `unsubscribe/*` is out of CSRF. Account
+  holders have the same switch under Security and on each message. An address stopped
+  because it bounced comes off the list only by staff.
+- **People who only sent an enquiry are mailed only once the privacy policy saying so is
+  published (X19)** and somebody switches it on under Announcements, ticking that the
+  policy tells them; until then `Audience` leaves them out. Version 2 of the policy is
+  drafted by a migration for the owner to read and publish; it is never published by code.
+- **A greeting goes on its day only.** An occasion with the same date every year moves on
+  by itself; a festival moves on a year as a guess and is not sent until somebody confirms
+  the date, with a reminder a month before. A day the scheduler missed is skipped, never
+  sent late, and what the budget did not reach by midnight is not sent.
+- Opens are not tracked: no pixel, no provider yet. Bounces are added to the list by hand
+  until a provider's webhook can.
 
 ## Learning management
 

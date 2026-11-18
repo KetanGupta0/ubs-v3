@@ -1,7 +1,10 @@
 <?php
 
+use App\Http\Controllers\Account\NotificationController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\DesignController;
+use App\Http\Controllers\Mail\MessageController;
+use App\Http\Controllers\Mail\UnsubscribeController;
 use App\Http\Controllers\SavedViewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\VerificationController;
@@ -31,6 +34,25 @@ Route::middleware(['auth', 'password.owned'])->group(function () {
     Route::post('views', [SavedViewController::class, 'store'])->name('views.store');
     Route::get('views/{view}', [SavedViewController::class, 'apply'])->whereNumber('view')->name('views.apply');
     Route::delete('views/{view}', [SavedViewController::class, 'destroy'])->whereNumber('view')->name('views.destroy');
+});
+
+/*
+ * Greetings and announcements (§8): stopping them from the link in one, which
+ * is signed and never expires, and reading one in the platform.
+ */
+Route::get('unsubscribe/{address}', [UnsubscribeController::class, 'show'])->middleware('signed:relative')->name('mail.unsubscribe');
+Route::post('unsubscribe/{address}', [UnsubscribeController::class, 'store'])->middleware(['signed:relative', 'throttle:30,1,unsubscribe'])->name('mail.unsubscribe.store');
+Route::post('unsubscribe/{address}/resume', [UnsubscribeController::class, 'resume'])->middleware(['signed:relative', 'throttle:30,1,unsubscribe'])->name('mail.resubscribe');
+
+Route::middleware(['auth', 'password.owned'])->group(function () {
+    // What the platform has told somebody: the bell, and the full list.
+    Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('notifications/recent', [NotificationController::class, 'recent'])->name('notifications.recent');
+    Route::post('notifications/read-all', [NotificationController::class, 'readAll'])->name('notifications.read-all');
+    Route::post('notifications/{notification}', [NotificationController::class, 'open'])->whereUuid('notification')->name('notifications.open');
+
+    Route::get('messages/{campaign}', [MessageController::class, 'show'])->whereNumber('campaign')->name('messages.show');
+    Route::put('settings/mail', [MessageController::class, 'preference'])->name('settings.mail');
 });
 
 /*

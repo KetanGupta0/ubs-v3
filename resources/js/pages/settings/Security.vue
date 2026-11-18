@@ -16,6 +16,7 @@ import UiBadge from '@/components/UI/UiBadge.vue';
 import UiInput from '@/components/UI/UiInput.vue';
 import UiFormField from '@/components/UI/UiFormField.vue';
 import UiModal from '@/components/UI/UiModal.vue';
+import UiSwitch from '@/components/UI/UiSwitch.vue';
 import OtpInput from '@/components/Auth/OtpInput.vue';
 import { toast } from '@/support/toast';
 
@@ -25,6 +26,7 @@ defineProps({
     sessions: { type: Array, default: () => [] },
     devices: { type: Array, default: () => [] },
     recentActivity: { type: Array, default: () => [] },
+    promotionalMail: { type: Object, default: null },
 });
 
 const page = usePage();
@@ -334,6 +336,19 @@ const eventLabels = {
                         </div>
                     </div>
                 </div>
+            </UiCard>
+
+            <!-- ------------------------------------- greetings and announcements -->
+            <UiCard v-if="promotionalMail">
+                <template #header>
+                    <h2 class="text-base font-semibold">Email from us</h2>
+                </template>
+                <UiSwitch
+                    :model-value="promotionalMail.receiving"
+                    label="Greetings and announcements"
+                    description="A greeting on national days and festivals, and now and then news about our courses, products and services. Turning this off does not stop messages about your account, such as codes, receipts and reminders."
+                    @update:model-value="(receive) => router.put('/settings/mail', { receive }, { preserveScroll: true })"
+                />
             </UiCard>
 
             <!-- --------------------------------------------------- sessions -->

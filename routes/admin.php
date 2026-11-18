@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\BatchPerformanceController;
 use App\Http\Controllers\Admin\BatchRunController;
 use App\Http\Controllers\Admin\BillingController;
+use App\Http\Controllers\Admin\BroadcastController;
 use App\Http\Controllers\Admin\CertificateTemplateController;
 use App\Http\Controllers\Admin\ChangeRequestController;
 use App\Http\Controllers\Admin\ChatReportController;
@@ -32,6 +33,7 @@ use App\Http\Controllers\Admin\LegalDocumentController;
 use App\Http\Controllers\Admin\LicenceController;
 use App\Http\Controllers\Admin\MediaController;
 use App\Http\Controllers\Admin\MeetingController;
+use App\Http\Controllers\Admin\OccasionController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageCopyController;
 use App\Http\Controllers\Admin\PeopleController;
@@ -55,6 +57,7 @@ use App\Http\Controllers\Admin\StatementController;
 use App\Http\Controllers\Admin\StudentNoticeController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\SupportController;
+use App\Http\Controllers\Admin\SuppressionController;
 use App\Http\Controllers\Admin\TdsController;
 use App\Http\Controllers\Admin\TeamMemberController;
 use Illuminate\Support\Facades\Route;
@@ -378,6 +381,33 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('billing/{payment}/offline', [BillingController::class, 'recordOffline'])->name('billing.offline');
             Route::post('billing/tds/{deduction}/check', [TdsController::class, 'check'])->whereNumber('deduction')->name('billing.tds.check');
             Route::post('invoices/{invoice}/credit-notes', [CreditNoteController::class, 'store'])->whereNumber('invoice')->name('credit-notes.store');
+        });
+
+        /* ---------------------------------- greetings and announcements (§8) */
+        Route::middleware('permission:mail.broadcast')->prefix('mail')->group(function () {
+            Route::get('broadcasts', [BroadcastController::class, 'index'])->name('mail.broadcasts.index');
+            Route::get('broadcasts/new', [BroadcastController::class, 'create'])->name('mail.broadcasts.create');
+            Route::post('broadcasts', [BroadcastController::class, 'store'])->name('mail.broadcasts.store');
+            Route::get('broadcasts/{campaign}', [BroadcastController::class, 'show'])->whereNumber('campaign')->name('mail.broadcasts.show');
+            Route::get('broadcasts/{campaign}/edit', [BroadcastController::class, 'edit'])->whereNumber('campaign')->name('mail.broadcasts.edit');
+            Route::put('broadcasts/{campaign}', [BroadcastController::class, 'update'])->whereNumber('campaign')->name('mail.broadcasts.update');
+            Route::post('broadcasts/{campaign}/cancel', [BroadcastController::class, 'cancel'])->whereNumber('campaign')->name('mail.broadcasts.cancel');
+            Route::post('audience/count', [BroadcastController::class, 'count'])->middleware('throttle:60,1,audience')->name('mail.audience.count');
+            Route::post('preview', [BroadcastController::class, 'preview'])->name('mail.preview');
+            Route::post('test', [BroadcastController::class, 'test'])->middleware('throttle:10,1,mail-test')->name('mail.test');
+            Route::post('enquiries', [BroadcastController::class, 'enquiries'])->name('mail.enquiries');
+
+            Route::get('suppressions', [SuppressionController::class, 'index'])->name('mail.suppressions.index');
+            Route::post('suppressions', [SuppressionController::class, 'store'])->name('mail.suppressions.store');
+            Route::delete('suppressions/{suppression}', [SuppressionController::class, 'destroy'])->whereNumber('suppression')->name('mail.suppressions.destroy');
+        });
+        Route::middleware('permission:mail.occasions')->prefix('mail')->group(function () {
+            Route::get('occasions', [OccasionController::class, 'index'])->name('mail.occasions.index');
+            Route::post('occasions', [OccasionController::class, 'store'])->name('mail.occasions.store');
+            Route::put('occasions/{occasion}', [OccasionController::class, 'update'])->whereNumber('occasion')->name('mail.occasions.update');
+            Route::delete('occasions/{occasion}', [OccasionController::class, 'destroy'])->whereNumber('occasion')->name('mail.occasions.destroy');
+            Route::get('occasions/{occasion}/preview', [OccasionController::class, 'preview'])->whereNumber('occasion')->name('mail.occasions.preview');
+            Route::post('occasions/{occasion}/test', [OccasionController::class, 'test'])->whereNumber('occasion')->middleware('throttle:10,1,mail-test')->name('mail.occasions.test');
         });
 
         /* ------------------------------------------------------------- shop */

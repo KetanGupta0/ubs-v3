@@ -73,6 +73,19 @@ return [
     ],
 
     /*
+    | Greetings and announcements by email (§8). The hosting's mail allows a
+    | hundred a day in all (X8), and sign in codes, receipts and reminders must
+    | never wait behind a greeting, so promotional mail has a smaller daily
+    | budget of its own and goes out a few at a time. Raise the budget when a
+    | mail provider is set up. Nobody gets more than a couple a week.
+    */
+    'mail' => [
+        'promotional_daily_limit' => (int) env('MAIL_PROMOTIONAL_DAILY_LIMIT', 60),
+        'promotional_per_week' => 2,
+        'per_run' => 15,
+    ],
+
+    /*
     | TDS a client may declare on one of our invoices (CL14), by section, at
     | the rate for a resident company deducting from us. Rates change with
     | Finance Acts: change them here, never in the code that applies them.

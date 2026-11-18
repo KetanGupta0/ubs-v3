@@ -62,6 +62,10 @@ class PermissionSeeder extends Seeder
                 'billing.manage' => 'Raise payment requests and issue invoices',
                 'billing.refund' => 'Process refunds',
             ],
+            'Mail' => [
+                'mail.broadcast' => 'Write and send announcements by email, and keep the do-not-mail list',
+                'mail.occasions' => 'Set the greeting days and their greetings',
+            ],
             'Shop' => [
                 'orders.view' => 'View shop orders and licences',
                 'orders.manage' => 'Cancel orders, and withdraw, restore or extend licences',

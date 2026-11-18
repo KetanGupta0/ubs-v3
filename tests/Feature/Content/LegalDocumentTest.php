@@ -179,20 +179,31 @@ it('lets staff read any version as a preview, kept out of search', function () {
 });
 
 it('starts the editor from the words in force, and throws a draft away', function () {
-    $this->actingAs($this->owner)->get('/admin/legal/privacy')
+    // The terms: the privacy policy starts with version 2 drafted for greetings (§8, X19).
+    $this->actingAs($this->owner)->get('/admin/legal/terms')
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('admin/legal/Edit')
             ->where('document.nextNumber', 2)
-            ->where('form.body', legalDocument('privacy')->current->body)
+            ->where('form.body', legalDocument('terms')->current->body)
             ->where('form.change_note', '')
             ->has('history', 1));
 
-    writeLegal($this, 'privacy');
-    $this->actingAs($this->owner)->delete('/admin/legal/privacy/draft')->assertRedirect('/admin/legal/privacy');
+    writeLegal($this, 'terms');
+    $this->actingAs($this->owner)->delete('/admin/legal/terms/draft')->assertRedirect('/admin/legal/terms');
 
-    expect(legalDocument('privacy')->draft)->toBeNull()
-        ->and(legalDocument('privacy')->current->version)->toBe(1);
+    expect(legalDocument('terms')->draft)->toBeNull()
+        ->and(legalDocument('terms')->current->version)->toBe(1);
+});
+
+it('starts with version 2 of the privacy policy drafted, for the owner to read and publish', function () {
+    $this->actingAs($this->owner)->get('/admin/legal/privacy')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('form.body', fn ($body) => str_contains($body, '## Greetings and announcements by email'))
+            ->where('form.change_note', fn ($note) => str_starts_with($note, 'Says that we email greetings')));
+
+    expect(legalDocument('privacy')->current->version)->toBe(1);
 });
 
 it('lists the documents for staff who may edit them, and nobody else', function () {
@@ -212,5 +223,6 @@ it('lists the documents for staff who may edit them, and nobody else', function 
     $legal->permissions()->attach(Permission::query()->where('key', 'legal.manage')->sole());
     $this->actingAs($legal->fresh())->get('/admin/legal/terms')->assertOk();
 
-    expect(LegalDocumentVersion::query()->where('status', 'draft')->count())->toBe(0);
+    // Only the privacy policy's drafted version 2; the refused attempt left nothing.
+    expect(LegalDocumentVersion::query()->where('status', 'draft')->count())->toBe(1);
 });

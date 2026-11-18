@@ -97,6 +97,9 @@ class HandleInertiaRequests extends Middleware
                     'id', 'name', 'email', 'mobile', 'role', 'avatar_url',
                 ]),
 
+                // For the bell: how many notifications nobody has opened yet.
+                'unreadNotifications' => fn () => $request->user()?->unreadNotifications()->count() ?? 0,
+
                 /*
                  * What this account may do, so the navigation can leave out
                  * what it cannot. This is presentation only; every route is

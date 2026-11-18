@@ -54,6 +54,10 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Unauthenticated web requests land on the single sign in form.
         $middleware->redirectGuestsTo(fn () => route('login'));
+
+        // A mail app's own unsubscribe button posts here with no session (RFC
+        // 8058). The link's signature is what protects it (§8).
+        $middleware->validateCsrfTokens(except: ['unsubscribe/*']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

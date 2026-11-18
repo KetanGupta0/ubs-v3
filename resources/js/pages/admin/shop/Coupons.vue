@@ -159,9 +159,9 @@ const tone = (state) => ({ On: 'success', Off: 'neutral', Ended: 'neutral', 'Not
                 <UiFormField label="Only on" :hint="restricted ? 'Takes off only what is in these.' : 'Nothing ticked: everything sold.'" :error="form.errors.solution_ids">
                     <div class="max-h-40 space-y-1.5 overflow-y-auto rounded-[var(--radius-control)] border p-3" style="border-color: var(--border-subtle)">
                         <p v-if="categories.length" class="text-xs font-medium" style="color: var(--text-muted)">Categories</p>
-                        <UiCheckbox v-for="category in categories" :key="`c${category.value}`" v-model="form.category_ids" :value="category.value" :label="category.label" class="flex" />
+                        <div v-for="category in categories" :key="`c${category.value}`"><UiCheckbox v-model="form.category_ids" :value="category.value" :label="category.label" /></div>
                         <p v-if="solutions.length" class="pt-1 text-xs font-medium" style="color: var(--text-muted)">Products</p>
-                        <UiCheckbox v-for="solution in solutions" :key="`s${solution.value}`" v-model="form.solution_ids" :value="solution.value" :label="solution.label" class="flex" />
+                        <div v-for="solution in solutions" :key="`s${solution.value}`"><UiCheckbox v-model="form.solution_ids" :value="solution.value" :label="solution.label" /></div>
                     </div>
                 </UiFormField>
 

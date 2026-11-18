@@ -10,13 +10,14 @@
 import { ref, computed, onMounted, nextTick } from 'vue';
 import { Link, router, usePage } from '@inertiajs/vue3';
 import {
-    Bell, LogOut, Settings, ShieldCheck, PanelLeftClose, PanelLeft,
+    LogOut, Settings, ShieldCheck, PanelLeftClose, PanelLeft,
     MoreHorizontal, ChevronRight, ChevronDown,
 } from 'lucide-vue-next';
 
 import BrandLogo from '@/components/Brand/BrandLogo.vue';
 import BrandMark from '@/components/Brand/BrandMark.vue';
 import NavItem from '@/components/Nav/NavItem.vue';
+import NotificationBell from '@/components/Nav/NotificationBell.vue';
 import SearchPalette from '@/components/Search/SearchPalette.vue';
 import ThemeToggle from '@/components/Nav/ThemeToggle.vue';
 import UiAvatar from '@/components/UI/UiAvatar.vue';
@@ -236,15 +237,7 @@ onMounted(() => {
 
                         <span class="hidden sm:contents"><ThemeToggle /></span>
 
-                        <button
-                            type="button"
-                            class="relative inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-[var(--surface-sunken)]"
-                            style="color: var(--text-muted)"
-                            aria-label="Notifications"
-                        >
-                            <Bell class="h-[18px] w-[18px]" />
-                            <span class="absolute right-2 top-2 h-1.5 w-1.5 rounded-full bg-accent-500" />
-                        </button>
+                        <NotificationBell />
 
                         <UiDropdown>
                             <template #trigger>

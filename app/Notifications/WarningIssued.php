@@ -59,6 +59,11 @@ class WarningIssued extends Notification implements ShouldQueue
     {
         return [
             'kind' => 'warning.issued',
+            'title' => match ($this->warning->level) {
+                'escalation' => 'An escalation about your course',
+                'warning' => 'A warning about your course',
+                default => 'A notice about your course',
+            },
             'level' => $this->warning->level,
             'reason' => $this->warning->reason,
             'url' => '/student/warnings',
