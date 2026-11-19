@@ -24,14 +24,25 @@ Google, and optional two factor authentication.
 
 ## Stack
 
-Laravel 13, Inertia.js 3, Vue 3, Vite 8, Tailwind CSS 4, MySQL 8, Redis, Laravel Reverb
-for realtime, Sanctum for the mobile APIs.
+Laravel 13, Inertia.js 3, Vue 3, Vite 8, Tailwind CSS 4, MySQL 8, Sanctum for the apps'
+API, Pest and Pint.
+
+Production is **Hostinger shared hosting**: no long running processes, so the queue is
+worked by the scheduler from one cron entry, realtime chat goes through Pusher Channels,
+mail is Hostinger's own within a daily limit set in the admin panel, errors go to Sentry
+and UptimeRobot watches `/health`. Locally, Laravel Reverb stands in for Pusher.
 
 ## Documentation
 
 | Document | Contents |
 | --- | --- |
-| [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) | Phase by phase build plan, brand identity, technology decisions, risks |
+| [`CLAUDE.md`](CLAUDE.md) | Working notes: the conventions and the rules that are easy to break, module by module |
+| [`docs/PROJECT_PLAN.md`](docs/PROJECT_PLAN.md) | Phase by phase build plan, brand, technology decisions, and what landed differently |
+| [`docs/EXPANSION_PLAN.md`](docs/EXPANSION_PLAN.md) | Everything after the plan: client management, the shop, mail, AI features, and every decision taken (X1 to X25) |
+| [`docs/HOSTING.md`](docs/HOSTING.md) | Shared hosting: what it allows, the deploy runbook, monitoring, backups and restoring |
+| [`docs/MIGRATION_PLAN.md`](docs/MIGRATION_PLAN.md) | Bringing v2's data across, reconciliation and the cutover runbook |
+| [`docs/API.md`](docs/API.md) and [`docs/api/openapi.yaml`](docs/api/openapi.yaml) | The API for the apps: a guide, and the OpenAPI contract the tests hold the server to |
+| [`docs/LICENCE_API.md`](docs/LICENCE_API.md) | How software we sell checks its licence key |
 | [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | Indicative database schema across all modules |
 
 ## Running it
@@ -39,13 +50,17 @@ for realtime, Sanctum for the mobile APIs.
 ```sh
 composer install && npm install
 cp .env.example .env && php artisan key:generate
-php artisan migrate && php artisan db:seed --class=DemoTableSeeder
+php artisan migrate --seed                          # demo accounts and data
+php artisan db:seed --class=DemoTableSeeder         # optional: rows for the /design table
 npm run dev        # and, in another shell:
 php artisan serve
 php artisan reverb:start   # and in a third, for live chat
 ```
 
 Then open `/` for the site and `/design` for the live component gallery.
+
+Before pushing: `vendor/bin/pint`, `php artisan test` and `npm run build`. After a deploy:
+`php artisan app:preflight`, which checks the install for production.
 
 ## Demo accounts
 
@@ -62,7 +77,7 @@ time code can be read straight out of the log.
 
 ## Status
 
-**Phases 0 to 7 are complete.**
+**Every phase of the plan is complete, and so are the expansion steps A to I.**
 
 Phase 0 built the foundation: brand identity and logo set, design tokens with
 full light and dark themes, a component library, the shared server driven table
@@ -106,16 +121,30 @@ all of it.
 Phase 6 built realtime chat: one thread per client and per project, one group
 per batch, text, photos and voice notes and nothing else, waveforms recorded in
 the browser, delivered and read receipts, typing indicators, presence, unread
-counts, reply quoting and a shared media gallery — over Laravel Reverb, with a
-polling fallback so a bad network costs a few seconds rather than the feature.
+counts, reply quoting and a shared media gallery, with a polling fallback so a
+bad network costs a few seconds rather than the feature.
 
 Phase 7 built reporting, search and exports: one search box that answers with
 whatever the person in front of it is allowed to find, saved views that keep a
-filter set and can be shared with the team, and a library of seven reports —
-revenue, receivables, project health, batch performance, attendance, the
-enrolment funnel and certificates issued — each with headline figures, charts
-whose palette was checked rather than chosen, the rows behind them, downloads in
-three formats, a print stylesheet, and the option to have it arrive by email on
-a cadence.
+filter set and can be shared with the team, and a library of reports, each with
+headline figures, charts whose palette was checked rather than chosen, the rows
+behind them, downloads in three formats, a print stylesheet, and the option to
+have it arrive by email on a cadence.
 
-Phases 8 and 9 are described in the plan. Phase 8 is the mobile API.
+After the plan, the expansion steps (`docs/EXPANSION_PLAN.md`) brought across v2's
+data with an importer that reconciles to the paisa; made a client an organisation
+with roles, agreements and proposals signed by a one time code over the PDF as
+sent, milestone acceptance that raises its invoice, meetings with minutes, change
+requests, staging feedback, Indian B2B billing with TDS and credit notes,
+renewals, handovers and service reports; added a shop selling source code by
+licence tier with coupons, licence keys, signed downloads and a licence check API;
+greetings and announcements by mail within the day's budget; quiz integrity checks,
+proctored quizzes with a lockdown, Safe Exam Browser and a live console, AI review
+of flagged attempts, and a website assistant answering from the catalogue.
+
+Phase 8 made the API ready for the apps: an OpenAPI contract the tests hold the
+server to, device tokens with refresh and sign out, ETags, and every file
+reachable by token. Phase 9 hardened it for the live site: a content security
+policy and security headers, a router audit, WCAG 2.2 AA in both themes, an N+1
+guard, dependency updates, Sentry and a health check, the daily mail limit, and
+the deploy and backup runbooks for shared hosting.
