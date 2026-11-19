@@ -160,6 +160,10 @@ function remove(quiz) {
                         <UiButton :href="`/admin/proctoring/quizzes/${quiz.id}`" variant="ghost" size="xs">
                             Proctoring
                         </UiButton>
+                        <UiButton :href="`${base}/quizzes/${quiz.id}/integrity`" variant="ghost" size="xs">
+                            Integrity
+                            <UiBadge v-if="quiz.flagged" tone="warning" size="sm" class="ml-1">{{ quiz.flagged }}</UiBadge>
+                        </UiButton>
                         <UiButton variant="ghost" size="xs" :aria-label="`Settings for ${quiz.title}`" @click="openForm(quiz)">
                             <Pencil class="h-3.5 w-3.5" />
                         </UiButton>

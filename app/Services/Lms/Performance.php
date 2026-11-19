@@ -68,6 +68,7 @@ class Performance
         $attempts = QuizAttempt::query()
             ->where('user_id', $student->id)
             ->whereNotNull('submitted_at')
+            ->counted()
             ->whereHas('quiz', fn (Builder $query) => $query->where('course_id', $course->id)
                 ->where(fn (Builder $inner) => $inner->whereNull('batch_id')->orWhere('batch_id', $enrolment->batch_id)))
             ->with('quiz:id,title')
@@ -293,7 +294,8 @@ class Performance
                 ->whereColumn('quiz_attempts.user_id', 'enrollments.user_id')
                 ->where('quizzes.course_id', $batch->course_id)
                 ->where(fn ($query) => $query->whereNull('quizzes.batch_id')->orWhere('quizzes.batch_id', $batch->id))
-                ->whereNotNull('quiz_attempts.submitted_at'),
+                ->whereNotNull('quiz_attempts.submitted_at')
+                ->whereNull('quiz_attempts.voided_at'),
             'points' => LeaderboardPoint::query()
                 ->selectRaw('coalesce(sum(points), 0)')
                 ->whereColumn('leaderboard_points.user_id', 'enrollments.user_id')

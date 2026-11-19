@@ -68,6 +68,7 @@ class AssessmentController extends Controller
                     'allowBack' => $quiz->allow_back,
                     'answersAfterClose' => $quiz->answers_after_close,
                     'proctoring' => $quiz->proctoring,
+                    'flagged' => $quiz->attempts()->whereNotNull('flagged_at')->whereDoesntHave('decision', fn ($query) => $query->whereNotNull('final_at'))->count(),
                     'showAnswers' => $quiz->show_answers,
                     'opensAt' => $quiz->opens_at?->format('Y-m-d\TH:i'),
                     'closesAt' => $quiz->closes_at?->format('Y-m-d\TH:i'),

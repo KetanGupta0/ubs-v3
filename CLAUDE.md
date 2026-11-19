@@ -617,6 +617,23 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   messages, adds time (an hour at most at once) or ends an attempt, each with a reason
   through `Auditor`; an ended attempt is marked as it stands, the student is told why,
   and a resit is the trainer's decision.
+- **The AI reads a flagged attempt with nobody named (§9.1, layer 3).** `AiReview` sends
+  flagged attempts, or one a trainer asks about, through the Message Batches API at half
+  price; `App\Services\Ai\ClaudeBatches` is the only class that touches the SDK, and the
+  tests stand in for it. `payload()` labels students A, B, … and takes names, emails and
+  numbers out of free text; no address or id goes. The answer is held to
+  `AiReview::SCHEMA` (a risk, evidence pointing at something specific, the innocent
+  readings weighed), and the prompt forbids saying an answer was written by an AI. It
+  advises a person, never changes a score, never reaches the student, and everything
+  around it works without `ANTHROPIC_API_KEY`.
+- **A person decides, and the student is told (§9.1, layer 4).** `IntegrityDecisions`:
+  cleared, to discuss, voided (with a resit if allowed) or a warning on the ladder, each
+  audited. The student reads the outcome and the reason, never the note, and replies
+  once before it is final; a first decision to clear is final and not sent, because
+  nothing was ever said to them. A voided attempt stays on the record and counts for
+  nothing: read scores through `QuizAttempt::counted()` (best attempt, content gate,
+  performance, result card), and a quiz's points follow the attempts that count
+  (`recountPoints()`), so changing the decision gives back what voiding took.
 - **Safe Exam Browser is checked on every request of the attempt (X10).** Each carries
   a SHA-256 of its own full address followed by the configuration key or the browser
   exam key, compared in `Proctoring::inSafeExamBrowser()` with the keys on the quiz; the

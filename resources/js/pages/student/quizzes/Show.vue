@@ -196,8 +196,9 @@ async function start() {
 
                         <span class="tnum text-sm">{{ attempt.score }} / {{ attempt.totalMarks }}</span>
 
+                        <UiBadge v-if="attempt.voided" tone="warning" size="sm">does not count</UiBadge>
                         <UiBadge
-                            v-if="attempt.needsReview"
+                            v-else-if="attempt.needsReview"
                             size="sm"
                         >
                             being marked

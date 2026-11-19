@@ -748,6 +748,19 @@ Both features use the Claude API through the official PHP SDK
 - *Safe Exam Browser is checked from its request headers, which the tests fake. It
   needs one run in Safe Exam Browser itself, on Windows or macOS, before the first
   final assessment.*
+- *The AI review and the trainer's decision (layers 3 and 4), built 2026-11-19. When the
+  checks flag attempts, the batch's trainer is told, and each flagged attempt goes to the
+  AI with the next batch, at half price, with no name, address or contact detail in it;
+  it comes back with how worried to be, evidence pointing at questions and moments, and
+  the innocent readings it weighed. A quiz's Integrity page lists them, the most
+  worrying first; an attempt's page shows the flags, the AI's reading, the answers
+  beside those matched, and the timeline. The trainer clears it, asks to talk, voids it
+  (with a resit if they allow) or issues a warning on the ladder; the student is told
+  what and why, never the note, and can reply once before it is final. A voided attempt
+  stays on the record and counts for nothing, points included.*
+- *The AI is off until the owner adds `ANTHROPIC_API_KEY`; the checks, the screens and
+  the decisions work without it. The request was checked through the real SDK against a
+  stand-in for the API; one real batch should be sent once the key is in.*
 
 ### 9.1a Proctored quizzes: lockdown and live camera
 

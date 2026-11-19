@@ -79,6 +79,19 @@ return [
     | budget of its own and goes out a few at a time. Raise the budget when a
     | mail provider is set up. Nobody gets more than a couple a week.
     */
+    /*
+    | The AI features (§9, X3). Quiz review reads a flagged attempt on Opus,
+    | through the Message Batches API at half price, because nothing waits on
+    | it; the visitor assistant answers every message, so it is on Sonnet.
+    */
+    'ai' => [
+        'review_model' => env('AI_REVIEW_MODEL', 'claude-opus-5-5'),
+        'review_effort' => 'high',
+        // Attempts sent to the AI in one batch, and how many a quiz sends at most.
+        'review_batch_size' => 100,
+        'assistant_model' => env('AI_ASSISTANT_MODEL', 'claude-sonnet-5-5'),
+    ],
+
     'mail' => [
         'promotional_daily_limit' => (int) env('MAIL_PROMOTIONAL_DAILY_LIMIT', 60),
         'promotional_per_week' => 2,

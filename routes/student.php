@@ -117,6 +117,11 @@ Route::middleware(['auth', 'password.owned', 'role:student'])
             Route::post('quizzes/{quiz}/attempts/{attempt}/next', [QuizController::class, 'next'])->whereNumber(['quiz', 'attempt'])->name('quizzes.next');
         });
         Route::post('quizzes/{quiz}/attempts/{attempt}/here', [QuizController::class, 'here'])->whereNumber(['quiz', 'attempt'])->name('quizzes.here');
+        // The one reply to what a trainer decided about an attempt (§9.1).
+        Route::post('quizzes/{quiz}/attempts/{attempt}/integrity-reply', [QuizController::class, 'reply'])
+            ->whereNumber(['quiz', 'attempt'])
+            ->middleware('throttle:5,1,integrity-reply')
+            ->name('quizzes.integrity-reply');
         Route::get('quizzes/{quiz}/attempts/{attempt}/review', [QuizController::class, 'review'])
             ->whereNumber('quiz')
             ->whereNumber('attempt')

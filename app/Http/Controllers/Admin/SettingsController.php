@@ -72,6 +72,7 @@ class SettingsController extends Controller
                     'detail' => config('broadcasting.default') === 'pusher' ? 'Pusher' : config('broadcasting.default').' (polling on shared hosting)',
                 ],
                 ['name' => 'Human check on registration forms', 'configured' => HumanCheck::enabled(), 'detail' => 'Cloudflare Turnstile'],
+                ['name' => 'AI review of flagged quiz attempts', 'configured' => filled(config('services.anthropic.key')), 'detail' => 'Claude API'],
             ],
         ]);
     }

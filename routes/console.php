@@ -29,6 +29,10 @@ Schedule::command('mail:send-promotional', ['--remind'])->dailyAt('10:20');
 // attempts are compared (§9.1).
 Schedule::command('quizzes:check-integrity')->everyFifteenMinutes()->withoutOverlapping(15);
 
+// The AI's reading of what the checks flagged, through the Message Batches
+// API: sent a few minutes after, read back once the batch has ended (§9.1).
+Schedule::command('quizzes:ai-review')->everyFifteenMinutes()->withoutOverlapping(15);
+
 /*
  * Hourly, so a report set for seven in the morning arrives at seven. Each
  * schedule decides for itself whether it is due.

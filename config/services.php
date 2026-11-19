@@ -79,4 +79,13 @@ return [
         'secret' => env('TURNSTILE_SECRET_KEY'),
     ],
 
+    /*
+     * The Claude API (§9): reviewing flagged quiz attempts, and the visitor
+     * assistant. Off until the key is set, and everything that uses it works
+     * without it. Which model does what is in config/company.php.
+     */
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+    ],
+
 ];

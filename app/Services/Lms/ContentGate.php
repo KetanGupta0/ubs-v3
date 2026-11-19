@@ -172,6 +172,7 @@ class ContentGate
         $this->bestScores = QuizAttempt::query()
             ->where('user_id', $this->student->id)
             ->whereNotNull('submitted_at')
+            ->counted()
             ->selectRaw('quiz_id, max(percent) as best')
             ->groupBy('quiz_id')
             ->pluck('best', 'quiz_id')

@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 
 class QuizAttempt extends Model
@@ -26,6 +28,7 @@ class QuizAttempt extends Model
             'consented_at' => 'datetime',
             'seen_at' => 'datetime',
             'live_state' => 'array',
+            'voided_at' => 'datetime',
             'option_orders' => 'array',
             'current_index' => 'integer',
             'flags' => 'array',
@@ -42,6 +45,33 @@ class QuizAttempt extends Model
     public function endedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'ended_by');
+    }
+
+    /** Attempts that count: every one except those voided after an integrity review (§9.1). */
+    public function scopeCounted(Builder $query): Builder
+    {
+        return $query->whereNull($this->qualifyColumn('voided_at'));
+    }
+
+    public function aiReviews(): HasMany
+    {
+        return $this->hasMany(QuizAiReview::class)->orderBy('id');
+    }
+
+    /** The newest AI review, whatever state it is in. */
+    public function latestAiReview(): HasOne
+    {
+        return $this->hasOne(QuizAiReview::class)->latestOfMany();
+    }
+
+    public function decision(): HasOne
+    {
+        return $this->hasOne(QuizIntegrityDecision::class);
+    }
+
+    public function isVoided(): bool
+    {
+        return $this->voided_at !== null;
     }
 
     public function isProctored(): bool

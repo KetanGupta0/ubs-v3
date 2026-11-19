@@ -7,6 +7,7 @@ use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
 use App\Services\Lms\AttemptEvents;
+use App\Services\Lms\IntegrityDecisions;
 use App\Services\Lms\Proctoring;
 use App\Services\Lms\QuizGrader;
 use Illuminate\Http\JsonResponse;
@@ -86,6 +87,7 @@ class QuizController extends StudentController
                 'passed' => $attempt->passed,
                 'needsReview' => $attempt->needs_review,
                 'at' => $attempt->submitted_at->format('j M Y, g:i a'),
+                'voided' => $attempt->isVoided(),
             ]),
         ]);
     }
@@ -347,6 +349,10 @@ class QuizController extends StudentController
 
         abort_if($done->isOpen(), 404);
 
+        // What a trainer decided, once the student has been told: the outcome
+        // and the reason, never the note (§9.1, layer 4).
+        $decision = $done->decision()->whereNotNull('told_at')->first();
+
         return Inertia::render('student/quizzes/Review', [
             'quiz' => [
                 'id' => $record->id,
@@ -367,7 +373,17 @@ class QuizController extends StudentController
                 // Ended by the proctor, or for leaving too often: said plainly.
                 'endedReason' => $done->ended_reason,
                 'endedByProctor' => $done->ended_by !== null,
+                'voided' => $done->isVoided(),
             ],
+            'integrity' => $decision ? [
+                'outcome' => $decision->outcome,
+                'reason' => $decision->reason,
+                'resit' => $decision->resit,
+                'at' => $decision->decided_at->format('j M Y'),
+                'awaitsReply' => $decision->awaitsReply(),
+                'reply' => $decision->reply,
+                'final' => $decision->isFinal(),
+            ] : null,
             // Answers, and the key, only once the attempt is closed, only if the
             // quiz was set to show them, and, where it waits for everybody, only
             // once it has closed for everybody (§9.1).
@@ -390,6 +406,28 @@ class QuizController extends StudentController
                 ])
                 : [],
         ]);
+    }
+
+    /** The one reply a student may make to what a trainer decided, before it is final. */
+    public function reply(Request $request, int $quiz, int $attempt, IntegrityDecisions $decisions): RedirectResponse
+    {
+        $record = $this->readable($request, $quiz);
+        $done = $this->ownAttempt($request, $record, $attempt);
+        $decision = $done->decision()->whereNotNull('told_at')->first();
+
+        abort_unless($decision !== null, 404);
+
+        $validated = $this->validatedInput($request, ['reply' => ['required', 'string', 'max:2000']], [
+            'reply.required' => 'Write what you would like your trainer to know.',
+        ]);
+
+        try {
+            $decisions->reply($decision, $this->student($request), trim($validated['reply']));
+        } catch (RuntimeException $e) {
+            return back()->withErrors(['reply' => $e->getMessage()]);
+        }
+
+        return back()->with('success', 'Sent. Your trainer reads it before the decision is final.');
     }
 
     /**

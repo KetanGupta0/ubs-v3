@@ -40,6 +40,7 @@ use App\Http\Controllers\Admin\PeopleController;
 use App\Http\Controllers\Admin\ProctoringController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProposalController;
+use App\Http\Controllers\Admin\QuizIntegrityController;
 use App\Http\Controllers\Admin\RegistrationFormController;
 use App\Http\Controllers\Admin\RenewalController;
 use App\Http\Controllers\Admin\ReportController;
@@ -495,6 +496,19 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('proctoring/quizzes/{quiz}/safe-exam-browser', [ProctoringController::class, 'uploadSebFile'])->whereNumber('quiz')->name('proctoring.seb');
             Route::post('proctoring/quizzes/{quiz}/slots', [ProctoringController::class, 'storeSlot'])->whereNumber('quiz')->name('proctoring.slots.store');
             Route::delete('proctoring/slots/{slot}', [ProctoringController::class, 'destroySlot'])->whereNumber('slot')->name('proctoring.slots.destroy');
+        });
+
+        /*
+         * What the integrity checks found (§9.1, layer 4). A trainer's work, so
+         * students.view, as marking is: looking, asking the AI, deciding.
+         */
+        Route::middleware('permission:students.view')->group(function () {
+            Route::get('courses/{course:id}/quizzes/{quiz}/integrity', [QuizIntegrityController::class, 'index'])->whereNumber('quiz')->name('quizzes.integrity');
+            Route::post('courses/{course:id}/quizzes/{quiz}/integrity/check', [QuizIntegrityController::class, 'check'])->whereNumber('quiz')->middleware('throttle:10,1,integrity-check')->name('quizzes.integrity.check');
+            Route::get('quiz-attempts/{attempt}/integrity', [QuizIntegrityController::class, 'show'])->whereNumber('attempt')->name('attempts.integrity');
+            Route::post('quiz-attempts/{attempt}/ai-review', [QuizIntegrityController::class, 'askAi'])->whereNumber('attempt')->middleware('throttle:20,1,ai-review')->name('attempts.ai-review');
+            Route::post('quiz-attempts/{attempt}/decision', [QuizIntegrityController::class, 'decide'])->whereNumber('attempt')->name('attempts.decide');
+            Route::post('quiz-attempts/{attempt}/decision/final', [QuizIntegrityController::class, 'finalise'])->whereNumber('attempt')->name('attempts.decision.final');
         });
 
         /*

@@ -231,6 +231,7 @@ class Quiz extends Model
         return $this->attempts()
             ->where('user_id', $user->id)
             ->whereNotNull('submitted_at')
+            ->counted()
             ->orderByDesc('percent')
             ->first();
     }

@@ -90,6 +90,7 @@ class ResultCard
             ->where('user_id', $enrolment->user_id)
             ->whereIn('quiz_id', $quizzes->pluck('id'))
             ->whereNotNull('submitted_at')
+            ->counted()
             ->get()
             ->groupBy('quiz_id')
             ->map(fn ($attempts) => $attempts->sortByDesc('percent')->first());
