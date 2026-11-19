@@ -56,7 +56,7 @@ function save() {
         </template>
 
         <div v-if="review && !editing" class="space-y-2">
-            <p class="inline-flex gap-0.5" :aria-label="`${review.rating} out of 5`">
+            <p class="inline-flex gap-0.5" role="img" :aria-label="`${review.rating} out of 5`">
                 <Star
                     v-for="n in 5"
                     :key="n"

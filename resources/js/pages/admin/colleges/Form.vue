@@ -169,7 +169,7 @@ function destroy() {
                     type="button"
                     @click="destroy"
                 >
-                    <template #leading><Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" /></template>
+                    <template #leading><Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" /></template>
                     Remove
                 </UiButton>
                 <span v-else />

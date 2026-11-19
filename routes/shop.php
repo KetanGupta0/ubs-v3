@@ -23,15 +23,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/cart', [CartController::class, 'show'])->name('cart');
 Route::post('/cart/lines', [CartController::class, 'add'])->middleware('throttle:60,1,cart')->name('cart.add');
-Route::delete('/cart/lines/{solution}', [CartController::class, 'remove'])->whereNumber('solution')->name('cart.remove');
+Route::delete('/cart/lines/{solution}', [CartController::class, 'remove'])->whereNumber('solution')->middleware('throttle:60,1,cart')->name('cart.remove');
 Route::post('/cart/coupons', [CartController::class, 'applyCoupon'])->middleware('throttle:20,1,coupons')->name('cart.coupons.apply');
-Route::delete('/cart/coupons/{code}', [CartController::class, 'removeCoupon'])->where('code', '[A-Za-z0-9_-]{1,40}')->name('cart.coupons.remove');
+Route::delete('/cart/coupons/{code}', [CartController::class, 'removeCoupon'])->where('code', '[A-Za-z0-9_-]{1,40}')->middleware('throttle:60,1,cart')->name('cart.coupons.remove');
 
 Route::middleware('guest')->group(function () {
     // Tight, because each one sends a message to an address somebody typed.
     Route::post('/checkout/code', [CheckoutController::class, 'sendCode'])->middleware('throttle:6,1,checkout-code')->name('checkout.code');
     Route::post('/checkout/code/verify', [CheckoutController::class, 'verify'])->middleware('throttle:20,1,checkout-verify')->name('checkout.verify');
-    Route::post('/checkout/restart', [CheckoutController::class, 'restart'])->name('checkout.restart');
+    Route::post('/checkout/restart', [CheckoutController::class, 'restart'])->middleware('throttle:20,1')->name('checkout.restart');
     Route::get('/checkout/sign-in', [CheckoutController::class, 'signIn'])->name('checkout.sign-in');
 });
 

@@ -13,7 +13,7 @@
     <link rel="manifest" href="/site.webmanifest">
 
     {{-- Set the theme before first paint so a dark mode visitor never sees a white flash. --}}
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         (function () {
             try {
                 var pref = localStorage.getItem('ubs.theme') || 'system';
@@ -28,7 +28,7 @@
         })();
     </script>
 
-    @routes
+    @routes(nonce: Vite::cspNonce())
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @inertiaHead
 </head>

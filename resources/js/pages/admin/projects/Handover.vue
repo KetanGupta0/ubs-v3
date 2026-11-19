@@ -58,7 +58,7 @@ const listError = (prefix) => Object.entries(form.errors).find(([key]) => key.st
                         <span style="color: var(--text-muted)">Published {{ state.publishedAt }}<template v-if="state.acknowledgedBy"> · last acknowledged by {{ state.acknowledgedBy }}, {{ state.acknowledgedAt }} (revision {{ state.acknowledgedRevision }})</template></span>
                     </template>
                 </div>
-                <p v-if="form.errors.handover" class="mt-3 text-sm font-medium text-danger-500" role="alert">{{ form.errors.handover }}</p>
+                <p v-if="form.errors.handover" class="mt-3 text-sm font-medium text-danger" role="alert">{{ form.errors.handover }}</p>
             </UiCard>
 
             <UiCard>
@@ -73,7 +73,7 @@ const listError = (prefix) => Object.entries(form.errors).find(([key]) => key.st
                         <UiTextarea v-model="form.environment_notes" :rows="6" />
                     </UiFormField>
                     <div class="rounded-xl p-4" style="background: var(--surface-sunken)">
-                        <p class="flex items-center gap-2 text-sm font-medium"><ShieldAlert class="h-4 w-4" style="color: var(--color-warn-600)" aria-hidden="true" /> Access</p>
+                        <p class="flex items-center gap-2 text-sm font-medium"><ShieldAlert class="h-4 w-4" style="color: var(--text-warning)" aria-hidden="true" /> Access</p>
                         <p class="mt-1 text-xs" style="color: var(--text-muted)">Say where access was shared and with whom, such as "hosting, registrar and repository owner access transferred to Rahul on 12 Nov". Never a password, key or token: one is refused on save.</p>
                         <UiFormField class="mt-3" label="Where access was shared" :error="form.errors.credentials_note">
                             <UiTextarea v-model="form.credentials_note" :rows="3" />

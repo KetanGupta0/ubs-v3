@@ -3,6 +3,7 @@
 use App\Http\Controllers\Account\NotificationController;
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Http\Controllers\ClientErrorController;
+use App\Http\Controllers\CspReportController;
 use App\Http\Controllers\DesignController;
 use App\Http\Controllers\Mail\MessageController;
 use App\Http\Controllers\Mail\UnsubscribeController;
@@ -45,6 +46,12 @@ Route::middleware(['auth', 'password.owned'])->group(function () {
 Route::post('client-errors', ClientErrorController::class)
     ->middleware('throttle:10,1,client-errors')
     ->name('client-errors');
+
+// What the content security policy blocked, posted by the browser without a
+// session or token (it is outside CSRF in bootstrap/app.php).
+Route::post('csp-reports', CspReportController::class)
+    ->middleware('throttle:20,1,csp-reports')
+    ->name('csp-reports');
 
 /*
  * Greetings and announcements (§8): stopping them from the link in one, which

@@ -19,7 +19,7 @@ defineProps({
 <style scoped>
 .cms-text :deep(p) { margin: 0 0 0.9em; line-height: 1.7; color: var(--text-base); }
 .cms-text :deep(p:last-child) { margin-bottom: 0; }
-.cms-text :deep(a) { color: var(--color-brand-600); text-decoration: underline; text-underline-offset: 2px; }
+.cms-text :deep(a) { color: var(--text-brand); text-decoration: underline; text-underline-offset: 2px; }
 .cms-text :deep(ul) { list-style: disc; padding-left: 1.4em; margin: 0 0 0.9em; }
 .cms-text :deep(ol) { list-style: decimal; padding-left: 1.4em; margin: 0 0 0.9em; }
 .cms-text :deep(li) { margin: 0.25em 0; line-height: 1.6; }

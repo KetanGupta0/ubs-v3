@@ -10,12 +10,13 @@ const props = defineProps({
     tone: { type: String, default: 'neutral' },
 });
 
+/* Text tokens, so a figure reads in both themes (Step I). */
 const tones = {
     neutral: 'var(--text-strong)',
-    brand: 'var(--color-brand-600)',
-    warning: 'var(--color-warn-600)',
-    danger: 'var(--color-danger-500)',
-    success: 'var(--color-signal-600)',
+    brand: 'var(--text-brand)',
+    warning: 'var(--text-warning)',
+    danger: 'var(--text-danger)',
+    success: 'var(--text-success)',
 };
 
 const colour = computed(() => tones[props.tone] ?? tones.neutral);

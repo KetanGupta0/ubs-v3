@@ -70,6 +70,7 @@ Route::post('two-factor-challenge', [TwoFactorChallengeController::class, 'store
     ->middleware('throttle:20,1')
     ->name('two-factor.challenge.store');
 Route::delete('two-factor-challenge', [TwoFactorChallengeController::class, 'destroy'])
+    ->middleware('throttle:20,1')
     ->name('two-factor.challenge.cancel');
 
 Route::middleware('auth')->group(function () {

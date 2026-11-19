@@ -244,7 +244,7 @@ function setStatus(status) {
                     <Link
                         :href="`/admin/clients/${project.client.id}`"
                         class="text-sm hover:underline"
-                        style="color: var(--color-brand-600)"
+                        style="color: var(--text-brand)"
                     >
                         {{ project.client.name }}
                     </Link>
@@ -261,7 +261,7 @@ function setStatus(status) {
                     </div>
                     <div>
                         <dt class="text-xs" style="color: var(--text-muted)">Target</dt>
-                        <dd class="font-medium" :style="project.overdue ? { color: 'var(--color-warn-600)' } : {}">
+                        <dd class="font-medium" :style="project.overdue ? { color: 'var(--text-warning)' } : {}">
                             {{ project.targetDate || '—' }}
                         </dd>
                     </div>
@@ -385,7 +385,7 @@ function setStatus(status) {
                                         class="h-[18px] w-[18px]"
                                         :style="{
                                             color: milestone.complete
-                                                ? 'var(--color-signal-500)'
+                                                ? 'var(--text-success)'
                                                 : milestone.overdue
                                                     ? 'var(--color-warn-500)'
                                                     : 'var(--border-strong)',
@@ -452,7 +452,7 @@ function setStatus(status) {
                                             <Pencil class="h-3 w-3" />
                                         </UiButton>
                                         <UiButton variant="ghost" size="xs" icon aria-label="Remove" @click="deleteMilestone(milestone)">
-                                            <Trash2 class="h-3 w-3" style="color: var(--color-danger-500)" />
+                                            <Trash2 class="h-3 w-3" style="color: var(--text-danger)" />
                                         </UiButton>
                                     </template>
                                 </div>
@@ -536,7 +536,7 @@ function setStatus(status) {
                                         aria-label="Remove update"
                                         @click="deleteUpdate(update)"
                                     >
-                                        <Trash2 class="h-3 w-3" style="color: var(--color-danger-500)" />
+                                        <Trash2 class="h-3 w-3" style="color: var(--text-danger)" />
                                     </UiButton>
                                 </div>
                             </li>

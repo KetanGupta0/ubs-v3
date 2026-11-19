@@ -60,7 +60,7 @@ const statusTones = { upcoming: 'brand', running: 'success', completed: 'neutral
                 </template>
 
                 <template #cell:seats="{ row }">
-                    <span :style="row.nearlyFull ? { color: 'var(--color-warn-600)' } : {}" class="tnum">{{ row.seats }}</span>
+                    <span :style="row.nearlyFull ? { color: 'var(--text-warning)' } : {}" class="tnum">{{ row.seats }}</span>
                 </template>
 
                 <template #rowActions="{ row }">

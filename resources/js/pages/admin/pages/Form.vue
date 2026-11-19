@@ -200,7 +200,7 @@ const adding = ref(false);
                         </div>
 
                         <div v-else-if="block.type === 'faq'" class="space-y-3">
-                            <p v-if="err(index, 'items')" class="text-sm" style="color: var(--color-danger-600)">{{ err(index, 'items') }}</p>
+                            <p v-if="err(index, 'items')" class="text-sm" style="color: var(--text-danger)">{{ err(index, 'items') }}</p>
                             <div v-for="(item, i) in block.items" :key="i" class="space-y-2 rounded-lg p-3" style="background: var(--surface-sunken)">
                                 <UiFormField :label="`Question ${i + 1}`" :error="form.errors[`blocks.${index}.items.${i}.question`]"><UiInput v-model="item.question" /></UiFormField>
                                 <UiFormField label="Answer" :error="form.errors[`blocks.${index}.items.${i}.answer`]"><UiTextarea v-model="item.answer" :rows="2" /></UiFormField>

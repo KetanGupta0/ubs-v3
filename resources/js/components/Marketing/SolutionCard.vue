@@ -42,7 +42,7 @@ const tone = computed(() => accentFor(props.solution.accent));
             <div class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
                     <p class="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span class="text-xs font-medium uppercase tracking-wide" :style="{ color: tone.solid }">
+                        <span class="text-xs font-medium uppercase tracking-wide" :style="{ color: tone.text }">
                             {{ solution.category }}
                         </span>
                         <span
@@ -55,7 +55,7 @@ const tone = computed(() => accentFor(props.solution.accent));
                         <span
                             v-if="solution.hasDemo"
                             class="rounded-full border px-2 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide"
-                            :style="{ borderColor: tone.border, color: tone.solid }"
+                            :style="{ borderColor: tone.border, color: tone.text }"
                         >
                             Live demo
                         </span>

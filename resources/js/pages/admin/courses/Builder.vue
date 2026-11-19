@@ -316,7 +316,7 @@ function lockSummary(lesson) {
                                 <Pencil class="h-3.5 w-3.5" />
                             </UiButton>
                             <UiButton variant="ghost" size="xs" @click="deleteModule(module)">
-                                <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                                <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                             </UiButton>
                         </div>
                     </div>
@@ -364,7 +364,7 @@ function lockSummary(lesson) {
                                         <button
                                             type="button"
                                             class="hover:underline"
-                                            style="color: var(--color-danger-500)"
+                                            style="color: var(--text-danger)"
                                             @click="deleteMaterial(material)"
                                         >
                                             remove
@@ -399,7 +399,7 @@ function lockSummary(lesson) {
                                     <Pencil class="h-3.5 w-3.5" />
                                 </UiButton>
                                 <UiButton variant="ghost" size="xs" @click="deleteLesson(lesson)">
-                                    <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                                    <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                                 </UiButton>
                             </div>
                         </div>

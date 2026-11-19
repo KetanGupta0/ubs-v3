@@ -208,7 +208,7 @@ function destroy() {
                         />
                     </div>
 
-                    <p v-if="data.errors.fields" class="text-sm text-danger-600">{{ data.errors.fields }}</p>
+                    <p v-if="data.errors.fields" class="text-sm text-danger">{{ data.errors.fields }}</p>
 
                     <div class="space-y-3 pt-2">
                         <div
@@ -252,7 +252,7 @@ function destroy() {
                             </UiFormField>
                         </div>
 
-                        <p v-if="data.errors.questions" class="text-sm text-danger-600">{{ data.errors.questions }}</p>
+                        <p v-if="data.errors.questions" class="text-sm text-danger">{{ data.errors.questions }}</p>
 
                         <UiButton variant="secondary" size="sm" :disabled="data.questions.length >= maxQuestions" @click="addQuestion">
                             <template #leading><Plus class="h-3.5 w-3.5" /></template>

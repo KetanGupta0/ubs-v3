@@ -91,7 +91,7 @@ function question() {
                 </div>
 
                 <p v-if="minutes.disputedAt" class="mt-4 flex gap-2 rounded-xl p-3 text-sm" style="background: var(--surface-sunken)">
-                    <MessageSquareWarning class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--color-warn-600)" aria-hidden="true" />
+                    <MessageSquareWarning class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--text-warning)" aria-hidden="true" />
                     <span>“{{ minutes.disputeNote }}” · {{ minutes.disputedBy }}, {{ minutes.disputedAt }}. We will send a corrected version.</span>
                 </p>
 

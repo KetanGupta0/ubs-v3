@@ -90,7 +90,7 @@ function move(index, direction) {
                     </button>
                     <button
                         type="button"
-                        class="rounded p-1.5 text-danger-500 transition hover:bg-red-50 dark:hover:bg-red-950/40"
+                        class="rounded p-1.5 text-danger transition hover:bg-red-50 dark:hover:bg-red-950/40"
                         aria-label="Remove this item"
                         @click="remove(index)"
                     >

@@ -107,7 +107,7 @@ function save() {
                 </li>
             </ol>
 
-            <p v-if="form.errors.items" class="text-sm text-danger-600">{{ form.errors.items }}</p>
+            <p v-if="form.errors.items" class="text-sm text-danger">{{ form.errors.items }}</p>
 
             <div class="flex flex-wrap items-center justify-between gap-2">
                 <UiButton variant="secondary" size="sm" :disabled="full" @click="add">

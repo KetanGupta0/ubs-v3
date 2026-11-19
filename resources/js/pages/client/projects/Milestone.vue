@@ -98,7 +98,7 @@ const states = {
 
                 <ul class="mt-4 space-y-2">
                     <li v-for="(item, index) in pending.deliverables" :key="index" class="flex items-start gap-2.5 text-sm">
-                        <CheckCircle2 class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--color-signal-500)" aria-hidden="true" />
+                        <CheckCircle2 class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--text-success)" aria-hidden="true" />
                         <span>{{ item }}</span>
                     </li>
                 </ul>
@@ -144,7 +144,7 @@ const states = {
             <UiCard v-if="history.length">
                 <h2 class="text-base font-semibold" style="color: var(--text-strong)">Answers so far</h2>
                 <ol class="mt-4 space-y-4">
-                    <li v-for="round in history" :key="round.id" class="border-l-2 pl-3" :style="{ borderColor: round.state === 'accepted' ? 'var(--color-signal-500)' : 'var(--border-strong)' }">
+                    <li v-for="round in history" :key="round.id" class="border-l-2 pl-3" :style="{ borderColor: round.state === 'accepted' ? 'var(--text-success)' : 'var(--border-strong)' }">
                         <p class="text-sm font-medium">
                             {{ round.state === 'accepted' ? 'Accepted' : 'Changes asked for' }}
                             <span class="font-normal" style="color: var(--text-muted)">by {{ round.decidedBy }}, {{ round.decidedAt }}</span>
@@ -174,7 +174,7 @@ const states = {
                 </UiFormField>
                 <div>
                     <UiCheckbox v-model="acceptForm.confirm" label="The work listed was delivered, and I accept it for my organisation." />
-                    <p v-if="acceptForm.errors.confirm" class="mt-1 text-xs font-medium text-danger-500">{{ acceptForm.errors.confirm }}</p>
+                    <p v-if="acceptForm.errors.confirm" class="mt-1 text-xs font-medium text-danger">{{ acceptForm.errors.confirm }}</p>
                 </div>
             </form>
             <template #footer>

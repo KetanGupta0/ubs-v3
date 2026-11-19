@@ -39,7 +39,7 @@ function check(row, matches) {
                     <span v-else>{{ row.invoice }}</span>
                 </template>
                 <template #cell:certificate_due_on="{ row }">
-                    <span :style="{ color: row.overdue ? 'var(--color-danger-500)' : null }">{{ row.certificate_due_on }}</span>
+                    <span :style="{ color: row.overdue ? 'var(--text-danger)' : null }">{{ row.certificate_due_on }}</span>
                 </template>
                 <template #cell:status="{ row }">
                     <div class="flex flex-wrap items-center gap-1.5">

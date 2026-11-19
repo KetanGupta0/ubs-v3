@@ -86,7 +86,7 @@ function submit() {
                     </p>
                     <ul class="space-y-1.5 text-sm">
                         <li v-for="(item, index) in assignment.checklist" :key="index" class="flex gap-2">
-                            <CheckCircle2 class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--color-signal-500)" />
+                            <CheckCircle2 class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--text-success)" />
                             <span>{{ item }}</span>
                         </li>
                     </ul>

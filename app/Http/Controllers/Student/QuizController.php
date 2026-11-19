@@ -157,7 +157,7 @@ class QuizController extends StudentController
 
         $locked = $record->one_at_a_time && ! $record->allow_back;
         $shown = $locked ? $paper->slice($open->current_index, 1) : $paper;
-        $saved = $open->answers()->whereIn('question_id', $shown->pluck('id'))->get()
+        $saved = $open->answers()->whereIn('question_id', $shown->pluck('id'))->with('question:id,type')->get()
             ->mapWithKeys(fn (QuizAnswer $answer) => [$answer->question_id => $this->forPage($answer)]);
 
         return Inertia::render('student/quizzes/Attempt', [

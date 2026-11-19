@@ -51,7 +51,7 @@ function stop(schedule) {
                                 {{ report.description }}
                             </p>
 
-                            <p class="mt-4 flex items-center gap-1 text-xs font-medium" style="color: var(--color-brand-600)">
+                            <p class="mt-4 flex items-center gap-1 text-xs font-medium" style="color: var(--text-brand)">
                                 Open
                                 <ArrowRight class="h-3 w-3" />
                             </p>
@@ -80,7 +80,7 @@ function stop(schedule) {
                             <span class="block text-xs" style="color: var(--text-muted)">
                                 {{ schedule.cadence }} at {{ schedule.hour }} · {{ schedule.recipients.join(', ') }}
                             </span>
-                            <span v-if="schedule.lastError" class="block text-xs" style="color: var(--color-danger-500)">
+                            <span v-if="schedule.lastError" class="block text-xs" style="color: var(--text-danger)">
                                 Last attempt failed: {{ schedule.lastError }}
                             </span>
                         </span>
@@ -91,7 +91,7 @@ function stop(schedule) {
                         </span>
 
                         <UiButton variant="ghost" size="xs" aria-label="Stop" @click="stop(schedule)">
-                            <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                            <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                         </UiButton>
                     </li>
                 </ul>

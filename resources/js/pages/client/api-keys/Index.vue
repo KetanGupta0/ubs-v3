@@ -147,7 +147,7 @@ const statusTones = { active: 'success', revoked: 'danger', rotated: 'neutral', 
                             Rotate
                         </UiButton>
                         <UiButton variant="ghost" size="xs" @click="revoke(key)">
-                            <template #leading><Ban class="h-3 w-3" style="color: var(--color-danger-500)" /></template>
+                            <template #leading><Ban class="h-3 w-3" style="color: var(--text-danger)" /></template>
                             Revoke
                         </UiButton>
                     </div>
@@ -159,7 +159,7 @@ const statusTones = { active: 'success', revoked: 'danger', rotated: 'neutral', 
                         :label="`${key.quotaUsed.toLocaleString('en-IN')} of ${key.quota.toLocaleString('en-IN')} calls this month`"
                         :tone="key.exceeded ? 'danger' : key.quotaPercent > 80 ? 'warning' : 'brand'"
                     />
-                    <p v-if="key.exceeded" class="mt-1.5 flex items-center gap-1.5 text-xs" style="color: var(--color-danger-500)">
+                    <p v-if="key.exceeded" class="mt-1.5 flex items-center gap-1.5 text-xs" style="color: var(--text-danger)">
                         <AlertTriangle class="h-3.5 w-3.5" />
                         Quota used up. Calls are being refused until the month rolls over.
                     </p>

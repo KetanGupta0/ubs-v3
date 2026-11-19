@@ -51,7 +51,7 @@ defineProps({
 
 <style scoped>
 .assistant-reply :deep(a) {
-    color: var(--color-brand-600);
+    color: var(--text-brand);
     text-decoration: underline;
 }
 .assistant-reply :deep(ul) {

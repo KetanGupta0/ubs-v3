@@ -66,7 +66,7 @@ function fileError() {
             <UiCard>
                 <div class="flex flex-wrap items-center gap-3 text-sm">
                     <UiBadge :tone="tones[item.status] ?? 'neutral'" dot>{{ item.statusLabel }}</UiBadge>
-                    <span v-if="item.dueOn" :style="{ color: item.overdue ? 'var(--color-warn-600)' : 'var(--text-muted)' }">
+                    <span v-if="item.dueOn" :style="{ color: item.overdue ? 'var(--text-warning)' : 'var(--text-muted)' }">
                         {{ item.overdue ? 'Was wanted by' : 'Wanted by' }} {{ item.dueOn }}
                     </span>
                     <span v-if="item.blocksWork && item.status === 'open'" style="color: var(--text-muted)">· work on this part waits for it</span>
@@ -78,7 +78,7 @@ function fileError() {
                 <h2 class="text-base font-semibold" style="color: var(--text-strong)">Your reply</h2>
 
                 <p v-if="item.kind === 'access'" class="mt-3 flex items-start gap-2 rounded-xl p-3 text-sm" style="background: var(--surface-sunken)">
-                    <AlertTriangle class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--color-warn-600)" aria-hidden="true" />
+                    <AlertTriangle class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--text-warning)" aria-hidden="true" />
                     <span>Please do not type passwords or keys here. Invite our team account to the system, or tell us how you would like to share access safely, and we will arrange it.</span>
                 </p>
 

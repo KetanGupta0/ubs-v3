@@ -50,7 +50,7 @@ const icons = { quiz: ClipboardList, assignment: FileText };
                 class="flex items-center gap-3 rounded-[var(--radius-card)] border px-4 py-3.5 transition hover:shadow-[var(--shadow-card)]"
                 style="border-color: var(--color-warn-500); background: var(--surface)"
             >
-                <AlertTriangle class="h-5 w-5 shrink-0" style="color: var(--color-warn-600)" />
+                <AlertTriangle class="h-5 w-5 shrink-0" style="color: var(--text-warning)" />
                 <span class="min-w-0 flex-1 text-sm">
                     There {{ unreadWarnings === 1 ? 'is a message' : `are ${unreadWarnings} messages` }}
                     from your trainer waiting for you.
@@ -196,7 +196,7 @@ const icons = { quiz: ClipboardList, assignment: FileText };
                 class="flex items-center gap-3 rounded-[var(--radius-card)] border px-4 py-3.5"
                 style="border-color: var(--border-subtle); background: var(--surface)"
             >
-                <CheckCircle2 class="h-5 w-5" style="color: var(--color-signal-500)" />
+                <CheckCircle2 class="h-5 w-5" style="color: var(--text-success)" />
                 <p class="text-sm">Nothing due right now. Good place to be.</p>
             </section>
 

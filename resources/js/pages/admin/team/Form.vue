@@ -115,7 +115,7 @@ function destroy() {
                 <FormSection title="Where they appear">
                     <UiSwitch v-model="form.on_about" label="On the About page" description="As part of the team." />
                     <UiSwitch v-model="form.is_mentor" label="On the Training page" description="As a mentor, with what they teach." />
-                    <p v-if="form.errors.on_about" class="text-sm text-danger-600">{{ form.errors.on_about }}</p>
+                    <p v-if="form.errors.on_about" class="text-sm text-danger">{{ form.errors.on_about }}</p>
                     <UiSwitch v-model="form.is_active" label="Shown" description="Turn off to take them off the site without losing what is written here." />
                     <UiFormField label="Order" hint="Lower numbers come first." :error="form.errors.sort_order">
                         <UiInput v-model="form.sort_order" type="number" min="0" class="max-w-32" />

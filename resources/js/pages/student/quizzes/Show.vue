@@ -150,7 +150,7 @@ async function start() {
 
                 <div v-if="proctoring && quiz.canAttempt && !openAttemptId && !blocked" class="mt-4">
                     <UiCheckbox v-model="agree" label="I have read how this quiz is proctored, and I agree." />
-                    <p v-if="errors.agree" class="mt-1 text-xs" style="color: var(--color-danger-500)">{{ errors.agree }}</p>
+                    <p v-if="errors.agree" class="mt-1 text-xs" style="color: var(--text-danger)">{{ errors.agree }}</p>
                 </div>
 
                 <div class="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -170,7 +170,7 @@ async function start() {
                     </p>
                 </div>
 
-                <p v-if="errors.quiz" class="mt-3 text-sm" role="alert" style="color: var(--color-danger-500)">{{ errors.quiz }}</p>
+                <p v-if="errors.quiz" class="mt-3 text-sm" role="alert" style="color: var(--text-danger)">{{ errors.quiz }}</p>
             </UiCard>
 
             <UiCard v-if="attempts.length">
@@ -185,7 +185,7 @@ async function start() {
                             :style="{
                                 color: attempt.needsReview
                                     ? 'var(--text-muted)'
-                                    : attempt.passed ? 'var(--color-signal-500)' : 'var(--color-danger-500)',
+                                    : attempt.passed ? 'var(--text-success)' : 'var(--text-danger)',
                             }"
                         />
 

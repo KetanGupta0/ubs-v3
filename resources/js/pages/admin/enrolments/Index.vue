@@ -162,7 +162,7 @@ const submitWaive = () => waiveForm.post(`/admin/enrolments/${current.value.id}/
                 </template>
 
                 <template #cell:fee="{ row }">
-                    <span :style="row.hasPaid ? {} : { color: 'var(--color-warn-600)' }">{{ row.fee }}</span>
+                    <span :style="row.hasPaid ? {} : { color: 'var(--text-warning)' }">{{ row.fee }}</span>
                 </template>
 
                 <template #cell:progress_percent="{ row }">
@@ -188,7 +188,7 @@ const submitWaive = () => waiveForm.post(`/admin/enrolments/${current.value.id}/
                             </span>
                             <UiBadge :tone="statusTones[row.status] ?? 'neutral'" size="sm" dot>{{ row.statusLabel }}</UiBadge>
                         </div>
-                        <p class="mt-2 text-xs" :style="row.hasPaid ? { color: 'var(--text-muted)' } : { color: 'var(--color-warn-600)' }">
+                        <p class="mt-2 text-xs" :style="row.hasPaid ? { color: 'var(--text-muted)' } : { color: 'var(--text-warning)' }">
                             Fee: {{ row.fee }} · {{ row.progress_percent }}% done
                         </p>
                     </button>

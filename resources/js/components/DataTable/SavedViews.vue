@@ -142,7 +142,7 @@ function remove(view) {
                     aria-label="Remove view"
                     @click.stop="remove(view)"
                 >
-                    <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                    <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                 </button>
             </div>
         </div>

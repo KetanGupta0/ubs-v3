@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Student;
 
-use App\Enums\Role;
 use App\Models\SupportTicket;
 use App\Models\TicketMessage;
 use App\Models\User;
@@ -85,7 +84,7 @@ class SupportController extends StudentController
             'status' => 'open',
         ]);
 
-        $staff = User::query()->role(Role::Admin)->active()->get()->filter(fn (User $user) => $user->hasPermission('support.manage'));
+        $staff = User::query()->holdingPermission('support.manage')->active()->get();
 
         if ($staff->isNotEmpty()) {
             Notification::send($staff, new TicketRaised($ticket));

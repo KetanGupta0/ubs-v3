@@ -45,7 +45,7 @@ defineProps({
                         <span
                             v-if="room.type === 'batch_group'"
                             class="inline-flex h-9 w-9 items-center justify-center rounded-full"
-                            style="background: var(--color-brand-50); color: var(--color-brand-600)"
+                            style="background: var(--color-brand-50); color: var(--text-brand)"
                         >
                             <Users class="h-4 w-4" />
                         </span>

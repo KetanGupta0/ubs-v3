@@ -29,7 +29,7 @@ defineProps({
                 class="rounded-[var(--radius-card)] border p-5"
                 style="border-color: var(--border-subtle); background: var(--surface)"
             >
-                <p class="inline-flex gap-0.5" :aria-label="`${review.rating} out of 5`">
+                <p class="inline-flex gap-0.5" role="img" :aria-label="`${review.rating} out of 5`">
                     <Star
                         v-for="n in 5"
                         :key="n"

@@ -62,7 +62,7 @@ function readAll() {
                 <Bell class="h-[18px] w-[18px]" />
                 <span
                     v-if="unread"
-                    class="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-500 px-1 text-[10px] font-semibold text-white tnum"
+                    class="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-accent-700 px-1 text-[10px] font-semibold text-white tnum"
                 >{{ unread > 99 ? '99+' : unread }}</span>
             </button>
         </template>

@@ -95,7 +95,7 @@ const priorityTones = { urgent: 'danger', high: 'warning', normal: 'neutral', lo
                             <p class="mb-1.5 text-xs font-medium" style="color: var(--text-muted)">Covered</p>
                             <ul class="space-y-1 text-sm">
                                 <li v-for="(item, index) in contract.scope" :key="index" class="flex gap-2">
-                                    <span aria-hidden="true" style="color: var(--color-signal-500)">✓</span>
+                                    <span aria-hidden="true" style="color: var(--text-success)">✓</span>
                                     <span>{{ item }}</span>
                                 </li>
                             </ul>

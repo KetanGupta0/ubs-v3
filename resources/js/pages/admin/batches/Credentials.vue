@@ -178,7 +178,7 @@ function issueDocument() {
                                     size="xs"
                                     @click="revoking = student"
                                 >
-                                    <Ban class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                                    <Ban class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                                 </UiButton>
                             </template>
 

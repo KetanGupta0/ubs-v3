@@ -67,7 +67,7 @@ const points = [
                 </ul>
             </div>
 
-            <div class="relative p-10 text-xs text-white/40">
+            <div class="relative p-10 text-xs text-white/60">
                 &copy; {{ new Date().getFullYear() }} Unboundbyte Solutions Private Limited
             </div>
         </aside>

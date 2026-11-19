@@ -144,7 +144,7 @@ const tones = { accepted: 'success', rejected: 'danger', sent: 'brand', draft: '
                     <Link
                         :href="`/admin/clients/${proposal.client.id}`"
                         class="text-sm hover:underline"
-                        style="color: var(--color-brand-600)"
+                        style="color: var(--text-brand)"
                     >
                         {{ proposal.client.name }}
                     </Link>
@@ -219,7 +219,7 @@ const tones = { accepted: 'success', rejected: 'danger', sent: 'brand', draft: '
                                             <Pencil class="h-3 w-3" />
                                         </UiButton>
                                         <UiButton variant="ghost" size="xs" icon aria-label="Remove line" @click="deleteItem(item)">
-                                            <Trash2 class="h-3 w-3" style="color: var(--color-danger-500)" />
+                                            <Trash2 class="h-3 w-3" style="color: var(--text-danger)" />
                                         </UiButton>
                                     </span>
                                 </td>

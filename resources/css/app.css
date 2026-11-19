@@ -106,9 +106,25 @@
     --border-strong: #CDD3E4;
     --text-strong: var(--color-ink-950);
     --text-base: var(--color-ink-700);
-    --text-muted: var(--color-ink-500);
+    /* A step past ink-500, so muted text reads at 4.5:1 on the sunken surface
+       and on the warning and danger washes too (WCAG 2.2 AA, Step I). */
+    --text-muted: #5E6992;
     --text-inverse: #FFFFFF;
     --ring: var(--color-brand-600);
+
+    /* Status and product colours as text: the palette's 500 and 600 steps are
+       for fills and icons, and are too light for small text on white. */
+    --text-warning: #B45309;
+    --text-danger: #B91C1C;
+    --text-success: #15803D;
+    /* Brand coloured words, such as "See all": 600 on white, 400 on dark. */
+    --text-brand: var(--color-brand-600);
+    --accent-text-brand: #4338CA;
+    --accent-text-accent: #0E7490;
+    --accent-text-violet: #6D28D9;
+    --accent-text-emerald: #047857;
+    --accent-text-amber: #B45309;
+    --accent-text-rose: #BE123C;
 
     /* -------------------------------------------------------------------
        Chart colours.
@@ -161,6 +177,17 @@
     --text-muted: #8792B8;
     --text-inverse: var(--color-ink-950);
     --ring: var(--color-brand-400);
+
+    --text-warning: #FBBF24;
+    --text-danger: #F87171;
+    --text-success: #4ADE80;
+    --text-brand: var(--color-brand-400);
+    --accent-text-brand: #A5B4FC;
+    --accent-text-accent: #67E8F9;
+    --accent-text-violet: #C4B5FD;
+    --accent-text-emerald: #6EE7B7;
+    --accent-text-amber: #FCD34D;
+    --accent-text-rose: #FDA4AF;
 
     /* The same six hues, re-stepped for a dark surface and re-checked. */
     --chart-1: #6366F1;
@@ -241,6 +268,20 @@
   border: 1px solid var(--border-subtle);
 }
 
+/* Status as text, from the tokens above: 4.5:1 or more in both themes. The
+   palette's own 500 and 600 steps are for fills, borders and badges. */
+@utility text-danger {
+  color: var(--text-danger);
+}
+
+@utility text-warning {
+  color: var(--text-warning);
+}
+
+@utility text-success {
+  color: var(--text-success);
+}
+
 @utility text-gradient {
   background-image: linear-gradient(100deg, var(--color-brand-500), var(--color-accent-400));
   -webkit-background-clip: text;
@@ -299,6 +340,9 @@
     --text-strong: #000000;
     --text-base: #18181B;
     --text-muted: #52525B;
+    --text-warning: #92400E;
+    --text-danger: #991B1B;
+    --text-success: #166534;
     --chart-grid: #D4D4D8;
     color-scheme: light;
   }

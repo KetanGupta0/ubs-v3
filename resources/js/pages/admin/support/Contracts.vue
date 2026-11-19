@@ -58,7 +58,7 @@ defineProps({
                 </template>
 
                 <template #cell:ends_on="{ row }">
-                    <span :style="row.expired ? { color: 'var(--color-danger-500)' } : row.expiring ? { color: 'var(--color-warn-600)' } : {}">
+                    <span :style="row.expired ? { color: 'var(--text-danger)' } : row.expiring ? { color: 'var(--text-warning)' } : {}">
                         {{ row.ends_on }}
                     </span>
                 </template>

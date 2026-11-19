@@ -109,7 +109,7 @@ function askForChange() {
                     </div>
                     <div>
                         <dt class="text-xs" style="color: var(--text-muted)">Target</dt>
-                        <dd class="font-medium" :style="project.overdue ? { color: 'var(--color-warn-600)' } : {}">
+                        <dd class="font-medium" :style="project.overdue ? { color: 'var(--text-warning)' } : {}">
                             {{ project.targetDate || 'Not set' }}
                         </dd>
                     </div>
@@ -139,7 +139,7 @@ function askForChange() {
                 <ul v-else class="divide-y">
                     <li v-for="item in waiting" :key="item.id">
                         <Link :href="`/client/projects/${project.id}/waiting/${item.id}`" class="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                            <Inbox class="h-4 w-4 shrink-0" :style="{ color: item.overdue ? 'var(--color-warn-600)' : 'var(--text-muted)' }" aria-hidden="true" />
+                            <Inbox class="h-4 w-4 shrink-0" :style="{ color: item.overdue ? 'var(--text-warning)' : 'var(--text-muted)' }" aria-hidden="true" />
                             <span class="min-w-0 flex-1">
                                 <span class="block text-sm font-medium">{{ item.title }}</span>
                                 <span class="block text-xs" style="color: var(--text-muted)">
@@ -147,7 +147,7 @@ function askForChange() {
                                 </span>
                             </span>
                             <UiBadge v-if="item.status === 'answered'" tone="brand" size="sm" dot>Answered</UiBadge>
-                            <span v-else class="flex shrink-0 items-center gap-1 text-xs font-medium" style="color: var(--color-brand-600)">
+                            <span v-else class="flex shrink-0 items-center gap-1 text-xs font-medium" style="color: var(--text-brand)">
                                 Reply <ArrowRight class="h-3 w-3" />
                             </span>
                         </Link>
@@ -245,7 +245,7 @@ function askForChange() {
                                     class="absolute left-0 top-0.5 h-[18px] w-[18px]"
                                     :style="{
                                         color: milestone.complete
-                                            ? 'var(--color-signal-500)'
+                                            ? 'var(--text-success)'
                                             : milestone.overdue
                                                 ? 'var(--color-warn-500)'
                                                 : 'var(--border-strong)',

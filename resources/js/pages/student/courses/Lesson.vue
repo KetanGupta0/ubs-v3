@@ -326,7 +326,7 @@ function toggleComplete() {
                         aria-label="Your notes on this lesson"
                         placeholder="What to remember, what to ask, what to try again."
                     />
-                    <p v-if="noteForm.errors.body" class="text-sm text-danger-600">{{ noteForm.errors.body }}</p>
+                    <p v-if="noteForm.errors.body" class="text-sm text-danger">{{ noteForm.errors.body }}</p>
                     <div class="flex items-center justify-between gap-3">
                         <Link href="/student/notes" class="text-xs font-medium text-brand-600 hover:underline dark:text-brand-400">All your notes</Link>
                         <div class="flex items-center gap-3">
@@ -378,7 +378,7 @@ function toggleComplete() {
 
                 <form class="space-y-2" @submit.prevent="ask">
                     <UiTextarea v-model="askForm.body" :rows="3" aria-label="Ask a question" placeholder="Stuck on something in this lesson? Ask it here. Your trainer answers, and your batch can read the answer." />
-                    <p v-if="askForm.errors.body" class="text-sm text-danger-600">{{ askForm.errors.body }}</p>
+                    <p v-if="askForm.errors.body" class="text-sm text-danger">{{ askForm.errors.body }}</p>
                     <div class="flex justify-end">
                         <UiButton type="submit" size="sm" :loading="askForm.processing" :disabled="!askForm.body.trim()">Ask</UiButton>
                     </div>

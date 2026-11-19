@@ -20,10 +20,13 @@ const palette = {
 
 export function accentFor(name) {
     const [deep, light] = palette[name] ?? palette.brand;
+    const known = name in palette ? name : 'brand';
 
     return {
-        name: name in palette ? name : 'brand',
+        name: known,
         solid: `var(${deep})`,
+        /** For words: a deeper step in light mode and a lighter one in dark, both at 4.5:1 or more. */
+        text: `var(--accent-text-${known})`,
         light: `var(${light})`,
         gradient: `linear-gradient(135deg, var(${deep}), var(${light}))`,
         /** Tinted background that stays legible in both themes. */

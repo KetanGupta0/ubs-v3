@@ -338,7 +338,7 @@ function stop(one) {
                         </span>
                         <UiBadge size="sm">{{ one.format }}</UiBadge>
                         <UiButton variant="ghost" size="xs" aria-label="Stop" @click="stop(one)">
-                            <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                            <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                         </UiButton>
                     </li>
                 </ul>
@@ -353,7 +353,7 @@ function stop(one) {
                     class="rounded-full border px-3 py-1 text-xs transition hover:bg-[var(--surface-sunken)]"
                     :style="{
                         borderColor: one.key === report.key ? 'var(--color-brand-500)' : 'var(--border-subtle)',
-                        color: one.key === report.key ? 'var(--color-brand-600)' : 'var(--text-muted)',
+                        color: one.key === report.key ? 'var(--text-brand)' : 'var(--text-muted)',
                     }"
                 >
                     {{ one.title }}

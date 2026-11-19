@@ -210,7 +210,7 @@ const promises = [
 
                     <p
                         v-if="course.nextBatch?.nearlyFull"
-                        class="mt-3 text-xs font-medium text-warn-600"
+                        class="mt-3 text-xs font-medium text-warning"
                     >
                         Only {{ course.nextBatch.seatsLeft }} seats left in the next batch
                     </p>

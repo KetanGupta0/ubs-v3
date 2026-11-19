@@ -85,7 +85,7 @@ const copy = async (url, key) => {
                         <component
                             :is="certificate.valid ? ShieldCheck : ShieldX"
                             class="h-4 w-4 shrink-0"
-                            :style="{ color: certificate.valid ? 'var(--color-signal-500)' : 'var(--color-danger-500)' }"
+                            :style="{ color: certificate.valid ? 'var(--text-success)' : 'var(--text-danger)' }"
                         />
                         <span class="text-xs" style="color: var(--text-muted)">Verification code</span>
                         <code class="text-xs font-semibold tracking-wider">{{ certificate.code }}</code>

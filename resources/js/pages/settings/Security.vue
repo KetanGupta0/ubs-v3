@@ -287,7 +287,7 @@ const eventLabels = {
                         <div class="flex items-center gap-3">
                             <component
                                 :is="account.emailVerified ? MailCheck : MailWarning"
-                                :class="['h-4 w-4', account.emailVerified ? 'text-signal-500' : 'text-warn-500']"
+                                :class="['h-4 w-4', account.emailVerified ? 'text-success' : 'text-warning']"
                             />
                             <span class="text-sm" style="color: var(--text-base)">Email address</span>
                         </div>
@@ -300,7 +300,7 @@ const eventLabels = {
                     <div class="flex items-center justify-between gap-4">
                         <div class="flex items-center gap-3">
                             <PhoneCall
-                                :class="['h-4 w-4', account.mobileVerified ? 'text-signal-500' : 'text-warn-500']"
+                                :class="['h-4 w-4', account.mobileVerified ? 'text-success' : 'text-warning']"
                             />
                             <span class="text-sm" style="color: var(--text-base)">
                                 {{ account.mobile || 'No mobile number' }}

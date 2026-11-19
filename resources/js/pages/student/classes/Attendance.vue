@@ -38,7 +38,7 @@ defineProps({
                         <p class="text-xs" style="color: var(--text-muted)">{{ row.batch }}</p>
                     </div>
                     <p class="text-2xl font-semibold tnum"
-                       :style="{ color: row.short ? 'var(--color-danger-500)' : 'var(--text-strong)' }">
+                       :style="{ color: row.short ? 'var(--text-danger)' : 'var(--text-strong)' }">
                         {{ row.percent !== null ? `${row.percent}%` : '—' }}
                     </p>
                 </div>

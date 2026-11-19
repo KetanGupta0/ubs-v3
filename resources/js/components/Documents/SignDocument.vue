@@ -124,7 +124,7 @@ function sign() {
 
             <div>
                 <UiCheckbox v-model="form.confirm" :label="confirmLabel" />
-                <p v-if="form.errors.confirm" class="mt-1 text-xs font-medium text-danger-500">{{ form.errors.confirm }}</p>
+                <p v-if="form.errors.confirm" class="mt-1 text-xs font-medium text-danger">{{ form.errors.confirm }}</p>
             </div>
 
             <div class="rounded-xl border p-4" style="border-color: var(--border-subtle); background: var(--surface-sunken)">
@@ -138,7 +138,7 @@ function sign() {
                         {{ sentTo ? 'Send another code' : 'Email me a code' }}
                     </UiButton>
                 </div>
-                <p v-if="codeProblem" class="mt-2 text-sm font-medium text-danger-500" role="alert">{{ codeProblem }}</p>
+                <p v-if="codeProblem" class="mt-2 text-sm font-medium text-danger" role="alert">{{ codeProblem }}</p>
 
                 <UiFormField v-if="sentTo" class="mt-4" label="Code from the email" :error="form.errors.code">
                     <template #default>

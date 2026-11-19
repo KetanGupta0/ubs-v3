@@ -48,7 +48,7 @@ function submit() {
             class="mb-5 flex items-start gap-3 rounded-xl border px-4 py-3"
             style="border-color: var(--color-warn-500); background: color-mix(in oklab, var(--color-warn-500) 10%, transparent)"
         >
-            <ShieldAlert class="mt-0.5 h-4 w-4 shrink-0 text-warn-600" aria-hidden="true" />
+            <ShieldAlert class="mt-0.5 h-4 w-4 shrink-0 text-warning" aria-hidden="true" />
             <p class="text-sm" style="color: var(--text-base)">
                 Until you do this, the password we issued still exists in your email and your messages.
             </p>

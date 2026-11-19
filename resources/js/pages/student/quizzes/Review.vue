@@ -94,7 +94,7 @@ function key(answer) {
                 <form v-if="integrity.awaitsReply" class="mt-4 space-y-2" @submit.prevent="sendReply">
                     <label class="text-sm font-medium" for="integrity-reply">If something was different from how it looks, tell your trainer. You can reply once.</label>
                     <UiTextarea id="integrity-reply" v-model="replyForm.reply" :rows="3" maxlength="2000" />
-                    <p v-if="replyForm.errors.reply" class="text-xs" style="color: var(--color-danger-500)">{{ replyForm.errors.reply }}</p>
+                    <p v-if="replyForm.errors.reply" class="text-xs" style="color: var(--text-danger)">{{ replyForm.errors.reply }}</p>
                     <UiButton type="submit" size="sm" :loading="replyForm.processing" :disabled="!replyForm.reply.trim()">Send your reply</UiButton>
                 </form>
                 <p v-else class="mt-3 text-xs" style="color: var(--text-muted)">{{ integrity.final ? 'This is final.' : 'Your trainer reads your reply before this is final.' }}</p>
@@ -166,7 +166,7 @@ function key(answer) {
                             v-if="!answer.awaitingMarking"
                             :is="answer.isCorrect ? CheckCircle2 : XCircle"
                             class="h-4 w-4"
-                            :style="{ color: answer.isCorrect ? 'var(--color-signal-500)' : 'var(--color-danger-500)' }"
+                            :style="{ color: answer.isCorrect ? 'var(--text-success)' : 'var(--text-danger)' }"
                         />
                         <span class="text-sm tnum" style="color: var(--text-muted)">
                             {{ answer.marks }}/{{ answer.outOf }}
@@ -177,14 +177,14 @@ function key(answer) {
                 <dl class="mt-3 space-y-2 text-sm">
                     <div>
                         <dt class="text-xs" style="color: var(--text-muted)">You answered</dt>
-                        <dd :style="!answer.isCorrect && !answer.awaitingMarking ? { color: 'var(--color-danger-500)' } : {}">
+                        <dd :style="!answer.isCorrect && !answer.awaitingMarking ? { color: 'var(--text-danger)' } : {}">
                             {{ chose(answer) }}
                         </dd>
                     </div>
 
                     <div v-if="!answer.isCorrect && key(answer)">
                         <dt class="text-xs" style="color: var(--text-muted)">The answer</dt>
-                        <dd style="color: var(--color-signal-600)">{{ key(answer) }}</dd>
+                        <dd style="color: var(--text-success)">{{ key(answer) }}</dd>
                     </div>
                 </dl>
 

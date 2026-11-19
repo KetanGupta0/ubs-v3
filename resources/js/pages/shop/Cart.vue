@@ -197,7 +197,7 @@ function placeOrder() {
                                 <span class="flex min-w-0 items-center gap-2">
                                     <Tag class="h-3.5 w-3.5 shrink-0" style="color: var(--text-muted)" aria-hidden="true" />
                                     <span class="font-mono font-semibold">{{ coupon.code }}</span>
-                                    <span v-if="coupon.refusal" class="truncate text-xs" style="color: var(--color-danger-600)">{{ coupon.refusal }}</span>
+                                    <span v-if="coupon.refusal" class="truncate text-xs" style="color: var(--text-danger)">{{ coupon.refusal }}</span>
                                     <span v-else-if="coupon.label" class="truncate text-xs" style="color: var(--text-muted)">{{ coupon.label }}</span>
                                 </span>
                                 <span class="flex items-center gap-1">
@@ -284,7 +284,7 @@ function placeOrder() {
                             <UiFormField label="GSTIN" hint="If you are registered, to claim the input tax." :error="orderForm.errors.gstin">
                                 <UiInput v-model="orderForm.gstin" maxlength="15" class="uppercase" placeholder="27ABCDE1234F1Z5" />
                             </UiFormField>
-                            <p v-if="orderForm.errors.state" class="text-xs" style="color: var(--color-danger-600)">{{ orderForm.errors.state }}</p>
+                            <p v-if="orderForm.errors.state" class="text-xs" style="color: var(--text-danger)">{{ orderForm.errors.state }}</p>
                             <UiFormField label="Address" :error="orderForm.errors.address">
                                 <UiInput v-model="orderForm.address" maxlength="255" autocomplete="street-address" />
                             </UiFormField>

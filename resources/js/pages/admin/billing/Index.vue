@@ -67,7 +67,7 @@ const tones = { paid: 'success', pending: 'brand', cancelled: 'neutral', refunde
                 </template>
 
                 <template #cell:due_on="{ row }">
-                    <span :style="row.overdue ? { color: 'var(--color-danger-500)' } : {}">{{ row.due_on }}</span>
+                    <span :style="row.overdue ? { color: 'var(--text-danger)' } : {}">{{ row.due_on }}</span>
                 </template>
 
                 <template #rowActions="{ row }">

@@ -83,7 +83,7 @@ class StudentApiController extends Controller
         $modules = CourseModule::query()
             ->where('course_id', $course)
             ->published()
-            ->with(['lessons' => fn ($query) => $query->where('is_published', true)->orderBy('sort_order')])
+            ->with(['lessons' => fn ($query) => $query->where('is_published', true)->orderBy('sort_order')->with('prerequisite:id,title')])
             ->orderBy('sort_order')
             ->get();
 

@@ -15,9 +15,32 @@ use Illuminate\Database\Seeder;
  */
 class PermissionSeeder extends Seeder
 {
+    /** Every key, for the preflight check that the seeder has run after a deploy. @return array<int, string> */
+    public static function keys(): array
+    {
+        return collect(self::permissions())->flatMap(fn (array $entries) => array_keys($entries))->values()->all();
+    }
+
     public function run(): void
     {
-        $permissions = [
+        $permissions = self::permissions();
+
+        foreach ($permissions as $group => $entries) {
+            foreach ($entries as $key => $label) {
+                Permission::query()->updateOrCreate(
+                    ['key' => $key],
+                    ['label' => $label, 'group' => $group],
+                );
+            }
+        }
+
+        $this->command?->info('Seeded '.collect($permissions)->flatten()->count().' permissions.');
+    }
+
+    /** @return array<string, array<string, string>> */
+    protected static function permissions(): array
+    {
+        return [
             'Clients' => [
                 'clients.view' => 'View clients',
                 'clients.create' => 'Create client accounts',
@@ -80,16 +103,5 @@ class PermissionSeeder extends Seeder
                 'audit.view' => 'Read the audit log',
             ],
         ];
-
-        foreach ($permissions as $group => $entries) {
-            foreach ($entries as $key => $label) {
-                Permission::query()->updateOrCreate(
-                    ['key' => $key],
-                    ['label' => $label, 'group' => $group],
-                );
-            }
-        }
-
-        $this->command?->info('Seeded '.collect($permissions)->flatten()->count().' permissions.');
     }
 }

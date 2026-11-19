@@ -51,7 +51,7 @@ const percent = (value) => (value === null || value === undefined ? '—' : `${v
         <div class="space-y-5">
             <div v-if="p.signals.length" class="rounded-xl border px-4 py-3" style="border-color: var(--color-warn-500)">
                 <p class="flex items-center gap-2 text-sm font-medium">
-                    <AlertTriangle class="h-4 w-4" style="color: var(--color-warn-600)" />
+                    <AlertTriangle class="h-4 w-4" style="color: var(--text-warning)" />
                     {{ audience === 'student' ? 'Worth a look' : 'Signals' }}
                 </p>
                 <ul class="mt-1 list-disc pl-6 text-sm" style="color: var(--text-muted)">

@@ -410,8 +410,8 @@ onBeforeUnmount(() => {
                         </p>
                     </div>
                     <div v-if="clock" class="flex items-center gap-2">
-                        <Clock class="h-4 w-4" :style="{ color: running ? 'var(--text-muted)' : 'var(--color-danger-500)' }" />
-                        <span class="text-lg font-semibold tnum" :style="{ color: running ? 'var(--text-strong)' : 'var(--color-danger-500)' }">{{ clock }}</span>
+                        <Clock class="h-4 w-4" :style="{ color: running ? 'var(--text-muted)' : 'var(--text-danger)' }" />
+                        <span class="text-lg font-semibold tnum" :style="{ color: running ? 'var(--text-strong)' : 'var(--text-danger)' }">{{ clock }}</span>
                     </div>
                 </div>
 

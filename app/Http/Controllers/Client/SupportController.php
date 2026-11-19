@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Enums\Role;
 use App\Models\MaintenanceContract;
 use App\Models\Project;
 use App\Models\SupportTicket;
@@ -238,11 +237,7 @@ class SupportController extends ClientController
 
     protected function notifyStaff(SupportTicket $ticket): void
     {
-        $recipients = User::query()
-            ->role(Role::Admin)
-            ->active()
-            ->get()
-            ->filter(fn ($staff) => $staff->hasPermission('support.manage'));
+        $recipients = User::query()->holdingPermission('support.manage')->active()->get();
 
         if ($recipients->isNotEmpty()) {
             Notification::send($recipients, new TicketRaised($ticket));

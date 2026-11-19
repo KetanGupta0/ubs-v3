@@ -241,7 +241,7 @@ const titles = { message: 'Message', time: 'Give more time', end: 'End the attem
                             More time
                         </UiButton>
                         <UiButton size="xs" variant="ghost" @click="open('end', tile)">
-                            <template #leading><CircleStop class="h-3 w-3" style="color: var(--color-danger-500)" /></template>
+                            <template #leading><CircleStop class="h-3 w-3" style="color: var(--text-danger)" /></template>
                             End
                         </UiButton>
                     </div>

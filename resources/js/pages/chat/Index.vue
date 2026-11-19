@@ -321,7 +321,7 @@ const othersHere = computed(() =>
                                 <span
                                     v-if="room.live.value"
                                     class="inline-flex items-center gap-1 text-[0.65rem]"
-                                    style="color: var(--color-signal-600)"
+                                    style="color: var(--text-success)"
                                     title="Live"
                                 >
                                     <Wifi class="h-3 w-3" />

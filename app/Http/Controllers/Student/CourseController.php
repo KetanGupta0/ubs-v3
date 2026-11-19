@@ -74,7 +74,8 @@ class CourseController extends StudentController
         $modules = CourseModule::query()
             ->where('course_id', $course)
             ->published()
-            ->with(['lessons' => fn ($query) => $query->where('is_published', true)])
+            // The prerequisite's title is what a sealed lesson says to finish first.
+            ->with(['lessons' => fn ($query) => $query->where('is_published', true)->with('prerequisite:id,title')])
             ->orderBy('sort_order')
             ->get();
 

@@ -87,7 +87,7 @@ const icons = {
                                 class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
                                 :style="{
                                     background: item.urgent ? 'var(--color-warn-50, #fffbeb)' : 'var(--surface-sunken)',
-                                    color: item.urgent ? 'var(--color-warn-600)' : 'var(--text-muted)',
+                                    color: item.urgent ? 'var(--text-warning)' : 'var(--text-muted)',
                                 }"
                             >
                                 <component :is="icons[item.kind] ?? FileText" class="h-4 w-4" />
@@ -98,7 +98,7 @@ const icons = {
                                 <span class="block text-xs" style="color: var(--text-muted)">{{ item.detail }}</span>
                             </span>
 
-                            <span class="flex shrink-0 items-center gap-1 text-xs font-medium" style="color: var(--color-brand-600)">
+                            <span class="flex shrink-0 items-center gap-1 text-xs font-medium" style="color: var(--text-brand)">
                                 {{ item.action }}
                                 <ArrowRight class="h-3 w-3" />
                             </span>
@@ -112,7 +112,7 @@ const icons = {
                 class="flex items-center gap-3 rounded-[var(--radius-card)] border px-4 py-3.5"
                 style="border-color: var(--border-subtle); background: var(--surface)"
             >
-                <CheckCircle2 class="h-5 w-5" style="color: var(--color-signal-500)" />
+                <CheckCircle2 class="h-5 w-5" style="color: var(--text-success)" />
                 <p class="text-sm">Nothing needs your attention right now.</p>
             </section>
 

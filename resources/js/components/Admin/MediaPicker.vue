@@ -63,7 +63,7 @@ function choose(item) {
 <template>
     <UiModal :open="open" size="xl" title="Choose from the media library" @close="emit('close')">
         <div class="space-y-4">
-            <p v-if="failed" class="text-sm text-danger-600">The library could not be loaded. Close this and try again.</p>
+            <p v-if="failed" class="text-sm text-danger">The library could not be loaded. Close this and try again.</p>
 
             <p v-else-if="!loading && !items.length" class="text-sm" style="color: var(--text-muted)">
                 The library is empty. Upload a picture in this block, or add some in the media library first.

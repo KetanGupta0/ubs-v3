@@ -31,7 +31,7 @@ class StaffController extends Controller
         return Inertia::render('admin/staff/Index', [
             'staff' => User::query()
                 ->role(Role::Admin)
-                ->with('permissions:id,key')
+                ->with(['permissions:id,key', 'twoFactorSecret'])
                 ->orderBy('name')
                 ->get()
                 ->map(fn (User $user) => [

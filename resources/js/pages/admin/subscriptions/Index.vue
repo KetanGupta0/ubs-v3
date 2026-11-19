@@ -122,7 +122,7 @@ function cancel(row) {
                 :only="['table']"
             >
                 <template #cell:renews_on="{ row }">
-                    <span :style="row.lapsed ? { color: 'var(--color-danger-500)' } : row.daysToRenewal <= 30 ? { color: 'var(--color-warn-600)' } : {}">
+                    <span :style="row.lapsed ? { color: 'var(--text-danger)' } : row.daysToRenewal <= 30 ? { color: 'var(--text-warning)' } : {}">
                         {{ row.renews_on }}
                     </span>
                 </template>
@@ -146,7 +146,7 @@ function cancel(row) {
                             <RefreshCw class="h-3 w-3" />
                         </UiButton>
                         <UiButton variant="ghost" size="xs" icon aria-label="Cancel" @click="cancel(row)">
-                            <Ban class="h-3 w-3" style="color: var(--color-danger-500)" />
+                            <Ban class="h-3 w-3" style="color: var(--text-danger)" />
                         </UiButton>
                     </span>
                 </template>

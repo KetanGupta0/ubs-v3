@@ -137,7 +137,7 @@ const responseText = (answer) =>
                         <component
                             :is="answer.isCorrect ? Check : X"
                             class="h-3.5 w-3.5"
-                            :style="{ color: answer.isCorrect ? 'var(--color-signal-500)' : 'var(--color-danger-500)' }"
+                            :style="{ color: answer.isCorrect ? 'var(--text-success)' : 'var(--text-danger)' }"
                         />
                         {{ answer.marks }} of {{ answer.outOf }}
                         <span v-if="answer.correct.length">· expected {{ answer.correct.join(', ') }}</span>

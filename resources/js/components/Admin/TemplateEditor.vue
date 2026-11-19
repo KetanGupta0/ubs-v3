@@ -132,7 +132,7 @@ function restoreDefaults() {
                 class="flex items-start gap-2 rounded-lg px-3 py-2 text-sm"
                 style="background: color-mix(in oklab, var(--color-warn-500) 12%, var(--surface)); color: var(--text-base)"
             >
-                <TriangleAlert class="mt-0.5 h-4 w-4 shrink-0 text-warn-600" />
+                <TriangleAlert class="mt-0.5 h-4 w-4 shrink-0 text-warning" />
                 <span>
                     In India every SMS must match a template registered on DLT with your SMS provider. Change this
                     wording only to match one you have registered, or the operator will block the message.
@@ -172,7 +172,7 @@ function restoreDefaults() {
                         </button>
                     </li>
                 </ul>
-                <p v-if="missing.length" class="mt-2 text-xs text-warn-600">
+                <p v-if="missing.length" class="mt-2 text-xs text-warning">
                     Still needs {{ missing.map((variable) => placeholder(variable.name)).join(' and ') }}.
                 </p>
             </div>
@@ -190,7 +190,7 @@ function restoreDefaults() {
                 </template>
                 <template v-else>
                     <p class="whitespace-pre-wrap px-4 py-3 font-mono text-sm" style="color: var(--text-strong)">{{ preview.text }}</p>
-                    <p class="px-4 pb-3 text-xs" :class="preview.parts > 1 ? 'text-warn-600' : ''" :style="preview.parts > 1 ? {} : { color: 'var(--text-muted)' }">
+                    <p class="px-4 pb-3 text-xs" :class="preview.parts > 1 ? 'text-warning' : ''" :style="preview.parts > 1 ? {} : { color: 'var(--text-muted)' }">
                         {{ preview.length }} characters, sent as {{ preview.parts }} {{ preview.parts === 1 ? 'part' : 'parts' }}{{ preview.unicode ? ' (it has characters outside plain English, which shortens each part to 70)' : '' }}.{{ preview.parts > 1 ? ' Each part is charged.' : '' }}
                     </p>
                 </template>

@@ -47,7 +47,7 @@ provideField(computed(() => ({
             style="color: var(--text-strong)"
         >
             {{ label }}
-            <span v-if="required" class="text-danger-500" aria-hidden="true">*</span>
+            <span v-if="required" class="text-danger" aria-hidden="true">*</span>
         </label>
 
         <div :class="horizontal ? 'sm:col-span-2 space-y-1.5' : 'space-y-1.5'">
@@ -61,7 +61,7 @@ provideField(computed(() => ({
                 {{ hint }}
             </p>
 
-            <p v-if="error" :id="errorId" class="text-xs font-medium text-danger-500">
+            <p v-if="error" :id="errorId" class="text-xs font-medium text-danger">
                 {{ error }}
             </p>
         </div>

@@ -149,7 +149,7 @@ function submit() {
                 role="status"
             >
                 <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-green-50 dark:bg-green-950/60">
-                    <MailCheck class="h-5 w-5 text-signal-500" aria-hidden="true" />
+                    <MailCheck class="h-5 w-5 text-success" aria-hidden="true" />
                 </span>
                 <h2 class="mt-4 text-lg font-semibold">Thanks. Check your email.</h2>
                 <p class="mx-auto mt-2 max-w-md text-sm" style="color: var(--text-muted)">
@@ -249,7 +249,7 @@ function submit() {
 
                     <div v-if="humanCheck">
                         <div ref="widget" />
-                        <p v-if="entry.errors.human" class="mt-1.5 text-sm text-danger-600">{{ entry.errors.human }}</p>
+                        <p v-if="entry.errors.human" class="mt-1.5 text-sm text-danger">{{ entry.errors.human }}</p>
                     </div>
                 </div>
 

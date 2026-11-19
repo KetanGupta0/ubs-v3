@@ -184,7 +184,7 @@ const statusTones = { active: 'success', revoked: 'danger', rotated: 'neutral', 
                             size="xs"
                             @click="revoke(key)"
                         >
-                            <template #leading><Ban class="h-3 w-3" style="color: var(--color-danger-500)" /></template>
+                            <template #leading><Ban class="h-3 w-3" style="color: var(--text-danger)" /></template>
                             Revoke
                         </UiButton>
                     </li>

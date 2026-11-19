@@ -49,6 +49,14 @@ needed. Import through the `@` alias, never with a relative climb.
 `resources/css/app.css`. Light and dark are defined together in that one file,
 which is why almost nothing in the codebase needs a `dark:` variant.
 
+**Words meet WCAG 2.2 AA in both themes.** Status and product colours as text use
+`var(--text-warning)`, `--text-danger`, `--text-success`, `--text-brand` and the
+`text-warning`, `text-danger` and `text-success` utilities, and a product's words use
+`accentFor(name).text`. The palette's 500 and 600 steps (`--color-warn-600`,
+`text-danger-500`) are for fills, borders and icons: as small text on white they fall
+short of 4.5:1. Until November 2026 every form error, overdue date and category label
+did. A box with no visible label takes `aria-label` (`UiCheckbox`, `UiProgress`).
+
 **Every list uses the shared table.** `App\Support\Table\Table` on the server and
 `resources/js/components/DataTable/DataTable.vue` on the client. Do not hand roll
 a list with its own search box. The shared one already handles search, sorting,
@@ -103,6 +111,16 @@ vendor/bin/pint     # style
 php artisan test    # suite
 npm run build       # catches template and import errors
 ```
+
+**A query per row fails outside production.** `Model::preventLazyLoading()` is on in
+development and in the suite, so a list that reads a relation for each row (an N+1)
+throws instead of growing slower with every row. Eager load it with `with()`, or set
+the inverse with `chaperone()`. `QueryBudgetTest` holds the pages where a browser
+found one that no test had shown.
+
+After a deploy, `php artisan app:preflight` checks the install for production: debug
+off, HTTPS, the queue run by the scheduler, migrations and permissions in place, mail
+going somewhere, and says which services are still to be set up.
 
 ## Authentication
 
@@ -256,6 +274,11 @@ Rules for the marketing pages:
 
 `routes/admin.php`, `App\Http\Controllers\Admin\*`, `resources/js/pages/admin`.
 
+- **Every admin route names a permission,** apart from the dashboard and reports (which
+  check each report's own), every route that changes something without a sign in is
+  throttled or signed, and every API route but signing in and the licence check needs a
+  full token. `tests/Feature/Security/RouteAuditTest.php` reads the router, so a route
+  added without its guard fails there.
 - **The owner holds every permission; nobody else does.** `users.is_owner` is what
   `hasPermission()` checks, and it is deliberately not fillable. Every other
   administrator, staff included, holds exactly what is in `permission_user`, so
@@ -525,9 +548,11 @@ the selling page of a solution in the admin catalogue, and Orders in the client 
   licence, free a site) and `coupons.manage`, and the Shop sales report. A code somebody used
   keeps its name and is switched off, never deleted; a licence's updates are extended, never
   cut short (withdraw it instead). The key never appears on our side.
-- **Throttles in the shop carry a prefix** (`throttle:6,1,checkout-code`). An unnamed throttle
-  shares one count per address with every other unnamed one, so applying two codes would
-  have used up the attempts at asking for a checkout code.
+- **An unnamed throttle counts for its own route** (`App\Http\Middleware\ThrottleRequests`,
+  aliased as `throttle`). Laravel's shares one count per address with every other unnamed
+  one, so until November 2026 applying two codes used up the attempts at asking for a
+  checkout code. A name (`throttle:6,1,checkout-code`) is how routes share a count on
+  purpose.
 
 ## Mail: greetings and announcements
 
@@ -806,6 +831,21 @@ group), `resources/js/pages/admin/reports`, `resources/js/components/Charts`.
   because a 404 from the search box is worse than no search.
 - **A saved view stores the query, not the rows**, and `screen` is checked to be
   a path on this platform before it is stored.
+
+## Security headers
+
+`App\Http\Middleware\SecurityHeaders`, `App\Support\Security\ContentSecurityPolicy`.
+
+- **Every page carries a content security policy (Step I).** Scripts come from this site,
+  from a per-request nonce on the two inline ones (`Vite::cspNonce()`: the theme script
+  and `@routes`), and from Razorpay and Cloudflare Turnstile only; frames are lesson
+  videos, the checkout and the human check. A new third party script, frame or
+  connection is added to the policy in the same change, or it is blocked. Styles may be
+  inline. Every violation is posted to `/csp-reports` and reaches the log and Sentry, so
+  a blocked payment window shows up the first time; `CSP_REPORT_ONLY=true` stops the
+  blocking at once if it ever must. PDFs and downloads carry no policy.
+- Every response also says `nosniff`, a short referrer, no framing by another site, and
+  camera and microphone for this site only; production remembers HTTPS.
 
 ## Monitoring
 

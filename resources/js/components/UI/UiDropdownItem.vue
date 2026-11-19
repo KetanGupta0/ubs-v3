@@ -23,7 +23,7 @@ const component = computed(() => (props.href ? Link : 'button'));
         :class="[
             'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-sm transition',
             danger
-                ? 'text-danger-500 hover:bg-red-50 dark:hover:bg-red-950/40'
+                ? 'text-danger hover:bg-red-50 dark:hover:bg-red-950/40'
                 : 'text-[var(--text-base)] hover:bg-[var(--surface-sunken)] hover:text-[var(--text-strong)]',
         ]"
     >

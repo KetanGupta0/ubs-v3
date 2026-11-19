@@ -94,7 +94,7 @@ const check = () => {
                         <component
                             :is="result.valid ? ShieldCheck : ShieldX"
                             class="h-5 w-5"
-                            :style="{ color: result.valid ? 'var(--color-signal-500)' : 'var(--color-danger-500)' }"
+                            :style="{ color: result.valid ? 'var(--text-success)' : 'var(--text-danger)' }"
                         />
                         {{ result.valid ? 'This document is genuine' : 'This document has been revoked' }}
                     </p>

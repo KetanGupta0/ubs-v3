@@ -178,7 +178,7 @@ const priorityTones = { urgent: 'danger', high: 'warning', normal: 'neutral', lo
                         <dl class="space-y-3 text-sm">
                             <div>
                                 <dt class="text-xs" style="color: var(--text-muted)">First response due</dt>
-                                <dd :style="ticket.breachedResponse ? { color: 'var(--color-danger-500)' } : {}">
+                                <dd :style="ticket.breachedResponse ? { color: 'var(--text-danger)' } : {}">
                                     {{ ticket.responseDueAt || 'No contract' }}
                                 </dd>
                             </div>
@@ -188,7 +188,7 @@ const priorityTones = { urgent: 'danger', high: 'warning', normal: 'neutral', lo
                             </div>
                             <div>
                                 <dt class="text-xs" style="color: var(--text-muted)">Resolution due</dt>
-                                <dd :style="ticket.breachedResolution ? { color: 'var(--color-danger-500)' } : {}">
+                                <dd :style="ticket.breachedResolution ? { color: 'var(--text-danger)' } : {}">
                                     {{ ticket.resolutionDueAt || '—' }}
                                 </dd>
                             </div>
@@ -216,7 +216,7 @@ const priorityTones = { urgent: 'danger', high: 'warning', normal: 'neutral', lo
                                 <dt class="text-xs" style="color: var(--text-muted)">{{ ticket.client.role === 'student' ? 'Student' : 'Client' }}</dt>
                                 <dd>
                                     <Link :href="ticket.client.href" class="hover:underline"
-                                          style="color: var(--color-brand-600)">
+                                          style="color: var(--text-brand)">
                                         {{ ticket.client.name }}
                                     </Link>
                                 </dd>

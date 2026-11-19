@@ -100,7 +100,7 @@ function decline() {
                 />
                 <p class="text-sm" style="color: var(--text-muted)">
                     Not right?
-                    <button type="button" class="font-medium text-danger-500 hover:underline" @click="declining = true">Decline it</button>
+                    <button type="button" class="font-medium text-danger hover:underline" @click="declining = true">Decline it</button>
                     and tell us why; we can estimate it again.
                 </p>
             </template>

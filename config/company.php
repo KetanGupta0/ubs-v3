@@ -101,6 +101,17 @@ return [
     ],
 
     /*
+    | Security headers (Step I). The content security policy says where a page
+    | may load scripts, frames and connections from. If it ever blocks
+    | something it should not, such as a payment window, CSP_REPORT_ONLY=true
+    | stops it blocking at once while every violation is still reported.
+    */
+    'security' => [
+        'csp' => (bool) env('CSP_ENABLED', true),
+        'csp_report_only' => (bool) env('CSP_REPORT_ONLY', false),
+    ],
+
+    /*
     | TDS a client may declare on one of our invoices (CL14), by section, at
     | the rate for a resident company deducting from us. Rates change with
     | Finance Acts: change them here, never in the code that applies them.

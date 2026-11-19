@@ -110,7 +110,7 @@ function submit() {
         style="border-color: var(--border-subtle); background: var(--surface)"
     >
         <span class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-green-50 dark:bg-green-950/60">
-            <CheckCircle2 class="h-5 w-5 text-signal-500" aria-hidden="true" />
+            <CheckCircle2 class="h-5 w-5 text-success" aria-hidden="true" />
         </span>
 
         <h3 class="mt-4 text-lg font-semibold">We have your enquiry</h3>

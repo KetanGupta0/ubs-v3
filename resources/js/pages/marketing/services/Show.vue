@@ -81,7 +81,7 @@ const paragraphs = (props.service.description ?? '').split('\n\n').filter(Boolea
                         class="animate-fade-up flex items-start gap-2.5 rounded-xl border bg-[var(--surface)] p-4"
                         :style="{ borderColor: 'var(--border-subtle)', animationDelay: `${index * 50}ms` }"
                     >
-                        <Check class="mt-0.5 h-4 w-4 shrink-0 text-signal-500" aria-hidden="true" />
+                        <Check class="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
                         <span class="text-sm" style="color: var(--text-base)">{{ item }}</span>
                     </li>
                 </ul>

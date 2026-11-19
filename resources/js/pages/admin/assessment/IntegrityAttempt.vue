@@ -121,7 +121,7 @@ const shown = (value) => (Array.isArray(value) ? value.join(', ') : value ?? 'â€
                                         :is="row.right ? CheckCircle2 : XCircle"
                                         v-if="row.autoMarked && row.answer !== null"
                                         class="h-3.5 w-3.5 shrink-0"
-                                        :style="{ color: row.right ? 'var(--color-signal-500)' : 'var(--color-danger-500)' }"
+                                        :style="{ color: row.right ? 'var(--text-success)' : 'var(--text-danger)' }"
                                     />
                                     <span class="whitespace-pre-line">{{ shown(row.answer) }}</span>
                                 </p>

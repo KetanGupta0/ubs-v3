@@ -28,7 +28,9 @@ class CourseModule extends Model
 
     public function lessons(): HasMany
     {
-        return $this->hasMany(Lesson::class)->orderBy('sort_order');
+        // Each lesson gets this module as its own, so reading a lesson's module
+        // in a list (ContentGate's drip days) costs no query per lesson.
+        return $this->hasMany(Lesson::class)->orderBy('sort_order')->chaperone('module');
     }
 
     public function quizzes(): HasMany

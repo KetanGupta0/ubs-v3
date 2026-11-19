@@ -101,7 +101,7 @@ defineProps({
                             />
                         </div>
 
-                        <p v-if="row.short" class="mt-2 text-xs" style="color: var(--color-danger-500)">
+                        <p v-if="row.short" class="mt-2 text-xs" style="color: var(--text-danger)">
                             Below the {{ row.minimum }}% this course needs. Talk to your trainer.
                         </p>
                     </UiCard>
@@ -120,7 +120,7 @@ defineProps({
                         <component
                             :is="session.attended ? CheckCircle2 : XCircle"
                             class="h-4 w-4 shrink-0"
-                            :style="{ color: session.attended ? 'var(--color-signal-500)' : 'var(--color-danger-500)' }"
+                            :style="{ color: session.attended ? 'var(--text-success)' : 'var(--text-danger)' }"
                         />
 
                         <span class="min-w-0 flex-1">

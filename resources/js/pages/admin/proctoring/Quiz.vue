@@ -134,7 +134,7 @@ const states = {
                             label="Require Safe Exam Browser"
                             description="For a final assessment: Safe Exam Browser locks the computer itself, and an ordinary browser cannot start the quiz."
                         />
-                        <p v-if="settings.errors.require_seb" class="text-xs" style="color: var(--color-danger-500)">{{ settings.errors.require_seb }}</p>
+                        <p v-if="settings.errors.require_seb" class="text-xs" style="color: var(--text-danger)">{{ settings.errors.require_seb }}</p>
 
                         <template v-if="settings.require_seb">
                             <UiFormField
@@ -173,7 +173,7 @@ const states = {
                             {{ quiz.sebFile ? 'Replace it' : 'Upload' }}
                         </UiButton>
                     </form>
-                    <p v-if="sebFile.errors.file" class="mt-1 text-xs" style="color: var(--color-danger-500)">{{ sebFile.errors.file }}</p>
+                    <p v-if="sebFile.errors.file" class="mt-1 text-xs" style="color: var(--text-danger)">{{ sebFile.errors.file }}</p>
                 </div>
             </UiCard>
 
@@ -205,7 +205,7 @@ const states = {
                             </p>
                         </div>
                         <UiButton v-if="!row.started" size="xs" variant="ghost" icon :aria-label="`Remove the sitting on ${row.window}`" @click="removeSlot(row)">
-                            <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                            <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                         </UiButton>
                     </li>
                 </ul>

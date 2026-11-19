@@ -93,7 +93,7 @@ const documents = [
 
                     <div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div v-for="doc in documents" :key="doc.title" class="flex items-start gap-2.5">
-                            <component :is="doc.icon" class="mt-0.5 h-4 w-4 shrink-0 text-signal-500" aria-hidden="true" />
+                            <component :is="doc.icon" class="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
                             <span class="min-w-0">
                                 <span class="block text-sm font-semibold">{{ doc.title }}</span>
                                 <span class="block text-xs leading-relaxed" style="color: var(--text-muted)">{{ doc.body }}</span>
@@ -239,7 +239,7 @@ const documents = [
 
                     <p
                         v-if="item.nextBatch?.nearlyFull"
-                        class="mt-3 text-xs font-medium text-warn-600"
+                        class="mt-3 text-xs font-medium text-warning"
                     >
                         Only {{ item.nextBatch.seatsLeft }} seats left in the next batch
                     </p>

@@ -17,6 +17,8 @@ const props = defineProps({
     /** Partially selected, for a table's select-all header. */
     indeterminate: { type: Boolean, default: false },
     disabled: { type: Boolean, default: false },
+    /** The name a screen reader gives a box that has no visible label, such as a table row's. */
+    ariaLabel: { type: String, default: null },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -45,6 +47,7 @@ function toggle(event) {
                 class="peer sr-only"
                 :checked="indeterminate || checked"
                 :disabled="disabled"
+                :aria-label="ariaLabel || undefined"
                 @change="toggle"
             >
             <span

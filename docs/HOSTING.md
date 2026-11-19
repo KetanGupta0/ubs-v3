@@ -49,6 +49,8 @@ capped at **100 emails a day**.
 | Registration forms (§5) | Matching a registration to an account runs in a queued job, so it waits for the next scheduler minute; the visitor's answer does not. A college visit puts many students on one Wi-Fi address, so the limit per address is loose (40 a minute) and the limit per email is what bites (5 an hour). Cloudflare Turnstile is optional (`TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY`); it is an HTTPS call from PHP, and the privacy policy has to mention Cloudflare before the keys go in. Each registration sends one email, which counts against the mail cap above. | **Built** |
 | Error tracking (Step I, X23) | Sentry's free plan, reached over HTTPS when a fault happens, so nothing runs in the background. Server faults go through `Sentry\Laravel\Integration`; faults in a browser are posted by the page to `/client-errors` and passed on from the server, so the page loads no third party script. `config/sentry.php` fixes what a report may carry (no request body, cookies, query string, IP or SQL values) and `ErrorReports` scrubs the rest. Set `SENTRY_LARAVEL_DSN` in `.env`, run `php artisan config:cache`, then `php artisan sentry:test` once. | **Built** |
 | Uptime (Step I, X23) | UptimeRobot's free plan checks `https://<domain>/health` every five minutes and mails the owner when it fails. `/health` answers 503 naming the check that failed: the database, the scheduler (it beats every minute; ten minutes without a beat is late), the queue (work waiting over a quarter of an hour) or storage. The same checks show in Settings, Providers, and the dashboard says when the scheduler stops. Create an HTTP(s) monitor on that address with a five minute interval and an alert contact. | **Built** |
+| Security headers (Step I) | Sent by the application on every response, so nothing is needed in `.htaccess`: a content security policy on every page, `nosniff`, a short referrer, no framing by other sites, and HSTS in production. Violations are reported to `/csp-reports`. After the Razorpay keys go in, make one real payment and check the checkout window opened; if it was blocked, set `CSP_REPORT_ONLY=true` and say what Sentry shows. | **Built** |
+| Checking an install (Step I) | `php artisan app:preflight` after every deploy: it fails on what is unsafe in production (debug on, no HTTPS, the queue not run by the scheduler, migrations or permissions missing, mail going nowhere) and warns on what is still to be set up (payments, realtime, Sentry, unpublished legal pages). It exits non-zero on a failure. | **Built** |
 | Migration importer | Run over SSH from the command line, where web time limits do not apply, or run locally against the dump and upload the result. The data is small. | Rule for step C |
 
 ## Deploying
@@ -58,7 +60,8 @@ capped at **100 emails a day**.
 - **Upload over SSH,** then run `composer install --no-dev --optimize-autoloader`,
   `php artisan migrate --force`, `php artisan db:seed --class=PermissionSeeder --force`
   (new permission keys exist only once it has run; it is safe to repeat),
-  `php artisan config:cache route:cache view:cache` and `php artisan storage:link`.
+  `php artisan config:cache route:cache view:cache` and `php artisan storage:link`,
+  then `php artisan app:preflight`, which must pass before the site takes traffic.
   - SSH access depends on the plan, so check it before step C.
 - **Document root:** the domain must serve Laravel's `public/` directory, not the
   project root. Either point the domain there in hPanel or place the project above

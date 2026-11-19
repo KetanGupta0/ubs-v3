@@ -55,7 +55,7 @@ defineProps({
                 </template>
 
                 <template #cell:target_date="{ row }">
-                    <span :style="row.overdue ? { color: 'var(--color-warn-600)' } : {}">{{ row.target_date }}</span>
+                    <span :style="row.overdue ? { color: 'var(--text-warning)' } : {}">{{ row.target_date }}</span>
                 </template>
 
                 <template #rowActions="{ row }">

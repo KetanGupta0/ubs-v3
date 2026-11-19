@@ -96,7 +96,7 @@ const actionError = (prefix) => Object.entries(form.errors).find(([key]) => key.
 
             <!-- -------------------------------------------- client's answer -->
             <UiCard v-if="latest?.disputedAt" class="border-l-4" style="border-left-color: var(--color-warn-500)">
-                <p class="flex items-center gap-2 text-sm font-semibold"><MessageSquareWarning class="h-4 w-4" style="color: var(--color-warn-600)" aria-hidden="true" /> The client says version {{ latest.version }} is not right</p>
+                <p class="flex items-center gap-2 text-sm font-semibold"><MessageSquareWarning class="h-4 w-4" style="color: var(--text-warning)" aria-hidden="true" /> The client says version {{ latest.version }} is not right</p>
                 <p class="mt-2 whitespace-pre-line text-sm">“{{ latest.disputeNote }}”</p>
                 <p class="mt-1 text-xs" style="color: var(--text-muted)">{{ latest.disputedBy }}, {{ latest.disputedAt }}. Write the next version with the correction.</p>
             </UiCard>

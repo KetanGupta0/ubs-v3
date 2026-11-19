@@ -167,13 +167,13 @@ const sendCount = computed(() => (sendForm.scope === 'selected' ? selected.value
                 </template>
 
                 <template #cell:credentials="{ row }">
-                    <span :style="row.credentialsFailed ? { color: 'var(--color-danger-600)' } : {}">
+                    <span :style="row.credentialsFailed ? { color: 'var(--text-danger)' } : {}">
                         {{ row.credentials }}
                     </span>
                 </template>
 
                 <template #cell:last_login="{ row }">
-                    <span :style="row.neverSignedIn ? { color: 'var(--color-warn-600)' } : {}">
+                    <span :style="row.neverSignedIn ? { color: 'var(--text-warning)' } : {}">
                         {{ row.last_login }}
                     </span>
                 </template>
@@ -228,7 +228,7 @@ const sendCount = computed(() => (sendForm.scope === 'selected' ? selected.value
                     <UiTextarea v-model="sendForm.note" :rows="4" />
                 </UiFormField>
 
-                <p v-if="sendForm.errors.ids || sendForm.errors.scope" class="text-sm" style="color: var(--color-danger-600)">
+                <p v-if="sendForm.errors.ids || sendForm.errors.scope" class="text-sm" style="color: var(--text-danger)">
                     {{ sendForm.errors.ids || sendForm.errors.scope }}
                 </p>
             </form>

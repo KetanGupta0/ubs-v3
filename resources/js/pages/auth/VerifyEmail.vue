@@ -33,7 +33,7 @@ function signOut() {
             class="mb-5 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm"
             style="border-color: var(--border-subtle); background: var(--surface-sunken); color: var(--text-base)"
         >
-            <MailCheck class="mt-0.5 h-4 w-4 shrink-0 text-signal-500" aria-hidden="true" />
+            <MailCheck class="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
             {{ status }}
         </p>
 

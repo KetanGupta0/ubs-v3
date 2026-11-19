@@ -57,7 +57,7 @@ defineProps({
                     class="flex items-center gap-3 rounded-[var(--radius-card)] border px-4 py-3.5"
                     style="border-color: var(--border-subtle); background: var(--surface)"
                 >
-                    <CheckCircle2 class="h-5 w-5" style="color: var(--color-signal-500)" />
+                    <CheckCircle2 class="h-5 w-5" style="color: var(--text-success)" />
                     <p class="text-sm">Nothing outstanding. Thank you.</p>
                 </div>
 

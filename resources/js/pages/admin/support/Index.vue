@@ -71,7 +71,7 @@ const priorityTones = { urgent: 'danger', high: 'warning', normal: 'neutral', lo
                 </template>
 
                 <template #cell:sla="{ row }">
-                    <span :style="row.breached ? { color: 'var(--color-danger-500)' } : {}">
+                    <span :style="row.breached ? { color: 'var(--text-danger)' } : {}">
                         <AlertTriangle v-if="row.breached" class="mr-1 inline h-3 w-3" />{{ row.sla }}
                     </span>
                 </template>
@@ -96,7 +96,7 @@ const priorityTones = { urgent: 'danger', high: 'warning', normal: 'neutral', lo
                         </div>
                         <p class="mt-2 flex flex-wrap items-center gap-2 text-xs" style="color: var(--text-muted)">
                             <UiBadge size="sm" dot>{{ row.statusLabel }}</UiBadge>
-                            <span :style="row.breached ? { color: 'var(--color-danger-500)' } : {}">{{ row.sla }}</span>
+                            <span :style="row.breached ? { color: 'var(--text-danger)' } : {}">{{ row.sla }}</span>
                         </p>
                     </Link>
                 </template>

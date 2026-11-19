@@ -49,7 +49,7 @@ function startViewAs() {
 
 const statusTones = { active: 'success', suspended: 'danger', pending: 'warning' };
 const deliveryIcons = { sent: CheckCircle2, failed: XCircle, queued: Clock };
-const deliveryTones = { sent: 'text-signal-500', failed: 'text-danger-500', queued: 'text-warn-500' };
+const deliveryTones = { sent: 'text-success', failed: 'text-danger', queued: 'text-warning' };
 
 const form = useForm({
     name: props.person.name,
@@ -348,7 +348,7 @@ function resend() {
                                         {{ delivery.status }} · {{ delivery.at }}
                                         <template v-if="delivery.by"> · by {{ delivery.by }}</template>
                                     </span>
-                                    <span v-if="delivery.reason" class="block text-danger-500">{{ delivery.reason }}</span>
+                                    <span v-if="delivery.reason" class="block text-danger">{{ delivery.reason }}</span>
                                 </span>
                             </li>
                         </ul>

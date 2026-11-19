@@ -31,7 +31,7 @@ defineProps({
                 <ul class="space-y-3">
                     <li v-for="meeting in upcoming" :key="meeting.id">
                         <Link :href="`/client/meetings/${meeting.id}`" class="flex items-center gap-3 rounded-[var(--radius-card)] border bg-[var(--surface)] p-4 transition hover:shadow-[var(--shadow-card)]" style="border-color: var(--border-subtle)">
-                            <CalendarClock class="h-5 w-5 shrink-0" style="color: var(--color-brand-600)" aria-hidden="true" />
+                            <CalendarClock class="h-5 w-5 shrink-0" style="color: var(--text-brand)" aria-hidden="true" />
                             <span class="min-w-0 flex-1">
                                 <span class="block text-sm font-semibold">{{ meeting.title }}</span>
                                 <span class="block text-xs" style="color: var(--text-muted)">{{ meeting.when }}<template v-if="meeting.project"> · {{ meeting.project.name }}</template></span>

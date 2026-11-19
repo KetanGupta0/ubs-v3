@@ -152,7 +152,7 @@ const tones = { successful: 'success', failed: 'danger', refunded: 'warning', cr
                             <Link
                                 :href="`/admin/${payment.user.role}s/${payment.user.id}`"
                                 class="hover:underline"
-                                style="color: var(--color-brand-600)"
+                                style="color: var(--text-brand)"
                             >
                                 {{ payment.user.name }}
                             </Link>
@@ -226,7 +226,7 @@ const tones = { successful: 'success', failed: 'danger', refunded: 'warning', cr
                             <span class="block text-xs" style="color: var(--text-muted)">
                                 {{ transaction.at }} · {{ transaction.gateway }}{{ transaction.method ? ` · ${transaction.method}` : '' }}
                             </span>
-                            <span v-if="transaction.failureReason" class="block text-xs" style="color: var(--color-danger-500)">
+                            <span v-if="transaction.failureReason" class="block text-xs" style="color: var(--text-danger)">
                                 {{ transaction.failureReason }}
                             </span>
                         </span>

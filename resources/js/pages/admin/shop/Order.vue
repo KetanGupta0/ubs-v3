@@ -138,7 +138,7 @@ function release(licence, site) {
                         <p class="mt-0.5 text-xs" style="color: var(--text-muted)">
                             {{ licence.maskedKey ?? 'Key not made yet' }} · {{ licence.sites }}, {{ licence.sitesInUse }} in use · updates until {{ licence.updatesUntil }}<template v-if="licence.supportUntil"> · support until {{ licence.supportUntil }}</template> · {{ licence.downloads }} {{ licence.downloads === 1 ? 'download' : 'downloads' }}<template v-if="licence.lastChecked"> · last checked {{ licence.lastChecked }}</template>
                         </p>
-                        <p v-if="!licence.active" class="mt-1 text-xs" style="color: var(--color-danger-600)">Withdrawn: {{ licence.revokedReason }}</p>
+                        <p v-if="!licence.active" class="mt-1 text-xs" style="color: var(--text-danger)">Withdrawn: {{ licence.revokedReason }}</p>
                     </div>
                     <div v-if="mayManage" class="flex gap-1">
                         <UiButton v-if="licence.active" size="xs" variant="ghost" @click="revoke(licence)">Withdraw</UiButton>

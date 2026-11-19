@@ -108,7 +108,7 @@ function scheduleLine(batch) {
                                 </span>
                             </p>
 
-                            <p v-if="course.originalPrice" class="mt-1 text-xs font-medium text-signal-600">
+                            <p v-if="course.originalPrice" class="mt-1 text-xs font-medium text-success">
                                 Save {{ course.savingLabel }} on this batch
                             </p>
 

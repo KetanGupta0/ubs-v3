@@ -216,7 +216,7 @@ function togglePublished(testimonial) {
                                     <Pencil class="h-3.5 w-3.5" />
                                 </UiButton>
                                 <UiButton variant="ghost" size="xs" icon aria-label="Remove question" @click="deleteFaq(faq)">
-                                    <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                                    <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                                 </UiButton>
                             </div>
                         </li>
@@ -273,7 +273,7 @@ function togglePublished(testimonial) {
                                 <Pencil class="h-3.5 w-3.5" />
                             </UiButton>
                             <UiButton variant="ghost" size="xs" icon aria-label="Remove testimonial" @click="deleteTestimonial(testimonial)">
-                                <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                                <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                             </UiButton>
                         </div>
                     </footer>

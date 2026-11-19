@@ -318,7 +318,7 @@ const attendanceTone = (student) => {
                                     <ShieldAlert class="h-3.5 w-3.5" />
                                 </UiButton>
                                 <UiButton variant="ghost" size="xs" @click="drop(student)">
-                                    <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                                    <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                                 </UiButton>
                             </span>
                         </li>
@@ -388,7 +388,7 @@ const attendanceTone = (student) => {
                                     <Pencil class="h-3.5 w-3.5" />
                                 </UiButton>
                                 <UiButton variant="ghost" size="xs" :aria-label="`Remove ${session.title}`" @click="removeSession(session)">
-                                    <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                                    <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                                 </UiButton>
                             </span>
                         </li>
@@ -428,7 +428,7 @@ const attendanceTone = (student) => {
                         </div>
 
                         <UiButton variant="ghost" size="xs" @click="removeAnnouncement(announcement)">
-                            <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                            <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                         </UiButton>
                     </div>
                 </UiCard>

@@ -140,7 +140,7 @@ const facts = [
                                 placeholder="What happened when you contacted them?"
                                 :invalid="Boolean(noteForm.errors.body)"
                             />
-                            <p v-if="noteForm.errors.body" class="text-xs font-medium text-danger-500">
+                            <p v-if="noteForm.errors.body" class="text-xs font-medium text-danger">
                                 {{ noteForm.errors.body }}
                             </p>
 

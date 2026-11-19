@@ -307,7 +307,7 @@ onBeforeUnmount(() => {
                 Add a caption if you like, then send.
             </span>
             <button type="button" class="ml-auto" aria-label="Remove photo" @click="unpick">
-                <Trash2 class="h-4 w-4" style="color: var(--color-danger-500)" />
+                <Trash2 class="h-4 w-4" style="color: var(--text-danger)" />
             </button>
         </div>
 

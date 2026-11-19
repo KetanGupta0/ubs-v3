@@ -168,7 +168,7 @@ function remove(quiz) {
                             <Pencil class="h-3.5 w-3.5" />
                         </UiButton>
                         <UiButton variant="ghost" size="xs" :aria-label="`Delete ${quiz.title}`" @click="remove(quiz)">
-                            <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                            <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                         </UiButton>
                     </div>
                 </div>

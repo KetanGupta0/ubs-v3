@@ -58,7 +58,7 @@ const outstanding = computed(
             >
                 <UiCard v-if="!user.emailVerified">
                     <div class="flex items-start gap-3">
-                        <MailWarning class="mt-0.5 h-5 w-5 shrink-0 text-warn-500" aria-hidden="true" />
+                        <MailWarning class="mt-0.5 h-5 w-5 shrink-0 text-warning" aria-hidden="true" />
                         <div class="min-w-0">
                             <h3 class="text-sm font-semibold">Confirm your email</h3>
                             <p class="mt-1 text-sm" style="color: var(--text-muted)">

@@ -14,6 +14,8 @@ const props = defineProps({
     tone: { type: String, default: 'brand' },
     size: { type: String, default: 'md' },
     showValue: { type: Boolean, default: true },
+    /** The bar's name for a screen reader when it has no visible label. */
+    ariaLabel: { type: String, default: null },
 });
 
 const clamped = computed(() => Math.max(0, Math.min(100, Math.round(props.value ?? 0))));
@@ -44,7 +46,7 @@ const heights = { sm: 'h-1.5', md: 'h-2', lg: 'h-2.5' };
             :aria-valuenow="clamped"
             aria-valuemin="0"
             aria-valuemax="100"
-            :aria-label="label || undefined"
+            :aria-label="label || ariaLabel || 'Progress'"
         >
             <div
                 class="h-full rounded-full transition-[width] duration-[var(--duration-slow)] ease-[var(--ease-out-expo)]"

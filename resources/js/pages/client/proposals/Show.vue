@@ -100,7 +100,7 @@ const tones = { accepted: 'success', rejected: 'danger', expired: 'neutral', sen
                     <template #header><h2 class="text-base font-semibold">What you get</h2></template>
                     <ul class="space-y-2 text-sm">
                         <li v-for="(item, index) in proposal.deliverables" :key="index" class="flex gap-2">
-                            <Check class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--color-signal-500)" />
+                            <Check class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--text-success)" />
                             <span>{{ item }}</span>
                         </li>
                     </ul>
@@ -198,7 +198,7 @@ const tones = { accepted: 'success', rejected: 'danger', expired: 'neutral', sen
                 />
                 <p class="text-sm" style="color: var(--text-muted)">
                     If anything needs changing first, reply to the email and we will send a revised version. Or
-                    <button type="button" class="font-medium text-danger-500 hover:underline" @click="open('rejected')">decline it</button>.
+                    <button type="button" class="font-medium text-danger hover:underline" @click="open('rejected')">decline it</button>.
                 </p>
             </template>
 
@@ -225,7 +225,7 @@ const tones = { accepted: 'success', rejected: 'danger', expired: 'neutral', sen
                     <UiTextarea v-model="form.note" :rows="4" />
                 </UiFormField>
 
-                <p v-if="form.errors.response" class="mt-2 text-sm text-danger-500">{{ form.errors.response }}</p>
+                <p v-if="form.errors.response" class="mt-2 text-sm text-danger">{{ form.errors.response }}</p>
             </form>
 
             <template #footer>

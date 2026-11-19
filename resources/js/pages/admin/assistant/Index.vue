@@ -63,7 +63,7 @@ const blocked = computed(() => {
 
                         <UiSwitch v-model="form.enabled" label="On the public site" description="Visitors see an “Ask us” button on every public page." />
                         <UiCheckbox v-if="form.enabled" v-model="form.policy_ack" label="The published privacy policy tells visitors what happens to what they type into it." />
-                        <p v-if="form.errors.enabled" class="text-xs" style="color: var(--color-danger-500)">{{ form.errors.enabled }}</p>
+                        <p v-if="form.errors.enabled" class="text-xs" style="color: var(--text-danger)">{{ form.errors.enabled }}</p>
 
                         <div class="grid gap-4 sm:grid-cols-2">
                             <UiFormField label="Keep conversations for" :hint="`Days, at most ${state.retentionLimit}, as the privacy policy promises. Then they are deleted; a lead they produced stays.`" :error="form.errors.retention_days">

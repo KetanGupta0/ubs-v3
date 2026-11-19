@@ -126,7 +126,7 @@ const lockIcons = {
                                 class="mt-0.5 h-[18px] w-[18px] shrink-0"
                                 :style="{
                                     color: lesson.completed
-                                        ? 'var(--color-signal-500)'
+                                        ? 'var(--text-success)'
                                         : lesson.lock.open
                                             ? 'var(--color-brand-500)'
                                             : 'var(--text-muted)',

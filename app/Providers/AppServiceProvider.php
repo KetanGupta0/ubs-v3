@@ -10,6 +10,7 @@ use App\Services\Sms\LogSmsSender;
 use App\Services\Sms\Msg91SmsSender;
 use App\Services\Sms\SmsSender;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -58,6 +59,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // A query per row of a list (an N+1) fails loudly in development and in
+        // the suite, and never in production, where a slow page beats a broken
+        // one (Step I). Only models loaded as part of a list are checked.
+        Model::preventLazyLoading(! $this->app->isProduction());
+
         /*
          * One password policy for the whole application, so a rule changed here
          * applies to registration, reset and the forced first change alike.

@@ -187,7 +187,7 @@ const missingKey = computed(() => needsOptions.value && form.correct.length === 
                                 class="flex items-center gap-1.5 text-xs"
                                 :style="{
                                     color: question.correct.includes(option)
-                                        ? 'var(--color-signal-600)'
+                                        ? 'var(--text-success)'
                                         : 'var(--text-muted)',
                                 }"
                             >
@@ -213,7 +213,7 @@ const missingKey = computed(() => needsOptions.value && form.correct.length === 
                             <Pencil class="h-3.5 w-3.5" />
                         </UiButton>
                         <UiButton variant="ghost" size="xs" @click="remove(question)">
-                            <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                            <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                         </UiButton>
                     </div>
                 </div>
@@ -289,7 +289,7 @@ const missingKey = computed(() => needsOptions.value && form.correct.length === 
                         Option
                     </UiButton>
 
-                    <p v-if="missingKey" class="mt-3 text-xs" style="color: var(--color-warn-600)">
+                    <p v-if="missingKey" class="mt-3 text-xs" style="color: var(--text-warning)">
                         Nothing is ticked. Saving it this way means every answer counts as wrong.
                     </p>
                 </div>

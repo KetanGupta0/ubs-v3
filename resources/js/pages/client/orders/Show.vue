@@ -171,7 +171,7 @@ function cancel() {
                 </div>
 
                 <p v-if="!licence.active" class="mt-3 flex items-start gap-2 text-sm">
-                    <ShieldAlert class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--color-danger-600)" />
+                    <ShieldAlert class="mt-0.5 h-4 w-4 shrink-0" style="color: var(--text-danger)" />
                     {{ licence.revokedReason || 'This licence has been withdrawn.' }} The key no longer works, and nothing can be downloaded under it.
                 </p>
 

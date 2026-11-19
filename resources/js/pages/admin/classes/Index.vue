@@ -77,7 +77,7 @@ function isCurrent(view) {
                     class="rounded-full border px-3 py-1.5 text-sm transition"
                     :class="isCurrent(view) ? 'font-semibold' : ''"
                     :style="isCurrent(view)
-                        ? { borderColor: 'var(--color-brand-500)', color: 'var(--color-brand-600)', background: 'var(--surface)' }
+                        ? { borderColor: 'var(--color-brand-500)', color: 'var(--text-brand)', background: 'var(--surface)' }
                         : { borderColor: 'var(--border-subtle)', color: 'var(--text-muted)' }"
                     :aria-current="isCurrent(view) ? 'page' : undefined"
                 >
@@ -113,7 +113,7 @@ function isCurrent(view) {
                 </template>
 
                 <template #cell:attendance="{ row }">
-                    <span :style="row.unmarked ? { color: 'var(--color-warn-600)', fontWeight: 600 } : {}">{{ row.attendance }}</span>
+                    <span :style="row.unmarked ? { color: 'var(--text-warning)', fontWeight: 600 } : {}">{{ row.attendance }}</span>
                 </template>
 
                 <template #rowActions="{ row }">
@@ -149,14 +149,14 @@ function isCurrent(view) {
                             <UiBadge v-else :tone="statusTones[row.status] ?? 'neutral'" size="sm" dot>{{ row.status }}</UiBadge>
                         </div>
                         <div class="mt-2 flex items-center justify-between text-xs">
-                            <span :style="row.unmarked ? { color: 'var(--color-warn-600)' } : { color: 'var(--text-muted)' }">
+                            <span :style="row.unmarked ? { color: 'var(--text-warning)' } : { color: 'var(--text-muted)' }">
                                 Attendance: {{ row.attendance }}
                             </span>
                             <Link
                                 v-if="row.status !== 'cancelled' && row.isPast"
                                 :href="`/admin/batches/${row.batchId}/sessions/${row.id}/register`"
                                 class="inline-flex items-center gap-1 font-medium"
-                                style="color: var(--color-brand-600)"
+                                style="color: var(--text-brand)"
                             >
                                 Register <ExternalLink class="h-3 w-3" />
                             </Link>

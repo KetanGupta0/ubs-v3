@@ -157,7 +157,9 @@ class Conversation extends Model
     {
         $id = $user instanceof User ? $user->id : $user;
 
-        return $this->participants->firstWhere('user_id', $id)
+        // The loaded list when there is one; otherwise one row, rather than
+        // every member of a batch group for each room in a list.
+        return ($this->relationLoaded('participants') ? $this->participants->firstWhere('user_id', $id) : null)
             ?? $this->participants()->where('user_id', $id)->first();
     }
 

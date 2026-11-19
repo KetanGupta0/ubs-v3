@@ -33,7 +33,9 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // No signed links to this disk are ever made, so the routes that
+            // would serve and receive them are not registered (Step I).
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

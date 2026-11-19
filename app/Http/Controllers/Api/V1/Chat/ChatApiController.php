@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Chat;
 
 use App\Http\Controllers\Controller;
 use App\Models\Conversation;
+use App\Models\ConversationParticipant;
 use App\Models\Message;
 use App\Services\Chat\Messenger;
 use App\Services\Chat\Rooms;
@@ -40,15 +41,24 @@ class ChatApiController extends Controller
             $this->rooms->ensureStudentRooms($user);
         }
 
+        $rooms = $this->rooms->visibleTo($user);
+
+        // This person's place in each room, in one query rather than one a room.
+        $places = ConversationParticipant::query()
+            ->where('user_id', $user->id)
+            ->whereIn('conversation_id', $rooms->pluck('id'))
+            ->get()
+            ->keyBy('conversation_id');
+
         return response()->json([
-            'data' => $this->rooms->visibleTo($user)->map(fn (Conversation $room) => [
+            'data' => $rooms->map(fn (Conversation $room) => [
                 'id' => $room->id,
                 'type' => $room->type,
                 'title' => $room->displayTitle(),
                 'preview' => $room->last_message_preview,
                 'lastMessageAt' => $room->last_message_at?->toIso8601String(),
-                'unread' => $room->participantFor($user)?->unreadCount() ?? 0,
-            ]),
+                'unread' => ($places[$room->id] ?? null)?->unreadCount() ?? 0,
+            ])->values(),
         ]);
     }
 

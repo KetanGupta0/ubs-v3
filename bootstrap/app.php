@@ -8,6 +8,8 @@ use App\Http\Middleware\GuardImpersonation;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RecordLastSeen;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\ThrottleRequests;
 use App\Models\Redirect;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -35,6 +37,9 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // On every response, the API and /health included (Step I).
+        $middleware->append(SecurityHeaders::class);
+
         $middleware->web(append: [
             // Before anything renders: a member of staff viewing as somebody
             // else may look and nothing more.
@@ -59,6 +64,10 @@ return Application::configure(basePath: dirname(__DIR__))
             // API rather than just the challenge endpoint.
             'abilities' => CheckAbilities::class,
             'ability' => CheckForAnyAbility::class,
+
+            // An unnamed throttle counts per route rather than sharing one
+            // count with every other unnamed throttle (Step I).
+            'throttle' => ThrottleRequests::class,
         ]);
 
         // Unauthenticated web requests land on the single sign in form.
@@ -66,7 +75,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // A mail app's own unsubscribe button posts here with no session (RFC
         // 8058). The link's signature is what protects it (§8).
-        $middleware->validateCsrfTokens(except: ['unsubscribe/*']);
+        // The browser posts what the content security policy blocked the
+        // same way, with nothing to sign it (Step I).
+        $middleware->validateCsrfTokens(except: ['unsubscribe/*', 'csp-reports']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // To Sentry once SENTRY_LARAVEL_DSN is set; config/sentry.php says

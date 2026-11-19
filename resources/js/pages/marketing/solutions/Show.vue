@@ -81,7 +81,7 @@ const paragraphs = computed(() =>
 
                 <div class="grid items-start gap-10 lg:grid-cols-12">
                     <div class="lg:col-span-6">
-                        <p class="text-sm font-semibold uppercase tracking-wide" :style="{ color: tone.solid }">
+                        <p class="text-sm font-semibold uppercase tracking-wide" :style="{ color: tone.text }">
                             {{ solution.category }}
                         </p>
 

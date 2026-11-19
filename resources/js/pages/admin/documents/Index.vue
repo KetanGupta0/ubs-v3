@@ -241,7 +241,7 @@ function createFolder() {
                             <Download class="h-3.5 w-3.5" />
                         </UiButton>
                         <UiButton variant="ghost" size="xs" icon aria-label="Remove" @click="destroy(document)">
-                            <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
+                            <Trash2 class="h-3.5 w-3.5" style="color: var(--text-danger)" />
                         </UiButton>
                     </span>
                 </li>

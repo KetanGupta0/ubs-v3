@@ -52,7 +52,8 @@ class ConversationParticipant extends Model
 
     public function unreadCount(): int
     {
-        return $this->conversation->messages()
+        return Message::query()
+            ->where('conversation_id', $this->conversation_id)
             ->whereNot('sender_id', $this->user_id)
             ->when(
                 $this->last_read_at,

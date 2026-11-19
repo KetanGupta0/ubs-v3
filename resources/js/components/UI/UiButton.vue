@@ -25,8 +25,8 @@ const props = defineProps({
 
 const variants = {
     primary:
-        'bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-800 ' +
-        'dark:bg-brand-500 dark:hover:bg-brand-400 dark:active:bg-brand-500',
+        // The same steps in dark mode: white on brand-500 is 4.46:1, just short of AA.
+        'bg-brand-600 text-white shadow-sm hover:bg-brand-700 active:bg-brand-800',
     accent:
         'bg-accent-500 text-ink-950 shadow-sm hover:bg-accent-400 active:bg-accent-600 font-semibold',
     secondary:

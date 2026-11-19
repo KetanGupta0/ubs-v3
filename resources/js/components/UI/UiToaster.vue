@@ -19,9 +19,9 @@ const icons = {
 };
 
 const tones = {
-    success: 'text-signal-500',
-    warning: 'text-warn-500',
-    danger: 'text-danger-500',
+    success: 'text-success',
+    warning: 'text-warning',
+    danger: 'text-danger',
     brand: 'text-brand-500',
     neutral: 'text-ink-400',
 };

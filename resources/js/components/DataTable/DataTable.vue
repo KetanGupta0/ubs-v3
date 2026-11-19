@@ -90,6 +90,14 @@ function toggleAll() {
     );
 }
 
+/* What a screen reader calls a row's checkbox: the row's first column, as shown. */
+function rowName(row) {
+    const first = visibleColumns.value[0];
+    const value = first ? row[first.key] : null;
+
+    return typeof value === 'string' || typeof value === 'number' ? String(value) : 'this row';
+}
+
 function toggleRow(id) {
     emit(
         'update:selected',
@@ -149,17 +157,13 @@ const exportFormats = [
                         Columns
                     </p>
                     <div class="max-h-72 overflow-y-auto scrollbar-thin px-2.5 py-1" @click.stop>
-                        <label
-                            v-for="column in table.columns"
-                            :key="column.key"
-                            class="flex cursor-pointer items-center gap-2.5 py-1.5"
-                        >
+                        <div v-for="column in table.columns" :key="column.key" class="flex py-1.5">
                             <UiCheckbox
                                 :model-value="!hiddenColumns.has(column.key)"
+                                :label="column.label"
                                 @update:model-value="toggleColumn(column.key)"
                             />
-                            <span class="text-sm" style="color: var(--text-base)">{{ column.label }}</span>
-                        </label>
+                        </div>
                     </div>
                 </UiDropdown>
                 </span>
@@ -221,9 +225,9 @@ const exportFormats = [
                                 <UiCheckbox
                                     :model-value="allSelected"
                                     :indeterminate="someSelected"
+                                    aria-label="Select all rows on this page"
                                     @update:model-value="toggleAll"
                                 />
-                                <span class="sr-only">Select all rows on this page</span>
                             </th>
 
                             <th
@@ -282,6 +286,7 @@ const exportFormats = [
                             <td v-if="selectable" class="px-4 py-3.5">
                                 <UiCheckbox
                                     :model-value="selected.includes(row[rowKey])"
+                                    :aria-label="`Select ${rowName(row)}`"
                                     @update:model-value="toggleRow(row[rowKey])"
                                 />
                             </td>

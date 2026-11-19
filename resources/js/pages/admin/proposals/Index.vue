@@ -59,7 +59,7 @@ const tones = { accepted: 'success', rejected: 'danger', sent: 'brand', draft: '
                 </template>
 
                 <template #cell:valid_until="{ row }">
-                    <span :style="row.expired ? { color: 'var(--color-warn-600)' } : {}">{{ row.valid_until }}</span>
+                    <span :style="row.expired ? { color: 'var(--text-warning)' } : {}">{{ row.valid_until }}</span>
                 </template>
 
                 <template #rowActions="{ row }">

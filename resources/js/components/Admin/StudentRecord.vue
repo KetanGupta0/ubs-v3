@@ -106,7 +106,7 @@ const percent = (value) => (value === null || value === undefined ? '—' : `${M
                                 <p class="font-medium" style="color: var(--text-strong)">{{ item.course }}</p>
                                 <p class="text-xs" style="color: var(--text-muted)">
                                     {{ item.batch ?? 'No batch' }} · enrolled {{ item.enrolledOn }} ·
-                                    <span :style="item.hasPaid ? {} : { color: 'var(--color-warn-600)' }">fee {{ item.fee.toLowerCase() }}</span>
+                                    <span :style="item.hasPaid ? {} : { color: 'var(--text-warning)' }">fee {{ item.fee.toLowerCase() }}</span>
                                 </p>
                             </div>
                             <UiBadge :tone="statusTones[item.status] ?? 'neutral'" size="sm" dot>{{ item.statusLabel }}</UiBadge>
@@ -128,7 +128,7 @@ const percent = (value) => (value === null || value === undefined ? '—' : `${M
                                 <p class="text-xs" style="color: var(--text-muted)">Attendance</p>
                                 <p
                                     class="font-semibold tabular-nums"
-                                    :style="item.result.shortOnAttendance ? { color: 'var(--color-danger-600)' } : {}"
+                                    :style="item.result.shortOnAttendance ? { color: 'var(--text-danger)' } : {}"
                                 >
                                     {{ percent(item.result.attendance) }}
                                 </p>
@@ -207,7 +207,7 @@ const percent = (value) => (value === null || value === undefined ? '—' : `${M
                         <div class="flex items-center gap-3">
                             <span class="text-sm tabular-nums">{{ payment.paid }} of {{ payment.total }}</span>
                             <UiBadge :tone="paymentTones[payment.status] ?? 'neutral'" size="sm">{{ payment.status }}</UiBadge>
-                            <Link :href="`/admin/billing/${payment.id}`" class="text-xs font-medium hover:underline" style="color: var(--text-link, var(--color-brand-600))">
+                            <Link :href="`/admin/billing/${payment.id}`" class="text-xs font-medium hover:underline" style="color: var(--text-brand)">
                                 Open
                             </Link>
                         </div>
@@ -227,7 +227,7 @@ const percent = (value) => (value === null || value === undefined ? '—' : `${M
                                 <p class="text-xs" style="color: var(--text-muted)">
                                     {{ certificate.number }} · issued {{ certificate.issuedOn }}<template v-if="certificate.grade"> · grade {{ certificate.grade }}</template>
                                 </p>
-                                <p v-if="certificate.revoked" class="text-xs" style="color: var(--color-danger-600)">
+                                <p v-if="certificate.revoked" class="text-xs" style="color: var(--text-danger)">
                                     Withdrawn<template v-if="certificate.revokedReason">: {{ certificate.revokedReason }}</template>
                                 </p>
                             </div>

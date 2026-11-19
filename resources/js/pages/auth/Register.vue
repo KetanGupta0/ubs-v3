@@ -158,7 +158,7 @@ function submit() {
 
             <div>
                 <UiCheckbox v-model="form.terms" label="I agree to the terms and the privacy policy" />
-                <p v-if="form.errors.terms" class="mt-1 text-xs font-medium text-danger-500">
+                <p v-if="form.errors.terms" class="mt-1 text-xs font-medium text-danger">
                     {{ form.errors.terms }}
                 </p>
             </div>

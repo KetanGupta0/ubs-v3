@@ -214,7 +214,7 @@ function startOver() {
                     Please do not type passwords, card numbers or other sensitive details.
                     <a href="/legal/privacy" class="underline" @click.prevent="router.visit('/legal/privacy')">Privacy policy</a>.
                 </p>
-                <p v-if="problem" class="text-xs" role="alert" style="color: var(--color-danger-500)">{{ problem }}</p>
+                <p v-if="problem" class="text-xs" role="alert" style="color: var(--text-danger)">{{ problem }}</p>
                 <div class="flex flex-wrap gap-2">
                     <UiButton :loading="sending" @click="start">Start</UiButton>
                     <UiButton variant="ghost" @click="router.visit('/contact')">Write to us instead</UiButton>
@@ -245,7 +245,7 @@ function startOver() {
                     </form>
 
                     <div v-if="sending && !offer" class="w-fit rounded-2xl rounded-tl-sm px-3 py-2" style="background: var(--surface-sunken); color: var(--text-muted)" aria-label="The assistant is writing">…</div>
-                    <p v-if="problem" class="text-xs" role="alert" style="color: var(--color-danger-500)">{{ problem }}</p>
+                    <p v-if="problem" class="text-xs" role="alert" style="color: var(--text-danger)">{{ problem }}</p>
                 </div>
 
                 <footer class="border-t p-3" style="border-color: var(--border-subtle)">
@@ -275,7 +275,7 @@ function startOver() {
 
 <style scoped>
 .assistant-reply :deep(a) {
-    color: var(--color-brand-600);
+    color: var(--text-brand);
     text-decoration: underline;
 }
 .assistant-reply :deep(p + p),
