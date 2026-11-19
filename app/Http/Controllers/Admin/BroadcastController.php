@@ -13,6 +13,7 @@ use App\Models\Setting;
 use App\Services\Admin\Auditor;
 use App\Services\Mail\Audience;
 use App\Services\Mail\Campaigns;
+use App\Services\Mail\MailBudget;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
 use App\Support\Table\Table;
@@ -35,7 +36,7 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
  */
 class BroadcastController extends Controller
 {
-    public function index(Request $request, Campaigns $campaigns): Response|SymfonyResponse
+    public function index(Request $request): Response|SymfonyResponse
     {
         $table = Table::for(MailCampaign::query()->with('author:id,name', 'occasion:id,name')->withCount([
             'recipients',
@@ -73,7 +74,7 @@ class BroadcastController extends Controller
 
         return Inertia::render('admin/mail/Broadcasts', [
             'table' => $table->toArray($request),
-            'budget' => ['left' => $campaigns->budgetLeft(), 'limit' => (int) config('company.mail.promotional_daily_limit')],
+            'budget' => MailBudget::summary(),
             'enquiries' => $this->enquiriesState(),
         ]);
     }

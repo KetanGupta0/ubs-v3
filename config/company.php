@@ -73,13 +73,6 @@ return [
     ],
 
     /*
-    | Greetings and announcements by email (§8). The hosting's mail allows a
-    | hundred a day in all (X8), and sign in codes, receipts and reminders must
-    | never wait behind a greeting, so promotional mail has a smaller daily
-    | budget of its own and goes out a few at a time. Raise the budget when a
-    | mail provider is set up. Nobody gets more than a couple a week.
-    */
-    /*
     | The AI features (§9, X3). Quiz review reads a flagged attempt on Opus,
     | through the Message Batches API at half price, because nothing waits on
     | it; the visitor assistant answers every message, so it is on Sonnet.
@@ -92,8 +85,17 @@ return [
         'assistant_model' => env('AI_ASSISTANT_MODEL', 'claude-sonnet-5-5'),
     ],
 
+    /*
+    | Mail a day (X15). Hostinger's plan allows a hundred in all; the owner
+    | sets the plan's figure in Settings, and these are only where a new
+    | install starts. Greetings and announcements (§8) stop once the day's mail
+    | leaves only the part kept for service mail, so a sign in code, a receipt
+    | or a reminder always has room. They go out a few at a time, and nobody
+    | gets more than a couple a week.
+    */
     'mail' => [
-        'promotional_daily_limit' => (int) env('MAIL_PROMOTIONAL_DAILY_LIMIT', 60),
+        'daily_limit' => 100,
+        'service_reserve' => 40,
         'promotional_per_week' => 2,
         'per_run' => 15,
     ],

@@ -538,13 +538,19 @@ admin panel (`/admin/mail/*`), `mail:send-promotional` in the scheduler.
   only through a send (`MailCampaign`); they read the do-not-mail list
   (`MailSuppression`, by address) and nothing else does, so stopping them never stops a
   sign in code, a receipt or a reminder.
-- **Hostinger's mail allows 100 a day in all (X8),** so promotional mail has its own
-  daily budget (`MAIL_PROMOTIONAL_DAILY_LIMIT`, 60 by default) and goes out from the
+- **The day's mail is counted against the plan's limit (X8, X15).** Hostinger's plan
+  allows 100 a day in all. The owner sets the plan's figure, and the part kept for service
+  mail, under Settings, Mail (`App\Services\Mail\MailBudget`; 100 and 40 to start), and
+  the dashboard shows what is left today. `CountMailSent` counts every message the mailer
+  hands over, by recipient, in `mail_usage`; `CountMailRefused` counts a queued one the
+  server refused once its retries were spent. The count never holds service mail back:
+  the mail server decides, and mail sent by hand from the same mailbox counts there and
+  not here.
+- **Greetings and announcements take only what the day leaves above that part,** from the
   scheduler a few at a time, greetings before announcements and people without an
   account first, because mail is their only way to hear. Nobody gets more than
-  `company.mail.promotional_per_week` in a week. Raise the budget when a provider is set
-  up. Everybody with an account sees the same message among their notifications as soon
-  as a send starts, whatever the budget.
+  `company.mail.promotional_per_week` in a week. Everybody with an account sees the same
+  message among their notifications as soon as a send starts, whatever the budget.
 - **A send fixes who it is for when it starts** (`Campaigns::start()`), one address once,
   from `Audience` filters; the list and the weekly limit are checked again just before
   each mail goes. Staff are never in an audience.

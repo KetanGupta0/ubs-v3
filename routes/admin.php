@@ -745,6 +745,7 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::put('settings/company', [SettingsController::class, 'updateCompany'])->name('settings.company');
             Route::put('settings/site', [SettingsController::class, 'updateSite'])->name('settings.site');
             Route::put('settings/invoicing', [SettingsController::class, 'updateInvoicing'])->name('settings.invoicing');
+            Route::put('settings/mail', [SettingsController::class, 'updateMail'])->name('settings.mail');
             Route::put('settings/templates/{template}', [SettingsController::class, 'updateTemplate'])->name('settings.templates.update');
             Route::post('settings/templates/{template}/test', [SettingsController::class, 'testTemplate'])
                 ->middleware('throttle:5,1')

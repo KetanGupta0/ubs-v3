@@ -16,6 +16,7 @@ use App\Models\Solution;
 use App\Models\SupportTicket;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\Mail\MailBudget;
 use App\Support\Money;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -35,6 +36,8 @@ class DashboardController extends Controller
         return Inertia::render('admin/Dashboard', [
             'metrics' => $this->metrics(),
             'attention' => $this->needsAttention(),
+            // Against what the hosting plan allows, set in Settings (X15).
+            'mail' => MailBudget::summary(),
             'recentLeads' => Lead::query()
                 ->with(['solution:id,title', 'service:id,title', 'course:id,title,type', 'assignee:id,name'])
                 ->latest('id')
@@ -117,6 +120,28 @@ class DashboardController extends Controller
     protected function needsAttention(): array
     {
         $items = [];
+
+        $mail = MailBudget::summary();
+
+        if ($mail['state'] === 'used_up') {
+            $items[] = [
+                'tone' => 'danger',
+                'title' => 'Today\'s mail is used up: '.$mail['sent'].' of the '.$mail['limit'].' your plan allows',
+                'body' => 'Greetings and announcements wait for tomorrow. Until midnight the mail server may refuse sign in codes, receipts and reminders too.',
+                'href' => '/admin/settings?tab=mail',
+                'action' => 'Mail settings',
+            ];
+        }
+
+        if ($mail['refused'] > 0) {
+            $items[] = [
+                'tone' => 'warning',
+                'title' => $mail['refused'].' '.str('message')->plural($mail['refused']).' refused by the mail server today',
+                'body' => 'Each was tried again before it was given up. Near the day\'s limit that usually means the plan\'s cap was reached; mail sent by hand from the same mailbox counts against it too.',
+                'href' => '/admin/settings?tab=mail',
+                'action' => 'Mail settings',
+            ];
+        }
 
         $stale = Lead::query()
             ->where('status', 'new')

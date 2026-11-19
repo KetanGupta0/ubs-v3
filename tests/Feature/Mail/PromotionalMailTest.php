@@ -98,7 +98,8 @@ it('counts the audience live, staff never in it, filters narrowing the right peo
 it('puts an announcement in the platform at once and mails it within the day\'s budget, people without an account first', function () {
     publishPrivacyDraft($this->owner);
     Setting::put(Audience::SETTING, true, 'mail');
-    config(['company.mail.promotional_daily_limit' => 2]);
+    // Room for two greetings or announcements a day, past the part kept for service mail.
+    config(['company.mail.daily_limit' => 12, 'company.mail.service_reserve' => 10]);
     MailSuppression::query()->create(['email' => 'ravi@example.com', 'reason' => 'unsubscribed']);
 
     ($this->send)(['groups' => ['students', 'clients', 'enquiries']])->assertRedirect();

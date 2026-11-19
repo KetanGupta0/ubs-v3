@@ -9,6 +9,7 @@ use App\Models\Occasion;
 use App\Services\Admin\Auditor;
 use App\Services\Mail\Audience;
 use App\Services\Mail\Campaigns;
+use App\Services\Mail\MailBudget;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response as HttpResponse;
@@ -23,7 +24,7 @@ use Inertia\Response;
  */
 class OccasionController extends Controller
 {
-    public function index(Campaigns $campaigns): Response
+    public function index(): Response
     {
         $occasions = Occasion::query()->with('media')->withCount('campaigns')->orderByRaw('date is null')->orderBy('date')->get();
 
@@ -51,7 +52,7 @@ class OccasionController extends Controller
             'repeats' => collect(Occasion::REPEATS)->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])->values(),
             'media' => Media::query()->latest('id')->limit(60)->get()->map(fn (Media $media) => ['value' => $media->id, 'label' => $media->alt, 'url' => $media->url()]),
             'enquiriesAllowed' => Audience::enquiriesAllowed(),
-            'budget' => ['left' => $campaigns->budgetLeft(), 'limit' => (int) config('company.mail.promotional_daily_limit')],
+            'budget' => MailBudget::summary(),
         ]);
     }
 

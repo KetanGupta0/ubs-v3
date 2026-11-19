@@ -30,10 +30,9 @@ const props = defineProps({
     socialNetworks: { type: Array, default: () => [] },
     invoicing: { type: Object, required: true },
     templates: { type: Array, default: () => [] },
+    mail: { type: Object, required: true },
     providers: { type: Array, default: () => [] },
 });
-
-const tab = ref('company');
 
 /* Viewing settings is a separate permission from changing them. */
 const page = usePage();
@@ -44,8 +43,13 @@ const tabs = [
     { value: 'site', label: 'Public site' },
     { value: 'invoicing', label: 'Invoicing' },
     { value: 'templates', label: 'Messages' },
+    { value: 'mail', label: 'Mail' },
     { value: 'providers', label: 'Providers' },
 ];
+
+/* A link can open a tab: the dashboard's mail figure points at the Mail tab. */
+const asked = new URLSearchParams(window.location.search).get('tab');
+const tab = ref(tabs.some(({ value }) => value === asked) ? asked : 'company');
 
 const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -59,6 +63,11 @@ const siteForm = useForm({
     whatsapp: props.site.whatsapp ?? '',
     social: Object.fromEntries(props.socialNetworks.map(({ key }) => [key, props.site.social?.[key] ?? ''])),
 });
+
+const mailForm = useForm({ daily_limit: props.mail.limit, service_reserve: props.mail.reserve });
+
+/* What greetings and announcements could use on a day with no other mail. */
+const promotionalMost = computed(() => Math.max(0, (Number(mailForm.daily_limit) || 0) - (Number(mailForm.service_reserve) || 0)));
 
 const nextInvoiceNumber = computed(
     () => `${invoicingForm.prefix}-${String(invoicingForm.next_number).padStart(4, '0')}`,
@@ -74,6 +83,10 @@ function saveSite() {
 
 function saveInvoicing() {
     invoicingForm.put('/admin/settings/invoicing', { preserveScroll: true });
+}
+
+function saveMail() {
+    mailForm.put('/admin/settings/mail', { preserveScroll: true });
 }
 
 </script>
@@ -246,6 +259,69 @@ function saveInvoicing() {
                     :can-manage="canManage"
                 />
             </div>
+
+            <!-- ------------------------------------------------------ mail -->
+            <form v-else-if="tab === 'mail'" class="space-y-5" @submit.prevent="saveMail">
+                <FormSection
+                    title="Mail a day"
+                    description="Your hosting plan caps how much mail can go out in a day. Hostinger's plan allows 100. Set the new figure here whenever you change plan or add a mail provider."
+                >
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <UiFormField
+                            label="Mail your plan allows a day"
+                            required
+                            :error="mailForm.errors.daily_limit"
+                            hint="Counted by recipient, as the mail server counts."
+                        >
+                            <UiInput v-model.number="mailForm.daily_limit" type="number" min="1" max="100000" />
+                        </UiFormField>
+
+                        <UiFormField
+                            label="Kept for sign in codes, receipts and reminders"
+                            required
+                            :error="mailForm.errors.service_reserve"
+                            hint="Greetings and announcements stop once the day's mail leaves only this many."
+                        >
+                            <UiInput v-model.number="mailForm.service_reserve" type="number" min="0" />
+                        </UiFormField>
+                    </div>
+
+                    <p class="text-sm" style="color: var(--text-muted)">
+                        Greetings and announcements can use up to
+                        <span class="font-semibold" style="color: var(--text-strong)">{{ promotionalMost }}</span>
+                        a day, fewer on a day with a lot of service mail. Service mail is never held back: the mail
+                        server decides whether it goes.
+                    </p>
+                </FormSection>
+
+                <FormSection
+                    title="Today so far"
+                    description="Counted from midnight. Mail sent by hand from the same mailbox counts against your plan but not here."
+                >
+                    <dl class="grid gap-4 sm:grid-cols-4">
+                        <div>
+                            <dt class="text-xs" style="color: var(--text-muted)">Left today</dt>
+                            <dd class="mt-0.5 text-lg font-semibold">{{ mail.left }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs" style="color: var(--text-muted)">Sent</dt>
+                            <dd class="mt-0.5 text-lg font-semibold">{{ mail.sent }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs" style="color: var(--text-muted)">Greetings and announcements</dt>
+                            <dd class="mt-0.5 text-lg font-semibold">{{ mail.promotional }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-xs" style="color: var(--text-muted)">Refused by the mail server</dt>
+                            <dd class="mt-0.5 text-lg font-semibold">{{ mail.refused }}</dd>
+                        </div>
+                    </dl>
+                </FormSection>
+
+                <div class="flex justify-end pb-safe">
+                    <UiButton type="submit" :loading="mailForm.processing">Save mail limits</UiButton>
+                </div>
+            </form>
 
             <!-- ------------------------------------------------- providers -->
             <div v-else class="space-y-5">

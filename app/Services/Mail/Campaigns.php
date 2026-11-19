@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
 use InvalidArgumentException;
+use Symfony\Component\Mailer\Exception\TransportExceptionInterface;
 use Throwable;
 
 /**
@@ -21,10 +22,11 @@ use Throwable;
  *
  * Starting a send fixes who it is for, once, and puts it among the
  * notifications of everybody with an account straight away. The mail itself
- * goes out from the scheduler inside a daily budget kept below the hosting's
- * cap (X8), greetings before announcements and people without an account
- * first, because the mail is the only way to reach them. The do-not-mail list
- * and the weekly limit are checked again just before each one goes.
+ * goes out from the scheduler within what the day's mail leaves above the
+ * part kept for service mail (X8, X15), greetings before announcements and
+ * people without an account first, because the mail is the only way to reach
+ * them. The do-not-mail list and the weekly limit are checked again just
+ * before each one goes.
  */
 class Campaigns
 {
@@ -160,6 +162,10 @@ class Campaigns
             Log::warning('A greeting or announcement could not be sent', ['campaign' => $campaign->id, 'recipient' => $recipient->id]);
 
             // Twice refused is not going to work: stop trying this address.
+            if ($recipient->error && $e instanceof TransportExceptionInterface) {
+                MailBudget::recordRefused();
+            }
+
             $recipient->forceFill([
                 'status' => $recipient->error ? 'failed' : 'queued',
                 'error' => str($e->getMessage())->limit(290)->toString(),
@@ -169,12 +175,10 @@ class Campaigns
         }
     }
 
-    /** What is left of today's promotional budget. */
+    /** What greetings and announcements may still send today (X15). */
     public function budgetLeft(): int
     {
-        $sentToday = MailCampaignRecipient::query()->where('status', 'sent')->where('sent_at', '>=', today())->count();
-
-        return max(0, (int) config('company.mail.promotional_daily_limit') - $sentToday);
+        return MailBudget::promotionalLeft();
     }
 
     public function sentThisWeek(string $email): int

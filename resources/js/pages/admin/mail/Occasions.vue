@@ -86,7 +86,7 @@ const groupLabel = (value) => props.groups.find((group) => group.value === value
 
     <AppLayout title="Greetings" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Announcements', href: '/admin/mail/broadcasts' }, { label: 'Greetings' }]">
         <div class="mx-auto max-w-5xl space-y-5">
-            <PageHeader title="Greeting days" :description="`A greeting goes on its day from its time, in everybody's notifications at once and by mail within the day's budget (${budget.limit} a day), so on a big day not everybody gets the mail. A festival's date is confirmed each year.`">
+            <PageHeader title="Greeting days" :description="`A greeting goes on its day from its time, in everybody's notifications at once and by mail within the day's budget (at most ${Math.max(0, budget.limit - budget.reserve)} a day, fewer on a busy day), so on a big day not everybody gets the mail. A festival's date is confirmed each year.`">
                 <template #actions>
                     <UiButton size="sm" @click="start()">
                         <template #leading><Plus class="h-3.5 w-3.5" /></template>

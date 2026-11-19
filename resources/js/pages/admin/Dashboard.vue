@@ -6,10 +6,11 @@
  * list sits above the totals, because a count of everything ever rarely makes
  * anyone act, and an enquiry that has been sitting for four days does.
  */
+import { computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
 import {
     AlertTriangle, ArrowRight, CalendarDays, Inbox, Users, Briefcase,
-    Package, GraduationCap, History,
+    Package, GraduationCap, History, Mail,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -20,9 +21,10 @@ import UiBadge from '@/components/UI/UiBadge.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import UiEmptyState from '@/components/UI/UiEmptyState.vue';
 
-defineProps({
+const props = defineProps({
     metrics: { type: Object, default: () => ({}) },
     attention: { type: Array, default: () => [] },
+    mail: { type: Object, required: true },
     recentLeads: { type: Array, default: () => [] },
     upcomingBatches: { type: Array, default: () => [] },
     recentActivity: { type: Array, default: () => [] },
@@ -35,6 +37,19 @@ const statusTones = {
     converted: 'success',
     lost: 'neutral',
 };
+
+/*
+ * Mail against the plan's daily limit (X15). The fill carries how close the day
+ * is to the limit; the track is a paler step of the same colour, so the state
+ * reads across the whole bar. A badge with words says it too, never colour alone.
+ */
+const mailFill = computed(() => ({
+    ok: 'var(--color-brand-500)',
+    low: 'var(--color-warn-500)',
+    used_up: 'var(--color-danger-500)',
+}[props.mail.state] ?? 'var(--color-brand-500)'));
+
+const mailUsed = computed(() => Math.min(100, Math.round((props.mail.sent / Math.max(1, props.mail.limit)) * 100)));
 
 const attentionTones = {
     danger: { border: 'var(--color-danger-500)', wash: 'color-mix(in oklab, var(--color-danger-500) 8%, transparent)' },
@@ -130,6 +145,58 @@ const attentionTones = {
                     tone="success"
                     href="/admin/invoices"
                 />
+            </section>
+
+            <!-- -------------------------------------------------------- mail -->
+            <section
+                class="mb-6 rounded-[var(--radius-card)] border bg-[var(--surface)] p-4"
+                style="border-color: var(--border-subtle)"
+                aria-labelledby="mail-today"
+            >
+                <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+                    <div>
+                        <h2 id="mail-today" class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide" style="color: var(--text-muted)">
+                            <Mail class="h-3.5 w-3.5" aria-hidden="true" />
+                            Mail left today
+                        </h2>
+                        <p class="mt-1.5 flex flex-wrap items-baseline gap-x-2">
+                            <span class="text-2xl font-semibold" style="color: var(--text-strong)">{{ mail.left }}</span>
+                            <span class="text-sm" style="color: var(--text-muted)">of the {{ mail.limit }} your plan allows</span>
+                            <UiBadge v-if="mail.state !== 'ok'" :tone="mail.state === 'used_up' ? 'danger' : 'warning'" size="sm">
+                                <AlertTriangle class="mr-1 h-3 w-3" aria-hidden="true" />
+                                {{ mail.state === 'used_up' ? 'Used up' : 'Running low' }}
+                            </UiBadge>
+                        </p>
+                    </div>
+
+                    <Link href="/admin/settings?tab=mail" class="text-sm font-medium text-brand-600 hover:underline dark:text-brand-400">
+                        Change the limit
+                    </Link>
+                </div>
+
+                <div
+                    class="mt-3 h-2 overflow-hidden rounded-full"
+                    :style="{ background: `color-mix(in oklab, ${mailFill} 18%, var(--surface))` }"
+                    role="meter"
+                    aria-label="Mail sent today"
+                    aria-valuemin="0"
+                    :aria-valuemax="mail.limit"
+                    :aria-valuenow="Math.min(mail.sent, mail.limit)"
+                    :aria-valuetext="`${mail.sent} of ${mail.limit} sent, ${mail.left} left`"
+                >
+                    <div class="h-full rounded-full" :style="{ width: `${mailUsed}%`, background: mailFill }" />
+                </div>
+
+                <p class="mt-2 text-xs" style="color: var(--text-muted)">
+                    {{ mail.sent }} sent since midnight, {{ mail.promotional }} of them greetings and announcements<template v-if="mail.refused">, {{ mail.refused }} refused by the mail server</template>.
+                    <template v-if="mail.promotionalLeft > 0">
+                        Greetings and announcements can send {{ mail.promotionalLeft }} more today; the last {{ mail.reserve }} are kept for sign in codes, receipts and reminders.
+                    </template>
+                    <template v-else-if="mail.left > 0">
+                        Greetings and announcements wait for tomorrow, so what is left stays for sign in codes, receipts and reminders.
+                    </template>
+                    <template v-else>Greetings and announcements wait for tomorrow.</template>
+                </p>
             </section>
 
             <div class="grid gap-5 lg:grid-cols-3">

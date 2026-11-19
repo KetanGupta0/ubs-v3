@@ -89,7 +89,7 @@ it('never sends a date nobody confirmed, or a greeting late', function () {
 });
 
 it('stops a greeting at the end of its day, whatever the budget left unsent', function () {
-    config(['company.mail.promotional_daily_limit' => 1]);
+    config(['company.mail.daily_limit' => 11, 'company.mail.service_reserve' => 10]);
     User::factory()->create(['role' => Role::Student]);
     ($this->day)();
 

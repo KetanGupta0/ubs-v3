@@ -7,6 +7,7 @@ use App\Mail\TemplateTest;
 use App\Models\MessageTemplate;
 use App\Models\Setting;
 use App\Services\Admin\Auditor;
+use App\Services\Mail\MailBudget;
 use App\Support\HumanCheck;
 use App\Support\MessageCatalogue;
 use App\Support\SiteIdentity;
@@ -55,6 +56,7 @@ class SettingsController extends Controller
                 'terms' => Setting::get('invoicing.terms'),
             ],
             'templates' => $this->templates(),
+            'mail' => MailBudget::summary(),
 
             /*
              * Whether each provider is wired up, never the credential itself.
@@ -183,6 +185,37 @@ class SettingsController extends Controller
         $auditor->action('settings.invoicing_updated', context: ['fields' => array_keys($validated)]);
 
         return back()->with('success', 'Invoicing settings saved.');
+    }
+
+    /**
+     * How much mail a day the hosting plan allows, and how much of it to keep
+     * for service mail (X15). A change of plan is a change here and nowhere
+     * else: greetings and announcements follow it from their next run.
+     */
+    public function updateMail(Request $request, Auditor $auditor): RedirectResponse
+    {
+        $validated = $request->validate([
+            'daily_limit' => ['required', 'integer', 'min:1', 'max:'.MailBudget::MAX_LIMIT],
+            'service_reserve' => ['required', 'integer', 'min:0', 'lte:daily_limit'],
+        ], [
+            'service_reserve.lte' => 'Keep no more than the plan allows in a day.',
+        ]);
+
+        $before = ['daily_limit' => MailBudget::limit(), 'service_reserve' => MailBudget::reserve()];
+
+        Setting::put(MailBudget::LIMIT_KEY, (int) $validated['daily_limit'], 'mail');
+        Setting::put(MailBudget::RESERVE_KEY, (int) $validated['service_reserve'], 'mail');
+
+        $changes = collect($validated)
+            ->map(fn ($value, string $key) => ['from' => $before[$key], 'to' => (int) $value])
+            ->filter(fn (array $change) => $change['from'] !== $change['to'])
+            ->all();
+
+        if ($changes) {
+            $auditor->action('settings.mail_updated', context: $changes);
+        }
+
+        return back()->with('success', 'Saved. The dashboard and the mail screens count against the new figures straight away.');
     }
 
     public function updateTemplate(Request $request, MessageTemplate $template, Auditor $auditor): RedirectResponse
