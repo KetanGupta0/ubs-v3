@@ -73,6 +73,13 @@ function start() {
                     </span>
                 </p>
 
+                <div v-if="quiz.rules?.length && (quiz.canAttempt || openAttemptId)" class="mt-5 rounded-[var(--radius-field)] border px-4 py-3" style="border-color: var(--border-subtle)">
+                    <p class="text-sm font-semibold">Before you start</p>
+                    <ul class="mt-2 list-disc space-y-1 pl-5 text-sm" style="color: var(--text-base)">
+                        <li v-for="rule in quiz.rules" :key="rule">{{ rule }}</li>
+                    </ul>
+                </div>
+
                 <div class="mt-5 flex flex-wrap gap-2">
                     <UiButton v-if="openAttemptId" :href="`/student/quizzes/${quiz.id}/attempts/${openAttemptId}`">
                         <template #leading><Hourglass class="h-4 w-4" /></template>

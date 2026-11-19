@@ -15,6 +15,8 @@ class QuizAnswer extends Model
             'response' => 'array',
             'is_correct' => 'boolean',
             'marks_awarded' => 'decimal:2',
+            'seconds_spent' => 'integer',
+            'answered_at' => 'datetime',
         ];
     }
 

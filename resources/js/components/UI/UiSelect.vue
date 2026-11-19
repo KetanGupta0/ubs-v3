@@ -1,6 +1,6 @@
 <script setup>
 import { ChevronDown } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, onMounted, onUpdated, ref, watch } from 'vue';
 
 import { useField } from '@/composables/useField';
 
@@ -21,18 +21,48 @@ const props = defineProps({
     size: { type: String, default: 'md' },
 });
 
-defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue']);
 
 const field = useField();
 const isInvalid = computed(() => props.invalid || field.value.invalid);
 
 const normalise = (option) =>
     typeof option === 'object' ? option : { value: option, label: option };
+
+/*
+ * An option meaning "none" (`<option :value="null">Every batch</option>`).
+ * Vue removes the value attribute of an option bound to null, so the browser
+ * falls back to its text: the option could not show as chosen, and picking it
+ * sent the words "Every batch" as the value. Until November 2026 that meant a
+ * quiz, an assignment or a certificate design set for one batch could never be
+ * set back to all of them. The value Vue bound is kept on the element, so read
+ * that, and choose the empty option by hand when there is no value.
+ */
+const select = ref(null);
+const bound = (option) => ('_value' in option ? option._value : option.value);
+const empty = (value) => value === null || value === undefined || value === '';
+
+function showEmpty() {
+    if (!select.value || !empty(props.modelValue)) return;
+
+    select.value.selectedIndex = Array.from(select.value.options).findIndex((option) => empty(bound(option)));
+}
+
+function changed(event) {
+    const option = event.target.selectedOptions[0];
+
+    emit('update:modelValue', option && bound(option) === null ? null : event.target.value);
+}
+
+onMounted(showEmpty);
+onUpdated(showEmpty);
+watch(() => props.modelValue, showEmpty, { flush: 'post' });
 </script>
 
 <template>
     <div class="relative">
         <select
+            ref="select"
             :id="field.id"
             :aria-describedby="field.describedBy"
             v-bind="$attrs"
@@ -45,7 +75,7 @@ const normalise = (option) =>
                 size === 'sm' ? 'h-9 text-sm' : size === 'lg' ? 'h-12 text-base' : 'h-10 text-sm',
                 isInvalid ? 'border-danger-500' : 'border-[var(--border-strong)] focus:border-brand-500',
             ]"
-            @change="$emit('update:modelValue', $event.target.value)"
+            @change="changed"
         >
             <option v-if="placeholder" value="" disabled :selected="!modelValue">
                 {{ placeholder }}

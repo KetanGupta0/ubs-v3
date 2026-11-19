@@ -37,7 +37,12 @@ const form = useForm({
     attempts_allowed: 1,
     pass_percent: 50,
     shuffle_questions: false,
+    pool_size: null,
+    shuffle_options: false,
+    one_at_a_time: false,
+    allow_back: true,
     show_answers: true,
+    answers_after_close: false,
     opens_at: '',
     closes_at: '',
     is_published: false,
@@ -54,7 +59,12 @@ function openForm(quiz = null) {
     form.attempts_allowed = quiz?.attemptsAllowed ?? 1;
     form.pass_percent = quiz?.passPercent ?? 50;
     form.shuffle_questions = quiz?.shuffle ?? false;
+    form.pool_size = quiz?.poolSize ?? null;
+    form.shuffle_options = quiz?.shuffleOptions ?? false;
+    form.one_at_a_time = quiz?.oneAtATime ?? false;
+    form.allow_back = quiz?.allowBack ?? true;
     form.show_answers = quiz?.showAnswers ?? true;
+    form.answers_after_close = quiz?.answersAfterClose ?? false;
     form.opens_at = quiz?.opensAt ?? '';
     form.closes_at = quiz?.closesAt ?? '';
     form.is_published = quiz?.isPublished ?? false;
@@ -146,10 +156,10 @@ function remove(quiz) {
                         <UiButton :href="`${base}/quizzes/${quiz.id}`" variant="secondary" size="xs">
                             Questions
                         </UiButton>
-                        <UiButton variant="ghost" size="xs" @click="openForm(quiz)">
+                        <UiButton variant="ghost" size="xs" :aria-label="`Settings for ${quiz.title}`" @click="openForm(quiz)">
                             <Pencil class="h-3.5 w-3.5" />
                         </UiButton>
-                        <UiButton variant="ghost" size="xs" @click="remove(quiz)">
+                        <UiButton variant="ghost" size="xs" :aria-label="`Delete ${quiz.title}`" @click="remove(quiz)">
                             <Trash2 class="h-3.5 w-3.5" style="color: var(--color-danger-500)" />
                         </UiButton>
                     </div>
@@ -208,10 +218,22 @@ function remove(quiz) {
                 </div>
 
                 <UiSwitch v-model="form.shuffle_questions" label="Shuffle the questions" />
+                <UiSwitch v-model="form.shuffle_options" label="Shuffle the options" description="Each student sees the choices in their own order." />
+                <UiFormField label="Questions each student gets" hint="Drawn from all of this quiz's questions, so neighbours get different papers. Empty: all of them." :error="form.errors.pool_size">
+                    <UiInput v-model.number="form.pool_size" type="number" min="1" max="500" class="max-w-32" />
+                </UiFormField>
+                <UiSwitch v-model="form.one_at_a_time" label="One question at a time" />
+                <UiSwitch v-if="form.one_at_a_time" v-model="form.allow_back" label="Let students go back" description="Off, an answer is final once they move on." />
                 <UiSwitch
                     v-model="form.show_answers"
                     label="Show the answers afterwards"
                     description="Turn this off while a batch is still sitting it."
+                />
+                <UiSwitch
+                    v-if="form.show_answers"
+                    v-model="form.answers_after_close"
+                    label="Only once the quiz closes for everybody"
+                    description="So the first to finish cannot pass them on. Needs a closing time."
                 />
                 <UiSwitch v-model="form.is_published" label="Visible to students" />
             </form>

@@ -707,6 +707,31 @@ Both features use the Claude API through the official PHP SDK
 - The student can see the final decision and the reason, and can reply once before it is
   final.
 
+*Progress on Step H (decisions X3, X4, X10, X12 on 2026-11-19):*
+- *Layers 1 and 2 built 2026-11-19. A quiz's settings take how many questions each
+  student gets from the pool, the options in each student's own order, one question at a
+  time with or without going back, and the answers only once the quiz closes for
+  everybody, which needs a closing time. The paper is drawn when the attempt starts and
+  kept on it.*
+- *Answers are kept as they are given, with the time each took, and a refresh brings
+  them back. The page reports leaving the quiz and for how long, pasting and copying; the
+  server notes a new network; a second browser is told the attempt is open elsewhere and
+  may carry on there, which is noted and stops the first one. The student reads all of
+  this before starting.*
+- *Once a quiz has closed and the last sitting is over, checks with no AI flag: most of a
+  paper answered right in a few seconds each (on a one page quiz, the whole paper in less
+  time than reading it takes); a hard question answered right within seconds of coming
+  back from half a minute away; a long paste; carrying on in another browser; written
+  answers nearly word for word another student's in the batch; the same rare wrong
+  choices; the same answers sent from one address within minutes. A flag is kept on the
+  attempt with its evidence and decides nothing. The trainer's screen for them (layer 4)
+  comes with layer 3.*
+- *Building it found that the quiz page had been sending an option's place in the list
+  while every answer key holds the option's words, so one answer and several answers
+  questions taken through the page were always marked wrong. It also found that an empty
+  choice in a select ("Every batch", "No prerequisite", "Decide for me") could never be
+  picked, so a quiz set for one batch could not be set back to all of them.*
+
 ### 9.1a Proctored quizzes: lockdown and live camera
 
 **Requirement** (owner, 2026-11-10):
@@ -894,11 +919,11 @@ the middle of it.
 |---|---|---|
 | X1 | Generation 2 accounts: keep their passwords, or force a change too? | Keep. Their hashes were never published. |
 | X2 | Digital signatures: built-in OTP e-sign, Aadhaar eSign through a provider, or both? | **Decided 2026-11-17: the built-in OTP e-signature now**, for agreements, proposals and quotations. An Aadhaar eSign provider is added later, once one is chosen; check with a lawyer which agreements need it. |
-| X3 | AI model per feature (Opus 5.5 default; a cheaper model is your choice) | Your call on cost. Quiz review is low volume and batched, so the default costs little there. |
-| X4 | Live camera proctoring | **Decided 2026-11-10:** yes, live only, never recorded (§9.1a). Still open: students under 18 (guardian consent) and students without a webcam. |
-| X10 | Safe Exam Browser for final assessments, on top of browser lockdown? | Yes for final assessments; plain browser lockdown for regular quizzes. |
+| X3 | AI model per feature (Opus 5.5 default; a cheaper model is your choice) | **Decided 2026-11-19:** the visitor assistant on Claude Sonnet 5.5, which answers every message and must be quick; quiz review on Claude Opus 5.5 through the Message Batches API at half price. Both are set in `config/company.php`. |
+| X4 | Live camera proctoring | **Decided 2026-11-10:** yes, live only, never recorded (§9.1a). **Decided 2026-11-19:** a student under 18 sits a live-proctored quiz only once staff have recorded a guardian's consent on their record (name, relationship, date); a student without a webcam gets a one-off exemption from staff and sits it under lockdown only. |
+| X10 | Safe Exam Browser for final assessments, on top of browser lockdown? | **Decided 2026-11-19:** yes, for final assessments only: a quiz can require it, and an ordinary browser cannot start one. Regular quizzes use browser lockdown. |
 | X11 | Auto-submit after N full-screen or tab exits, or leave it to the reviewer? | Leave it to the reviewer by default; allow the rule per quiz, shown to students before they start. |
-| X12 | Media relay for live proctoring | **Not on the shared plan** (it cannot run an SFU or TURN). A managed service (for example LiveKit Cloud) or a separate small VPS, with recording off in its configuration. Ask before step H. |
+| X12 | Media relay for live proctoring | **Decided 2026-11-19: lockdown now, video later.** The lockdown, the live status of every student on the proctor's screen, messages, extra time and the AI review are built now; the camera stream joins when the owner adds LiveKit Cloud keys to `.env`. Shared hosting cannot run an SFU or TURN. |
 | X13 | Hosted realtime service (Pusher protocol) for chat and proctor status | **Decided 2026-11-12: Pusher Channels.** The owner creates the account; keys go in `.env`. |
 | X14 | Hostinger plan: SSH access, PHP 8.4, MySQL version, mail and process limits | **Answered 2026-11-12:** Business plan, SSH without root, PHP and MySQL configured, cron available, 100 emails a day. The mail cap means a transactional mail provider is needed before cutover (`docs/HOSTING.md`). |
 | X15 | Transactional mail provider | Needed before cutover, because of the 100 a day cap. Brevo, ZeptoMail or Amazon SES; ask before the cutover step. |

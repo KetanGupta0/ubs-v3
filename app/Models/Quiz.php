@@ -15,7 +15,11 @@ class Quiz extends Model
         'attempts_allowed' => 1,
         'pass_percent' => 50,
         'shuffle_questions' => true,
+        'shuffle_options' => false,
+        'one_at_a_time' => false,
+        'allow_back' => true,
         'show_answers' => true,
+        'answers_after_close' => false,
         'is_published' => false,
     ];
 
@@ -24,10 +28,52 @@ class Quiz extends Model
         return [
             'opens_at' => 'datetime',
             'closes_at' => 'datetime',
+            'integrity_checked_at' => 'datetime',
             'shuffle_questions' => 'boolean',
+            'shuffle_options' => 'boolean',
+            'one_at_a_time' => 'boolean',
+            'allow_back' => 'boolean',
             'show_answers' => 'boolean',
+            'answers_after_close' => 'boolean',
             'is_published' => 'boolean',
+            'pool_size' => 'integer',
         ];
+    }
+
+    /**
+     * Whether a finished attempt may show its answers and the key: the quiz
+     * shows them at all, and, if it waits for the quiz to close for everybody
+     * (§9.1), it has closed, so the first to finish cannot pass them on.
+     */
+    public function answersVisible(): bool
+    {
+        return $this->show_answers
+            && (! $this->answers_after_close || ($this->closes_at !== null && $this->closes_at->isPast()));
+    }
+
+    /**
+     * What a student is told before starting (§9.1): how the quiz is set, and
+     * what is recorded during the attempt. A rule nobody was told about is a
+     * trap, not a deterrent.
+     *
+     * @return array<int, string>
+     */
+    public function rulesForStudents(): array
+    {
+        $all = $this->questions()->count();
+        $drawn = $this->pool_size && $this->pool_size < $all;
+
+        return array_values(array_filter([
+            $drawn ? "You get {$this->pool_size} questions drawn from a larger set, so your paper is not the same as anybody else's." : null,
+            $this->one_at_a_time
+                ? ($this->allow_back ? 'Questions come one at a time; you can go back to change an answer.' : 'Questions come one at a time, and once you move on you cannot go back.')
+                : null,
+            $this->time_limit_minutes ? "You have {$this->time_limit_minutes} minutes from the moment you start. The clock is ours and does not stop if you leave the page." : null,
+            'This attempt belongs to the browser you start it in. Continuing on another device is possible, and is noted.',
+            'We note when the quiz loses focus or you leave it, when you paste or copy, a change of network or device, and how long you spend on each question.',
+            'A person looks at anything unusual. Nothing noted here fails you by itself, and you will hear what was decided and can reply.',
+            $this->answers_after_close && $this->show_answers ? 'The answers are shown once the quiz has closed for everybody.' : null,
+        ]));
     }
 
     public function course(): BelongsTo
@@ -55,6 +101,7 @@ class Quiz extends Model
         return $query->where('is_published', true);
     }
 
+    /** The marks a full paper is out of: every question, or what a pool draws. */
     public function totalMarks(): int
     {
         return (int) $this->questions()->sum('marks');

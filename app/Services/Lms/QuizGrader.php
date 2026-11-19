@@ -28,27 +28,113 @@ class QuizGrader
      */
     public const GRACE_SECONDS = 60;
 
-    public function __construct(protected Activity $activity) {}
+    /** The most a single answer adds to the time on a question: a beat, not a sitting. */
+    public const MAX_SECONDS_PER_SAVE = 3600;
 
-    public function start(Quiz $quiz, User $student, ?int $batchId = null): QuizAttempt
+    public function __construct(
+        protected Activity $activity,
+        protected AttemptEvents $events,
+    ) {}
+
+    /**
+     * Start an attempt, and fix its paper: the questions drawn from the pool,
+     * their order and each one's option order (§9.1). Fixed on the attempt, so
+     * a refresh changes nothing and the marking uses the same paper.
+     */
+    public function start(Quiz $quiz, User $student, ?int $batchId = null, ?string $deviceHash = null, ?string $ip = null): QuizAttempt
     {
         if (! $quiz->canBeAttemptedBy($student)) {
             throw new RuntimeException($quiz->closedReason() ?? 'No attempts left on this quiz.');
         }
 
         $number = $quiz->attemptsUsedBy($student) + 1;
+        $questions = $quiz->questions()->get();
 
-        return QuizAttempt::query()->create([
+        if ($quiz->pool_size && $quiz->pool_size < $questions->count()) {
+            $questions = $questions->shuffle()->take($quiz->pool_size)->sortBy('sort_order')->values();
+        }
+
+        if ($quiz->shuffle_questions) {
+            $questions = $questions->shuffle()->values();
+        }
+
+        $orders = $quiz->shuffle_options
+            ? $questions->filter(fn (Question $question) => in_array($question->type, ['mcq', 'multi'], true) && count($question->options ?? []) > 1)
+                ->mapWithKeys(fn (Question $question) => [(string) $question->id => collect(array_keys($question->options))->shuffle()->values()->all()])
+                ->all()
+            : null;
+
+        $attempt = QuizAttempt::query()->create([
             'quiz_id' => $quiz->id,
             'user_id' => $student->id,
             'batch_id' => $batchId,
             'attempt_number' => $number,
+            'question_ids' => $questions->pluck('id')->all(),
+            'option_orders' => $orders ?: null,
+            'device_hash' => $deviceHash,
+            'last_ip' => $ip,
             'started_at' => now(),
             'expires_at' => $quiz->time_limit_minutes
                 ? now()->addMinutes($quiz->time_limit_minutes)
                 : null,
-            'total_marks' => $quiz->totalMarks(),
+            'total_marks' => (int) $questions->sum('marks'),
         ]);
+
+        $this->events->record($attempt, 'started', ip: $ip);
+
+        return $attempt;
+    }
+
+    /** Whether the deadline, with its grace, has gone. */
+    public function pastDeadline(QuizAttempt $attempt): bool
+    {
+        return $attempt->expires_at !== null
+            && now()->greaterThan($attempt->expires_at->copy()->addSeconds(self::GRACE_SECONDS));
+    }
+
+    /**
+     * Keep one answer as it is given, with the time spent on it (§9.1).
+     *
+     * Refused after the deadline, and, on a quiz with no going back, for a
+     * question the student has already moved past.
+     */
+    public function saveAnswer(QuizAttempt $attempt, int $questionId, mixed $response, int $seconds, ?string $ip = null): void
+    {
+        if (! $attempt->isOpen() || $this->pastDeadline($attempt)) {
+            throw new RuntimeException('This attempt is closed.');
+        }
+
+        $paper = $attempt->paper();
+        $index = $paper->search(fn (Question $question) => $question->id === $questionId);
+
+        if ($index === false) {
+            throw new RuntimeException('That question is not on this paper.');
+        }
+
+        if ($attempt->quiz->one_at_a_time && ! $attempt->quiz->allow_back && $index !== $attempt->current_index) {
+            throw new RuntimeException('That question is no longer open.');
+        }
+
+        $seconds = max(0, min($seconds, self::MAX_SECONDS_PER_SAVE));
+        $answer = QuizAnswer::query()->firstOrNew(['quiz_attempt_id' => $attempt->id, 'question_id' => $questionId]);
+
+        $answer->forceFill([
+            'response' => $response === null || $response === '' ? null : (array) $response,
+            'seconds_spent' => (int) $answer->seconds_spent + $seconds,
+            'answered_at' => now(),
+        ])->save();
+
+        $this->events->record($attempt, 'answered', $questionId, $seconds, ip: $ip);
+    }
+
+    /** On a one-at-a-time quiz, move on to the next question. */
+    public function advance(QuizAttempt $attempt): void
+    {
+        $last = max(0, count($attempt->question_ids ?? []) - 1);
+
+        if ($attempt->current_index < $last) {
+            $attempt->forceFill(['current_index' => $attempt->current_index + 1])->save();
+        }
     }
 
     /**
@@ -63,7 +149,7 @@ class QuizGrader
         }
 
         $quiz = $attempt->quiz;
-        $questions = $quiz->questions()->get()->keyBy('id');
+        $questions = $attempt->paper()->keyBy('id');
 
         /*
          * The deadline is the server's. Answers that arrive well past it are
@@ -71,10 +157,23 @@ class QuizGrader
          * is what makes the time limit a limit rather than a suggestion the
          * page is free to ignore.
          */
-        if ($attempt->expires_at
-            && now()->greaterThan($attempt->expires_at->copy()->addSeconds(self::GRACE_SECONDS))) {
+        if ($this->pastDeadline($attempt)) {
             $responses = [];
         }
+
+        // What was kept as the student went, overridden by what arrived now,
+        // except where a quiz with no going back has already closed a question.
+        $stored = $attempt->answers()->get()->mapWithKeys(fn (QuizAnswer $answer) => [$answer->question_id => $this->unwrap($answer->response)]);
+        $locked = $quiz->one_at_a_time && ! $quiz->allow_back;
+        $current = $attempt->paper()->get($attempt->current_index)?->id;
+
+        foreach ($responses as $questionId => $response) {
+            if (! $locked || (int) $questionId === $current) {
+                $stored[(int) $questionId] = $response;
+            }
+        }
+
+        $responses = $stored->all();
 
         return DB::transaction(function () use ($attempt, $quiz, $questions, $responses) {
             $score = 0.0;
@@ -127,8 +226,16 @@ class QuizGrader
                 'percent' => (int) round($percent),
             ], $quiz->course_id, $attempt->batch_id);
 
+            $this->events->record($attempt, $this->pastDeadline($attempt) ? 'auto_submitted' : 'submitted', ip: request()?->ip());
+
             return $attempt->fresh();
         });
+    }
+
+    /** A stored response as the page sent it: a single choice is kept as a one item list. */
+    protected function unwrap(mixed $response): mixed
+    {
+        return is_array($response) && count($response) === 1 && array_is_list($response) ? $response[0] : $response;
     }
 
     /** A written answer, marked by a person. */

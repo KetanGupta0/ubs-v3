@@ -62,6 +62,11 @@ class AssessmentController extends Controller
                     'attemptsAllowed' => $quiz->attempts_allowed,
                     'passPercent' => $quiz->pass_percent,
                     'shuffle' => $quiz->shuffle_questions,
+                    'poolSize' => $quiz->pool_size,
+                    'shuffleOptions' => $quiz->shuffle_options,
+                    'oneAtATime' => $quiz->one_at_a_time,
+                    'allowBack' => $quiz->allow_back,
+                    'answersAfterClose' => $quiz->answers_after_close,
                     'showAnswers' => $quiz->show_answers,
                     'opensAt' => $quiz->opens_at?->format('Y-m-d\TH:i'),
                     'closesAt' => $quiz->closes_at?->format('Y-m-d\TH:i'),
@@ -472,7 +477,7 @@ class AssessmentController extends Controller
     /** @return array<string, mixed> */
     protected function quizRules(Request $request, Course $course): array
     {
-        return $this->validatedInput($request, [
+        $validated = $this->validatedInput($request, [
             'title' => ['required', 'string', 'max:160'],
             'instructions' => ['nullable', 'string', 'max:2000'],
             'course_module_id' => ['nullable', 'integer', Rule::exists('course_modules', 'id')->where('course_id', $course->id)],
@@ -482,13 +487,24 @@ class AssessmentController extends Controller
             'attempts_allowed' => ['required', 'integer', 'min:1', 'max:20'],
             'pass_percent' => ['required', 'integer', 'min:1', 'max:100'],
             'shuffle_questions' => ['boolean'],
+            // Harder to cheat on (§9.1): a pool, options in each student's own
+            // order, one question at a time, answers once it closes for everybody.
+            'pool_size' => ['nullable', 'integer', 'min:1', 'max:500'],
+            'shuffle_options' => ['boolean'],
+            'one_at_a_time' => ['boolean'],
+            'allow_back' => ['boolean'],
             'show_answers' => ['boolean'],
+            'answers_after_close' => ['boolean'],
             'opens_at' => ['nullable', 'date'],
-            'closes_at' => ['nullable', 'date', 'after:opens_at'],
+            'closes_at' => ['nullable', 'date', 'after:opens_at', Rule::requiredIf(fn () => $request->boolean('answers_after_close'))],
             'is_published' => ['boolean'],
         ], [
             'closes_at.after' => 'A quiz cannot close before it opens.',
+            'closes_at.required' => 'Answers after it closes need a closing time.',
         ]);
+
+        // Going back is allowed unless the form says otherwise.
+        return [...$validated, 'allow_back' => $this->boolInput($request, 'allow_back', true)];
     }
 
     /** @return array<string, mixed> */

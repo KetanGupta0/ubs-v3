@@ -12,28 +12,28 @@ const props = defineProps({
     quiz: { type: Object, required: true },
     attempt: { type: Object, required: true },
     answers: { type: Array, default: () => [] },
+    answersWaitForClose: { type: Boolean, default: false },
+    closesAt: { type: String, default: null },
 });
 
-/** What the student picked, in words rather than indexes. */
+/** An answer and a key are both the option's own words; true or false in any case. */
+function words(answer, values) {
+    if (answer.type === 'truefalse') return String(values[0]).toLowerCase() === 'true' ? 'True' : 'False';
+
+    return values.filter((value) => value !== null && value !== '').join(', ');
+}
+
+/** What the student picked. */
 function chose(answer) {
     if (answer.response === null || answer.response === undefined) return 'Not answered';
 
-    const values = Array.isArray(answer.response) ? answer.response : [answer.response];
-
-    if (answer.type === 'short') return values[0] || 'Not answered';
-    if (answer.type === 'truefalse') return values[0] === 'true' ? 'True' : 'False';
-
-    return values.map((index) => answer.options[Number(index)] ?? index).join(', ') || 'Not answered';
+    return words(answer, Array.isArray(answer.response) ? answer.response : [answer.response]) || 'Not answered';
 }
 
 function key(answer) {
     if (!answer.correct) return null;
 
-    const values = Array.isArray(answer.correct) ? answer.correct : [answer.correct];
-
-    if (answer.type === 'truefalse') return String(values[0]) === 'true' ? 'True' : 'False';
-
-    return values.map((index) => answer.options[Number(index)] ?? index).join(', ');
+    return words(answer, Array.isArray(answer.correct) ? answer.correct : [answer.correct]);
 }
 </script>
 
@@ -98,6 +98,13 @@ function key(answer) {
             <UiCard v-if="!quiz.showAnswers">
                 <p class="text-sm" style="color: var(--text-muted)">
                     This quiz does not show the answers afterwards. Your score is above.
+                </p>
+            </UiCard>
+
+            <!-- Everybody sits the same questions, so the key waits until nobody can still use it. -->
+            <UiCard v-else-if="answersWaitForClose">
+                <p class="text-sm" style="color: var(--text-muted)">
+                    The answers are shown once the quiz has closed for everybody<template v-if="closesAt">, after {{ closesAt }}</template>. Your score is above.
                 </p>
             </UiCard>
 

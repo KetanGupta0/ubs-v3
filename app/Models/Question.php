@@ -48,15 +48,25 @@ class Question extends Model
         };
     }
 
-    /** What a student sitting the quiz is allowed to see. */
-    public function forAttempt(): array
+    /**
+     * What a student sitting the quiz is allowed to see.
+     *
+     * The options come in this attempt's own order. An answer is the option's
+     * words, as the key is, so a shuffled paper is marked against the same key.
+     *
+     * @param  array<int, int>|null  $order  Original indexes, in display order.
+     */
+    public function forAttempt(?array $order = null): array
     {
+        $options = array_values($this->options ?? []);
+        $order = $order && count($order) === count($options) ? array_values($order) : array_keys($options);
+
         return [
             'id' => $this->id,
             'type' => $this->type,
             'typeLabel' => $this->typeLabel(),
             'body' => $this->body,
-            'options' => $this->options ?? [],
+            'options' => array_map(fn (int $index) => (string) $options[$index], $order),
             'marks' => $this->marks,
         ];
     }

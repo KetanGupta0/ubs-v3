@@ -275,6 +275,13 @@ Rules for the marketing pages:
   elements written inside it. Until November 2026 it had no slot, so every select
   written the second way rendered empty: question types, lesson prerequisites,
   assignment batches, report filters and the student's batch choice on joining.
+  An option for nothing, `<option :value="null">` (Every batch, No prerequisite,
+  Decide for me), shows as chosen when the value is empty and sends `null`. Vue
+  drops the value attribute of an option bound to null and the browser falls back
+  to its text, so until November 2026 nothing showed as chosen and picking it sent
+  its words, which every one of those fields refuses: a quiz, assignment, material
+  or certificate design set for one batch or course could not be set back, and a
+  lesson's prerequisite or quiz gate could not be taken off.
 - **`UiCheckbox` binds to a boolean or to a list.** With `v-model` on an array
   and a `:value`, it adds or removes that value. Until November 2026 the list form
   was declared and never handled, so every box showed ticked and the first click
@@ -558,7 +565,34 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   a student a fail they have not earned is worse than showing nothing.
 - **The answer key never reaches an open attempt.** `Question::forAttempt()` is
   what the page gets; `correct` is `$hidden` and is only sent in a review, and only
-  if the quiz was set to show answers.
+  if the quiz was set to show answers, and, where it waits, once the quiz has closed
+  for everybody (`answersVisible()`).
+- **A quiz paper is fixed when the attempt starts (§9.1).** `QuizGrader::start()`
+  draws the pool and orders the questions and each one's options, and keeps them on
+  the attempt (`question_ids`, `option_orders`), so a refresh changes nothing and the
+  marking uses that paper. An answer is the option's words, as the key is; the order
+  is only what is shown. Until November 2026 the page sent an option's place in the
+  list while the editor, the seeder and the importer key its words, so every one
+  answer and several answers question taken through the page was marked wrong.
+- **Answers are kept as they are given,** each with the seconds since the one before,
+  capped, so a refresh or a dropped connection loses nothing. On a quiz with no going
+  back a question closes when the student moves on, and neither saving nor the
+  submission can change it.
+- **An attempt is open in one browser at a time.** The browser is a random token in
+  the `quiz_device` cookie, kept in the session too, and only its hash is on the
+  attempt; a cookie, so signing out and in again is the same browser. Another browser
+  is told, and may carry on there, which is noted and stops the first one saving or
+  submitting. A new network is noted, never refused.
+- **What the browser reports is evidence, not fact.** Only
+  `QuizAttemptEvent::FROM_BROWSER` types are taken from it (leaving the quiz, pasting,
+  copying), capped per report and per attempt. The server writes the start, every
+  answer, the submission and a change of browser or network itself.
+- **Integrity checks find; a person decides.** `IntegrityChecks` runs once a quiz has
+  closed and the last sitting is over (`quizzes:check-integrity`). A flag never
+  changes a score, fails anybody or reaches the student, and the student is told
+  before starting what is noted (`Quiz::rulesForStudents()`). Time on a question
+  counts only when it was the one question on the screen; on a one page quiz the
+  whole sitting is judged, because people read ahead and then answer in a run.
 - **Points are awarded once per reason.** `leaderboard_points` is unique on
   student, source and reason, and `Activity::did()` writes the log and the points
   together so the register, the leaderboard and the student's own history cannot

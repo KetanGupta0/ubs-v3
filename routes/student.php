@@ -102,6 +102,14 @@ Route::middleware(['auth', 'password.owned', 'role:student'])
             ->whereNumber('quiz')
             ->whereNumber('attempt')
             ->name('quizzes.submit');
+        // Kept as the student goes: each answer with its time, what the browser saw,
+        // the next question on a one-at-a-time quiz, carrying on in another browser (§9.1).
+        Route::middleware('throttle:240,1,quiz-answers')->group(function () {
+            Route::post('quizzes/{quiz}/attempts/{attempt}/answers', [QuizController::class, 'saveAnswer'])->whereNumber(['quiz', 'attempt'])->name('quizzes.answers');
+            Route::post('quizzes/{quiz}/attempts/{attempt}/events', [QuizController::class, 'events'])->whereNumber(['quiz', 'attempt'])->name('quizzes.events');
+            Route::post('quizzes/{quiz}/attempts/{attempt}/next', [QuizController::class, 'next'])->whereNumber(['quiz', 'attempt'])->name('quizzes.next');
+        });
+        Route::post('quizzes/{quiz}/attempts/{attempt}/here', [QuizController::class, 'here'])->whereNumber(['quiz', 'attempt'])->name('quizzes.here');
         Route::get('quizzes/{quiz}/attempts/{attempt}/review', [QuizController::class, 'review'])
             ->whereNumber('quiz')
             ->whereNumber('attempt')

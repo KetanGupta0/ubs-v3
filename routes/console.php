@@ -25,6 +25,10 @@ Schedule::command('shop:expire-orders')->dailyAt('03:40');
 Schedule::command('mail:send-promotional')->everyFiveMinutes()->withoutOverlapping(10);
 Schedule::command('mail:send-promotional', ['--remind'])->dailyAt('10:20');
 
+// Once a quiz has closed for everybody and the last sitting is over, its
+// attempts are compared (§9.1).
+Schedule::command('quizzes:check-integrity')->everyFifteenMinutes()->withoutOverlapping(15);
+
 /*
  * Hourly, so a report set for seven in the morning arrives at seven. Each
  * schedule decides for itself whether it is due.
