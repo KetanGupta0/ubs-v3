@@ -55,25 +55,98 @@ capped at **100 emails a day**.
 
 ## Deploying
 
-- **Build assets in CI** (GitHub Actions: `npm ci && npm run build`), never on the
-  server.
-- **Upload over SSH,** then run `composer install --no-dev --optimize-autoloader`,
-  `php artisan migrate --force`, `php artisan db:seed --class=PermissionSeeder --force`
-  (new permission keys exist only once it has run; it is safe to repeat),
-  `php artisan config:cache route:cache view:cache` and `php artisan storage:link`,
-  then `php artisan app:preflight`, which must pass before the site takes traffic.
-  - SSH access depends on the plan, so check it before step C.
-- **Document root:** the domain must serve Laravel's `public/` directory, not the
-  project root. Either point the domain there in hPanel or place the project above
-  `public_html` and link `public_html` to `public/`.
-- **PHP version:** v3's lock file needs **PHP 8.4**. Select it in hPanel, with
-  extensions `pdo_mysql`, `mbstring`, `intl`, `gd`, `zip`, `bcmath`, `fileinfo`,
-  `exif`.
+### Once, before the first deploy
+
+- **PHP 8.4** selected in hPanel, with `pdo_mysql`, `mbstring`, `intl`, `gd`, `zip`,
+  `bcmath`, `fileinfo` and `exif`.
+- **Document root** on Laravel's `public/` directory, not the project root: point the
+  domain there in hPanel, or place the project above `public_html` and link
+  `public_html` to `public/`.
 - **Database:** check which MySQL or MariaDB version the plan provides. Migrations are
-  written for MySQL 8, so staging must run on the same engine and version as
-  production.
-- **Staging:** a subdomain on the same plan, with its own database and `.env`.
-- **Mail during staging:** to a sandbox or the log, never to real students.
+  written for MySQL 8, so staging runs on the same engine and version as production.
+- **`.env`** from `.env.example`, with at least: `APP_ENV=production`, `APP_DEBUG=false`,
+  `APP_URL=https://…`, `APP_KEY` (`php artisan key:generate`, once, then never again),
+  `SESSION_SECURE_COOKIE=true`, `QUEUE_CONNECTION=database`, `QUEUE_FROM_SCHEDULER=true`,
+  `CACHE_STORE=database`, `LOG_STACK=daily`, `LOG_LEVEL=warning`, the mail settings for
+  Hostinger's SMTP, and the provider keys as they arrive (Razorpay, MSG91, Pusher,
+  Google, `ANTHROPIC_API_KEY`, `SENTRY_LARAVEL_DSN`). Keep a copy of the whole file in a
+  password manager (see Backups).
+- **The one cron entry** in hPanel, every minute:
+  `* * * * * php /home/USER/path/artisan schedule:run >/dev/null 2>&1`
+- **Sentry:** create a free account and a Laravel project, put its DSN in
+  `SENTRY_LARAVEL_DSN`, and run `php artisan sentry:test` once after deploying.
+- **UptimeRobot:** create a free account and an HTTP(s) monitor on `https://<domain>/health`
+  every five minutes, with the owner's email as the alert contact.
+- **The mail limit:** Settings, Mail in the admin panel, to the figure the plan allows.
+- **Staging:** a subdomain on the same plan, with its own database and `.env`, and mail to
+  a sandbox or the log, never to real students.
+
+### Every deploy
+
+1. **Build assets in CI** (GitHub Actions: `npm ci && npm run build`), never on the server.
+2. **Take a backup** if the release has migrations (see Backups below).
+3. **Upload over SSH**, then run:
+   ```
+   php artisan down --refresh=15
+   composer install --no-dev --optimize-autoloader
+   php artisan migrate --force
+   php artisan db:seed --class=PermissionSeeder --force
+   php artisan config:cache && php artisan route:cache && php artisan view:cache && php artisan event:cache
+   php artisan storage:link
+   php artisan up
+   php artisan app:preflight
+   ```
+   The permission seeder is safe to repeat; new permission keys exist only once it has
+   run. `app:preflight` must pass: it exits non-zero on anything unsafe.
+4. **Look:** the dashboard says whether the scheduler is running and how much mail is
+   left today; Settings, Providers shows every check `/health` makes.
+
+## Backups (X24)
+
+Decided 2026-11-19: Hostinger's own backups only, nothing offsite. That keeps the set up
+to nothing; the risk it accepts is that the copies live with the same provider as the
+site. Read in hPanel how often the plan backs up and how long it keeps each copy, rather
+than relying on a figure written here.
+
+What a working restore needs, and where each piece lives:
+
+| Piece | Where | In Hostinger's backup |
+|---|---|---|
+| The database | MySQL | Yes, as a database backup |
+| Files: documents, invoices and receipts as issued, certificates, chat pictures and voice notes, handouts, source code zips, the media library | `storage/app/` | Yes, with the files |
+| `.env`: `APP_KEY` and every provider key | the project folder | Yes, with the files, but keep your own copy too |
+| The code | GitHub | Not needed: deploy it again |
+
+**Keep `.env` in a password manager as well.** `APP_KEY` encrypts each person's two-step
+sign in secret: with a database restored under a different key, nobody who uses two-step
+sign in can use their authenticator app until they sign in with a recovery code and set
+it up again, every session is signed out, and the signed links in mail already sent stop
+working.
+
+**Before anything risky** (a deploy with migrations, the importer, a bulk change in the
+panel), take a copy by hand: in hPanel, Backups, generate a backup of files and
+databases; or the database alone over SSH, kept outside `public_html`:
+```
+mkdir -p ~/backups
+mysqldump --single-transaction --no-tablespaces -u DB_USER -p DB_NAME | gzip > ~/backups/ubs-$(date +%F-%H%M).sql.gz
+```
+Delete old copies now and then: they count against the plan's storage and inodes.
+
+**To restore:**
+1. `php artisan down --refresh=15`.
+2. Restore the database and `storage/` from hPanel's Backups page, or
+   `gunzip < backup.sql.gz | mysql -u DB_USER -p DB_NAME` for the database; put `.env`
+   back if it was lost.
+3. `php artisan migrate --force` (nothing to do unless the code is newer than the
+   backup), then the caches and `storage:link` as in a deploy.
+4. `php artisan app:preflight`, then `php artisan up`.
+5. Anything paid between the backup and the restore is in the Razorpay dashboard: record
+   it by hand (an offline payment), which opens a course or delivers an order as any
+   payment does.
+
+**Restore once before cutover, and once a year after:** the latest production backup into
+the staging subdomain, with mail to the log; sign in as each role and open an invoice
+PDF and a certificate. A backup nobody has restored is a hope rather than a backup.
 
 ## Rule for new work
 

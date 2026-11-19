@@ -956,6 +956,24 @@ it on v3**, rather than all of it holding v2 alive.
 | **H** | §9.1 quiz integrity · §9.1a proctored quizzes · §9.2 visitor assistant | — |
 | **I** | Phases 8 and 9 of `PROJECT_PLAN.md` (mobile API, hardening) | — |
 
+*Progress on Step I (decisions X15, X23, X24, X25 on 2026-11-19), built and checked in a browser:*
+- *I1, mail:* Hostinger's mail stays. The plan's daily limit and the part kept for service
+  mail are set under Settings, Mail; every message is counted, the dashboard shows what is
+  left today and says when the server refused mail. Greetings, announcements and bulk
+  credential sends share what the day leaves above the part kept; a bulk send that does not
+  fit waits for the next mornings, which the cutover runbook now plans around.
+- *I2, monitoring:* Sentry for faults on the server and in browsers, with personal details
+  taken out before anything leaves; `/health` for UptimeRobot; the dashboard and Settings,
+  Providers say when the scheduler or the queue stops.
+- *I3, hardening:* dependencies past their advisories, a content security policy and
+  security headers, a router audit, unnamed throttles counted per route, WCAG 2.2 AA in
+  both themes, an N+1 guard, `app:preflight`.
+- *I4, the API:* documented in OpenAPI and held to it by a contract test; sign in through
+  the web's pipeline, temporary passwords replaced in the app too, device tokens with
+  refresh and sign out, ETags, files and chat media by token, app tickets reaching the desk.
+- *I5, hosting:* the deploy runbook, Hostinger-only backups with a restore to try on
+  staging, and the cutover runbook brought up to date.
+
 **Other rules for this order:**
 - D–H are independent once C has landed and can run in any order.
 - Each step ships on its own.

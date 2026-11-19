@@ -135,7 +135,13 @@ class AccountCreator
      *
      * @param  array<int, CredentialDelivery>|null  $plannedDeliveries
      */
-    public function resendCredentials(User $user, ?string $personalNote = null, ?User $actor = null, ?array $plannedDeliveries = null): array
+    /**
+     * @param  bool  $now  Hand the message over now rather than queue it: the
+     *                     bulk send does, so each one is counted against the
+     *                     day's mail before the next is weighed (X15), and a
+     *                     refusal is recorded as the failure it is.
+     */
+    public function resendCredentials(User $user, ?string $personalNote = null, ?User $actor = null, ?array $plannedDeliveries = null, bool $now = false): array
     {
         $password = TemporaryPassword::generate();
 
@@ -151,7 +157,7 @@ class AccountCreator
 
         return [
             'password' => $password,
-            'deliveries' => $this->sendCredentials($user, $password, $personalNote, $actor, $plannedDeliveries),
+            'deliveries' => $this->sendCredentials($user, $password, $personalNote, $actor, $plannedDeliveries, $now),
         ];
     }
 
@@ -186,12 +192,14 @@ class AccountCreator
      * @param  array<int, CredentialDelivery>|null  $deliveries  Rows already planned, if any.
      * @return array<int, CredentialDelivery>
      */
-    protected function sendCredentials(User $user, string $password, ?string $personalNote, ?User $actor = null, ?array $deliveries = null): array
+    protected function sendCredentials(User $user, string $password, ?string $personalNote, ?User $actor = null, ?array $deliveries = null, bool $now = false): array
     {
         $deliveries ??= $this->planDeliveries($user, $actor);
 
         try {
-            $user->notify(new WelcomeCredentials($user, $password, $personalNote));
+            $now
+                ? $user->notifyNow(new WelcomeCredentials($user, $password, $personalNote))
+                : $user->notify(new WelcomeCredentials($user, $password, $personalNote));
 
             foreach ($deliveries as $delivery) {
                 $delivery->forceFill(['status' => 'sent', 'sent_at' => now()])->save();

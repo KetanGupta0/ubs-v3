@@ -13,6 +13,7 @@ use App\Services\Admin\AccountCreator;
 use App\Services\Admin\Auditor;
 use App\Services\Admin\CredentialBulkSender;
 use App\Services\Lms\StudentRecord;
+use App\Services\Mail\MailBudget;
 use App\Support\Identifier;
 use App\Support\Table\Column;
 use App\Support\Table\Filter;
@@ -299,7 +300,10 @@ class PeopleController extends Controller
             return back()->with('error', 'No accounts matched, so nothing was sent.');
         }
 
+        // Weighed before the send takes its share of today's mail (X15).
+        $days = MailBudget::daysFor($users->count());
         $result = $sender->queue($users, $validated['note'] ?? null, $request->user());
+        $result['days'] = $result['queued'] > 0 ? $days : 1;
 
         return back()->with(
             $result['queued'] > 0 ? 'success' : 'warning',
@@ -307,7 +311,7 @@ class PeopleController extends Controller
         );
     }
 
-    /** @param  array{queued: int, skipped: array<string, int>}  $result */
+    /** @param  array{queued: int, skipped: array<string, int>, days?: int}  $result */
     protected function bulkSummary(array $result): string
     {
         $parts = [];
@@ -317,6 +321,11 @@ class PeopleController extends Controller
             : ($result['queued'] === 1
                 ? 'Credentials are on their way to 1 account.'
                 : "Credentials are on their way to {$result['queued']} accounts.");
+
+        // The day's mail limit (X15) spreads a big send over the mornings that follow.
+        if (($result['days'] ?? 1) > 1) {
+            $parts[] = "Within the day's mail limit that takes about {$result['days']} days; what does not fit today goes from 9 in the morning, and each account shows when it went.";
+        }
 
         $reasons = [
             CredentialBulkSender::SKIP_IN_USE => 'already have a password they chose',

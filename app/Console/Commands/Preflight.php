@@ -48,6 +48,13 @@ class Preflight extends Command
             ->reject(fn ($ext) => extension_loaded($ext));
         $this->check('PHP extensions are loaded', $missing->isEmpty(), 'Missing: '.$missing->implode(', ').'.');
         $this->check('Storage and the cache folder are writable', is_writable(storage_path()) && is_writable(base_path('bootstrap/cache')), 'storage/ and bootstrap/cache must be writable by PHP.');
+        $stack = (array) config('logging.channels.stack.channels', []);
+        $this->check(
+            'Logs rotate and keep a fortnight',
+            config('logging.default') !== 'single' && ! in_array('single', $stack, true),
+            'Set LOG_STACK=daily (and LOG_LEVEL=warning): a single log file grows until the plan\'s storage is full.',
+            warnOnly: ! $production,
+        );
         $this->check('Public storage is linked', is_link(public_path('storage')) || is_dir(public_path('storage')), 'Run php artisan storage:link.');
 
         // ------------------------------------------------------ the database

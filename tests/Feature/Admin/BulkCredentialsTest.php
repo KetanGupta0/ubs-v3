@@ -6,6 +6,9 @@ use App\Models\CredentialDelivery;
 use App\Models\Permission;
 use App\Models\User;
 use App\Notifications\WelcomeCredentials;
+use App\Services\Admin\AccountCreator;
+use App\Services\Admin\CredentialBulkSender;
+use App\Services\Mail\MailBudget;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Queue;
@@ -273,4 +276,43 @@ it('shows when credentials were last sent, and filters on it', function () {
         ->assertInertia(fn ($page) => $page
             ->has('table.rows', 1)
             ->where('table.rows.0.credentials', 'Never'));
+});
+
+it('keeps a big send within the day\'s mail limit, the rest waiting for the next morning with their passwords untouched', function () {
+    // Room for two in bulk today: a plan of four a day, two kept for service mail.
+    config(['company.mail.daily_limit' => 4, 'company.mail.service_reserve' => 2]);
+    $this->travelTo(now()->setTime(11, 0));
+
+    $students = collect(range(1, 3))->map(fn () => legacyStudent());
+    $hashes = $students->mapWithKeys(fn (User $student) => [$student->id => $student->password]);
+
+    sendInBulk($this, $this->owner, ['scope' => 'selected', 'ids' => $students->pluck('id')->all()])
+        ->assertSessionHas('success', fn (string $message) => str_contains($message, 'Credentials are on their way to 3 accounts.')
+            && str_contains($message, 'takes about 2 days'));
+
+    $run = function (User $student) {
+        $deliveries = CredentialDelivery::query()->where('user_id', $student->id)->pluck('id')->all();
+        $job = (new SendCredentials($student->id, null, $this->owner->id, $deliveries))->withFakeQueueInteractions();
+        $job->handle(app(AccountCreator::class), app(CredentialBulkSender::class));
+
+        return $job;
+    };
+
+    // The sync queue ran the send already; the mail went now, not queued again, and was counted.
+    expect(MailBudget::today()['sent'])->toBe(2)
+        ->and(CredentialDelivery::query()->where('status', 'sent')->where('channel', 'mail')->count())->toBe(2);
+
+    $waiting = $students->first(fn (User $student) => $student->fresh()->password === $hashes[$student->id]);
+    expect($waiting)->not->toBeNull()
+        ->and(CredentialDelivery::query()->where('user_id', $waiting->id)->pluck('status')->unique()->all())->toBe(['queued']);
+
+    // Run again today: it puts itself back until nine tomorrow, changing nothing.
+    $run($waiting)->assertReleased();
+    expect($waiting->fresh()->password)->toBe($hashes[$waiting->id]);
+
+    $this->travelTo(today()->addDay()->setTime(9, 5));
+    $run($waiting)->assertNotReleased();
+
+    expect($waiting->fresh()->password)->not->toBe($hashes[$waiting->id])
+        ->and(CredentialDelivery::query()->where('user_id', $waiting->id)->where('channel', 'mail')->value('status'))->toBe('sent');
 });

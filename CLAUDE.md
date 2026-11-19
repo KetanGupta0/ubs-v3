@@ -297,6 +297,12 @@ Rules for the marketing pages:
   own password and the old site never recorded sign ins. Each send is recorded as
   queued the moment it is planned, so a second click finds it, and the job checks
   again before it goes. `App\Services\Admin\CredentialBulkSender` holds the rule.
+- **A bulk credential send keeps inside the day's mail limit (X15).** It shares what the
+  day leaves above the part kept for service mail (`MailBudget::bulkLeft()`) with
+  greetings and announcements. A `SendCredentials` job whose mail does not fit puts itself
+  back until nine the next morning without touching the password, and retries for a month
+  rather than three times; when it goes it sends at once (`notifyNow`), so each message is
+  counted before the next is weighed. Mail and SMS go together, with the one password.
 - **Every change goes through `App\Services\Admin\Auditor`.** It stores only what
   actually moved, as before and after, with passwords, secrets and tokens replaced
   by dots. There is no route to edit or delete an entry.
@@ -918,12 +924,14 @@ group), `resources/js/pages/admin/reports`, `resources/js/components/Charts`.
 
 ## Not yet built
 
-Phases 8 and 9 in the plan. Navigation entries that render as "Soon" are
-deliberate placeholders, wired but not yet routed. Instalments,
-calendar invitations, message search, push notifications to a phone, a visual
-filter builder and a report designer are named in the plan and are not built;
-see the "what landed differently" notes under Phases 5, 6 and 7 in
-`docs/PROJECT_PLAN.md`.
+Every phase in the plan has landed; see the "what landed differently" notes under
+Phases 5 to 9 in `docs/PROJECT_PLAN.md`. Navigation entries that render as "Soon" are
+deliberate placeholders, wired but not yet routed. Instalments, calendar invitations,
+message search, a visual filter builder and a report designer are named in the plan
+and are not built. Waiting on something outside the code: push notifications to a phone
+(the apps and a Firebase project, X25), the live proctoring camera with guardian consent
+and the webcam exemption (a video relay, X4 and X12), and a mail provider if the plan's
+limit is ever not enough (X15). Offsite backups are not built by decision (X24).
 
 There are no JavaScript tests yet. Client only logic is currently verified by
 driving a real browser. Bugs in every phase so far have been visible only that

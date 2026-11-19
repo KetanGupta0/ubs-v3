@@ -396,28 +396,38 @@ Run after every import, printed and saved:
 
 ### Before the day (each a must)
 
-1. **Mail provider configured** (X15): Hostinger's 100 a day cannot carry cutover's credential
-   sends. Set `MAIL_*` for the provider and send one test from Settings → Messages.
+1. **Mail set up (X15, decided 2026-11-19: Hostinger's own).** Set the plan's daily limit
+   and the part kept for service mail under Settings, Mail, and send one test from
+   Settings → Messages. A bulk credential send keeps inside the day's limit: what does not
+   fit goes from 9 the next mornings, and the panel says how many days it takes (at 100 a
+   day with 40 kept, 300 accounts take five). Each account's mail and SMS go together,
+   because they carry the same password. Set up **MSG91** before the day, so anybody can
+   sign in at once with a one time code to their mobile, and remind people that Google
+   sign in works with the address they used on the old site. If the plan is to be raised,
+   raise it before the day and change the figure in the panel.
 2. **Pusher keys** in production `.env` (`BROADCAST_CONNECTION=pusher`, `VITE_BROADCASTER=pusher`,
    `PUSHER_*`), assets rebuilt; Settings → Providers shows "Realtime chat: Pusher".
 3. **Razorpay keys** in `.env`, never imported (§2.7).
 4. **Private files on the server, never in a repository:** the generation 1 list
    (`gen1.txt`, see §3) and the course map (`course-map.json`: v2 slug → v3 slug, or
    `{"type": "internship"}`). Decide D7 (v1 certificate QR addresses).
-5. **At least two rehearsals on staging** with a fresh dump each time:
+5. **Monitoring and backups in place:** Sentry's DSN in `.env` and `php artisan sentry:test`
+   seen in Sentry; an UptimeRobot monitor on `/health`; one restore of a backup into
+   staging tried, as `docs/HOSTING.md` describes.
+6. **At least two rehearsals on staging** with a fresh dump each time:
    `legacy:import --dry-run`, then a real `legacy:import`, then `legacy:reconcile`, all
    passing; the import report's warnings read through and each one either fixed in v2's copy
    or accepted. Sign in on staging as a generation 2 student (old password works) and a
    generation 1 student (forced change after a credential is sent).
-6. **Content reviewed:** imported courses, FAQs and pages are drafts; read and publish what is
+7. **Content reviewed:** imported courses, FAQs and pages are drafts; read and publish what is
    wanted, and publish the refund policy (`/refund-policy` redirects to it).
-7. **Announce** the window to students three days ahead (D11: a late Sunday evening between
+8. **Announce** the window to students three days ahead (D11: a late Sunday evening between
    batches, no live class scheduled).
 
 ### On the day
 
 1. v2 into maintenance mode; disable its cron entries in hPanel; point Razorpay's webhook away
-   from v2 and note the time.
+   from v2 and note the time. Take a backup of v3 as it stands (hPanel, Backups).
 2. Final `mysqldump` of v2, restored into the read-only copy the `legacy` connection points at;
    copy v2's `storage/` to the server.
 3. Over SSH, on v3:
@@ -427,8 +437,9 @@ Run after every import, printed and saved:
    php artisan legacy:import --dry-run --generation-one=/private/gen1.txt --course-map=/private/course-map.json --storage=/private/v2-storage
    php artisan legacy:import --generation-one=/private/gen1.txt --course-map=/private/course-map.json --storage=/private/v2-storage
    php artisan legacy:reconcile
+   php artisan app:preflight
    ```
-   Stop if `legacy:reconcile` fails. Nothing is visible to anybody yet.
+   Stop if `legacy:reconcile` or `app:preflight` fails. Nothing is visible to anybody yet.
 4. Point Razorpay's webhook at v3; fetch payments captured during the window from the Razorpay
    dashboard and record them by hand (offline payment), which opens the course as any payment does.
 5. Switch DNS / document root to v3. Old addresses are handled by v3 itself (`redirects` table,
@@ -438,8 +449,12 @@ Run after every import, printed and saved:
 6. Smoke test: sign in as each role; open a course; verify three certificates by their old QR
    links (one revoked); make a ₹1 test payment and refund it; send yourself a chat message.
 7. From the Students list, send credentials to everybody on a temporary password (the bulk send
-   skips generation 2, who keep theirs). Then email everybody: new site, sign in as before or
-   with the credentials just sent, set up two factor again.
+   skips generation 2, who keep theirs). Within the day's mail limit this takes the days the
+   panel says, so tell everybody through the channels already in use (the WhatsApp groups, a
+   banner on the old address) rather than by mail: the new site is live, sign in as before,
+   with Google, or with a one time code to your mobile; credentials by email follow over the
+   next days for whoever needs them; set up two-step sign in again. Watch the dashboard's mail
+   figure and its "refused" count for the first week.
 
 **Rollback:** until step 5 nothing is visible. After it, v2 is untouched and only in
 maintenance mode, so rollback is DNS + webhook back to v2 + maintenance off. Anything done

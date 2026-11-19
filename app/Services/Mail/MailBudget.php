@@ -74,12 +74,34 @@ class MailBudget
      */
     public static function promotionalLeft(): int
     {
+        return self::bulkLeft();
+    }
+
+    /**
+     * What mail sent in bulk may still use today: greetings, announcements and
+     * a bulk credential send share what the day leaves above the part kept for
+     * sign in codes, receipts and reminders.
+     */
+    public static function bulkLeft(): int
+    {
         $sent = max(
             self::today()['sent'],
             MailCampaignRecipient::query()->where('status', 'sent')->where('sent_at', '>=', today())->count(),
         );
 
         return max(0, self::limit() - self::reserve() - $sent);
+    }
+
+    /** Roughly how many days a bulk send of this many messages takes, today included. */
+    public static function daysFor(int $messages): int
+    {
+        $today = self::bulkLeft();
+
+        if ($messages <= $today) {
+            return 1;
+        }
+
+        return 1 + (int) ceil(($messages - $today) / max(1, self::limit() - self::reserve()));
     }
 
     /**

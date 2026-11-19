@@ -31,6 +31,8 @@ it('passes an install set up for production, with warnings for what is still to 
         'queue.from_scheduler' => true,
         'mail.default' => 'smtp',
         'mail.from.address' => 'hello@unboundbyte.com',
+        'logging.default' => 'stack',
+        'logging.channels.stack.channels' => ['daily'],
         'sentry.dsn' => null,
     ]);
 

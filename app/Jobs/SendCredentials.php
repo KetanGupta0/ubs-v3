@@ -6,6 +6,7 @@ use App\Models\CredentialDelivery;
 use App\Models\User;
 use App\Services\Admin\AccountCreator;
 use App\Services\Admin\CredentialBulkSender;
+use App\Services\Mail\MailBudget;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -21,7 +22,23 @@ class SendCredentials implements ShouldQueue
 {
     use Queueable;
 
-    public int $tries = 3;
+    /** Hour of the morning a send that waited for the day's mail goes out. */
+    public const MORNING = 9;
+
+    /**
+     * Retried for a month, not a number of times: a large send waits for the
+     * day's mail limit (X15) by putting itself back until the next morning,
+     * which would use up a count of tries in three days. A fault waits longer
+     * each time.
+     *
+     * @var array<int, int>
+     */
+    public array $backoff = [300, 1800, 3600];
+
+    public function retryUntil(): \DateTimeInterface
+    {
+        return now()->addDays(30);
+    }
 
     public function __construct(
         public int $userId,
@@ -65,11 +82,30 @@ class SendCredentials implements ShouldQueue
             return;
         }
 
+        // Nothing is changed until it can go: the password is only replaced
+        // once there is room in the day's mail for the message carrying it.
+        if ($deliveries->contains('channel', 'mail') && MailBudget::bulkLeft() <= 0) {
+            $this->release($this->secondsUntilMorning());
+
+            return;
+        }
+
+        // Handed over now rather than queued again, so each one is counted
+        // against the day before the next is weighed.
         $creator->resendCredentials(
             $user,
             $this->personalNote,
             User::query()->find($this->actorId),
             $deliveries->isEmpty() ? null : $deliveries->all(),
+            now: true,
         );
+    }
+
+    /** Tomorrow at nine, spread over ten minutes so a big send does not all wake at once. */
+    protected function secondsUntilMorning(): int
+    {
+        $morning = today()->addDay()->setTime(self::MORNING, 0)->addSeconds($this->userId % 600);
+
+        return max(60, (int) now()->diffInSeconds($morning, absolute: true));
     }
 }

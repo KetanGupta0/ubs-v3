@@ -471,6 +471,23 @@ API work happens inside each phase, not only here. This phase hardens and docume
 
 **Exit:** three mobile apps could start development against a stable documented API.
 
+**What landed differently, and what did not land (built 2026-11-19, decision X25):**
+- The apps come later, so this phase made the API they will use ready and fixed rather
+  than building towards push. `docs/api/openapi.yaml` documents every route and
+  `ContractTest` holds the server to it both ways on the demo data; `docs/API.md` is the
+  developers' guide. No Postman collection is generated: the OpenAPI file imports
+  straight into Postman. The sandbox is a staging copy seeded with the demo data.
+- Device tokens, one per device, with refresh, a device list and signing a device out.
+  Sign in goes through the web's `LoginPipeline`, and a temporary password has to be
+  replaced in the app as on the web, which it did not have to be before.
+- ETags on every `GET`, so an unchanged answer is an empty `304`. Lists are capped rather
+  than paged, chat has an `after` cursor, and there are no delta sync endpoints: the
+  numbers are small.
+- Staff have no app API yet; the admin panel works on a phone.
+- Push tokens are recorded; sending through Firebase Cloud Messaging waits for the apps
+  and a Firebase project. Biometric re-authentication is the app's to do with the token
+  it holds.
+
 ### Phase 9 — Hardening and hosting
 
 - Authorisation policies on every model, verified by tests.
@@ -485,6 +502,33 @@ API work happens inside each phase, not only here. This phase hardens and docume
 - Monitoring: uptime, error tracking, log aggregation, queue depth alerts.
 
 **Exit:** live on the production domain.
+
+**What landed differently, and what did not land (built 2026-11-19, decisions X15, X23, X24):**
+- Shared hosting rather than a server: no Nginx, Supervisor or Redis to run. The queue
+  works from the scheduler's one cron entry, realtime goes to Pusher, and
+  `docs/HOSTING.md` holds the deploy and restore runbooks. `php artisan app:preflight`
+  checks an install after every deploy.
+- Monitoring is Sentry for faults on the server and in browsers, stripped of personal
+  details before they leave, and UptimeRobot on `/health`, which checks the database,
+  the scheduler's heartbeat, the queue and storage. The dashboard says when the
+  scheduler stops.
+- Mail stays on Hostinger: the plan's daily limit is a setting, the dashboard shows
+  what is left today, and greetings, announcements and bulk credential sends keep to
+  what the day leaves above the part kept for service mail.
+- Backups are Hostinger's own, by decision; nothing offsite. A restore is described and
+  is to be tried on staging before cutover.
+- Authorisation is checked by reading the router (`RouteAuditTest`: every admin route
+  names a permission, every open unsafe route is throttled or signed, every API route
+  needs a full token) rather than by a policy class per model; client records are
+  reached only through the client's own relations, as before.
+- A content security policy with nonces on every page, security headers on every
+  response, unnamed throttles counted per route, dependencies past their advisories.
+- WCAG 2.2 AA by axe on the main pages of every role, in light and dark, with text
+  tokens for status and product colours.
+- Lazy loading throws outside production, which found seven N+1 queries; two lists keep
+  a query budget under test.
+- No virus scanning of uploads (no binary on shared hosting): uploads are checked by
+  their bytes and pictures re-encoded, as before.
 
 ---
 
