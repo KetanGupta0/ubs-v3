@@ -912,6 +912,30 @@ place:
     (which show where the site copy is missing something)
   - an on/off switch
 
+
+*Progress on Step H4 (decisions X20, X21, X22 on 2026-11-19):*
+- *Built 2026-11-19. An "Ask us" button on every public page opens the assistant. Before
+  anything is sent the visitor reads that it is an AI, that what they type goes to
+  Anthropic to be answered and is kept for the period set, and that their details reach
+  the team only if they press Send; then they agree. It looks things up in the catalogue
+  by the public pages' rules (products, services, courses, internships, batches starting,
+  open registration forms, the main pages) and answers from that alone, with prices as
+  the pages show them and links to the pages; what it cannot answer it says, points to
+  the contact page, and notes for the panel. Asked to be contacted, it puts the details
+  on a card the visitor can correct; pressing Send makes a lead with the conversation
+  attached, announced like any other enquiry.*
+- *Website → Website assistant: the switch (it needs the key and the published privacy
+  policy that says so), how long conversations are kept and how many it takes a day (as
+  the owner asked, both set there), the last month's figures, the questions it could not
+  answer, and every conversation with the tools each answer used. Answers come whole, a
+  few seconds each, never streamed, because shared hosting counts open streams.*
+- *The privacy paragraph is in the policy's next draft for the owner to read and publish;
+  the assistant cannot be switched on before that. The request was checked through the
+  real SDK against a stand-in for the API, and the widget end to end in a browser against
+  a stand-in for the model; one real conversation should be had once the key is in.*
+- *Step H is complete, except the camera for live proctoring, which waits for a video
+  relay (X12).*
+
 ---
 
 ## 10. Order of work
@@ -966,3 +990,6 @@ the middle of it.
 | X17 | Fixed prices: GST included or added? | **Decided 2026-11-18:** added. A product's price is before tax, as B2B buyers expect; the cart and invoice add GST, split CGST and SGST or IGST by the buyer's state. |
 | X18 | Licence keys: recorded only, or checked online by the software? | **Decided 2026-11-18:** both. Keys are recorded and revoked on refund, and a verification API lets the software check a key and the site it runs on, activating sites up to the tier's limit. |
 | X19 | Privacy policy version 2, before any greeting goes out | **Decided 2026-11-18:** drafted in the panel by us, reviewed and published by the owner. |
+| X20 | Visitor assistant: how long its conversations are kept | **Decided 2026-11-19:** set in the admin panel (Website assistant): 30 days to start, at most 90, which is what the privacy policy states. |
+| X21 | Visitor assistant: a limit on conversations a day, to bound the cost | **Decided 2026-11-19:** set in the admin panel: 100 a day to start, 0 for none. Past it, visitors are pointed to the contact page. |
+| X22 | Visitor assistant: the privacy policy paragraph | **Decided 2026-11-19:** drafted by us in the policy's next version; the owner reads and publishes it, and the assistant cannot be switched on before then. |

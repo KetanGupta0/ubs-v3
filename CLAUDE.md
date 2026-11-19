@@ -236,6 +236,21 @@ Rules for the marketing pages:
   gets the site name once; a title that already has it is left alone.
 - Facet lists are ordered by how many products carry each value, because a
   facet list is a browsing aid rather than an index.
+- **The assistant answers from the catalogue and passes nothing on by itself (§9.2).**
+  `App\Services\Assistant\Assistant` runs it on `company.ai.assistant_model`, a whole
+  answer per message and never a stream, because a stream holds an entry process;
+  `App\Services\Ai\ClaudeChat` is the only class that touches the SDK. Its tools
+  (`SiteTools`) read the catalogue by the public pages' rules (nothing unpublished, no
+  `lms_only`, no form for an LMS only course) and give prices as the pages do.
+  `offer_contact` only puts details on a card: a lead is made when the visitor presses
+  Send (`confirmLead()`), and every lead, wherever it comes from, is announced through
+  `LeadNotifier`. Replies are Markdown made safe on the server, linking only to this
+  site's paths. It is off until switched on under Website → Website assistant, which
+  needs `ANTHROPIC_API_KEY` and a published privacy version at least
+  `assistant.policy_version`, and a visitor agrees to its notice before anything is
+  sent. A conversation takes twenty messages (`Assistant::MAX_VISITOR_MESSAGES`); how
+  many conversations a day and how long they are kept (at most 90 days, as the policy
+  says) are set there. `assistant:prune` deletes old conversations, never the leads.
 
 ## Admin panel
 

@@ -17,6 +17,7 @@ import ThemeToggle from '@/components/Nav/ThemeToggle.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import UiDrawer from '@/components/UI/UiDrawer.vue';
 import UiToaster from '@/components/UI/UiToaster.vue';
+import AssistantWidget from '@/components/Assistant/AssistantWidget.vue';
 
 const menuOpen = ref(false);
 const scrolled = ref(false);
@@ -245,5 +246,6 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
         </UiDrawer>
 
         <UiToaster />
+        <AssistantWidget />
     </div>
 </template>

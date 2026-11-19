@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AgreementController;
 use App\Http\Controllers\Admin\AssessmentController;
+use App\Http\Controllers\Admin\AssistantController;
 use App\Http\Controllers\Admin\AuditLogController;
 use App\Http\Controllers\Admin\BatchController;
 use App\Http\Controllers\Admin\BatchPerformanceController;
@@ -496,6 +497,13 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('proctoring/quizzes/{quiz}/safe-exam-browser', [ProctoringController::class, 'uploadSebFile'])->whereNumber('quiz')->name('proctoring.seb');
             Route::post('proctoring/quizzes/{quiz}/slots', [ProctoringController::class, 'storeSlot'])->whereNumber('quiz')->name('proctoring.slots.store');
             Route::delete('proctoring/slots/{slot}', [ProctoringController::class, 'destroySlot'])->whereNumber('slot')->name('proctoring.slots.destroy');
+        });
+
+        /* The website assistant (§9.2): its switch, its limits, its conversations. */
+        Route::middleware('permission:assistant.manage')->group(function () {
+            Route::get('assistant', [AssistantController::class, 'index'])->name('assistant.index');
+            Route::put('assistant', [AssistantController::class, 'update'])->name('assistant.update');
+            Route::get('assistant/conversations/{conversation}', [AssistantController::class, 'show'])->whereNumber('conversation')->name('assistant.show');
         });
 
         /*

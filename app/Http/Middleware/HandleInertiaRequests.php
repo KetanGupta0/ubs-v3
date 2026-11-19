@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\LegalDocument;
 use App\Models\SiteMenu;
+use App\Services\Assistant\Assistant;
 use App\Services\Auth\Impersonation;
 use App\Services\Shop\CartStore;
 use App\Support\PageCopy;
@@ -65,6 +66,11 @@ class HandleInertiaRequests extends Middleware
             'cart' => fn () => $request->user() && ! $request->user()->isClient()
                 ? 0
                 : app(CartStore::class)->count($request->user()),
+
+            /* Whether the public site shows the assistant (§9.2): switched on, with the key and the policy in place. */
+            'assistant' => fn () => app(Assistant::class)->available()
+                ? ['retentionDays' => Assistant::settings()['retention_days']]
+                : null,
 
             /* Staff looking at a fixed page's unpublished wording, so the page can say so. */
             'copyPreview' => fn () => PageCopy::previewing(),

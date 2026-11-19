@@ -53,6 +53,7 @@ class PermissionSeeder extends Seeder
             'Public site' => [
                 'content.manage' => 'Write and publish pages on the public site',
                 'legal.manage' => 'Edit and publish the privacy policy, terms and refund policy',
+                'assistant.manage' => 'Run the website assistant: switch it on, its limits, and read its conversations',
             ],
             'Catalogue' => [
                 'catalogue.view' => 'View the catalogue',

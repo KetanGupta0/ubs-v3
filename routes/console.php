@@ -33,6 +33,9 @@ Schedule::command('quizzes:check-integrity')->everyFifteenMinutes()->withoutOver
 // API: sent a few minutes after, read back once the batch has ended (§9.1).
 Schedule::command('quizzes:ai-review')->everyFifteenMinutes()->withoutOverlapping(15);
 
+// The website assistant's conversations go once older than the period set in the panel (§9.2).
+Schedule::command('assistant:prune')->dailyAt('03:40');
+
 /*
  * Hourly, so a report set for seven in the morning arrives at seven. Each
  * schedule decides for itself whether it is due.

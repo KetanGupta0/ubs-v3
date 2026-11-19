@@ -23,7 +23,7 @@ import {
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
     UserPlus, Package, ShieldCheck, Building2, Wrench, HelpCircle, UserCog,
     ScrollText, FileSignature, Files, LifeBuoy as LifeBuoyIcon, Banknote,
-    ShieldAlert, ClipboardPen, NotebookPen, MessageCircleQuestion, BellRing, TrendingUp, Flag, MonitorCheck,
+    ShieldAlert, ClipboardPen, NotebookPen, MessageCircleQuestion, BellRing, TrendingUp, Flag, MonitorCheck, Bot,
 } from 'lucide-vue-next';
 
 export const navigation = {
@@ -85,6 +85,7 @@ export const navigation = {
         { group: 'Website', label: 'Site content', icon: HelpCircle, href: '/admin/content', permission: 'catalogue.view' },
         { group: 'Website', label: 'Team and mentors', icon: Contact, href: '/admin/team', permission: 'content.manage' },
         { group: 'Website', label: 'Search wording', icon: Search, href: '/admin/seo', permission: 'content.manage' },
+        { group: 'Website', label: 'Website assistant', icon: Bot, href: '/admin/assistant', permission: 'assistant.manage' },
         { group: 'Website', label: 'Legal documents', icon: Scale, href: '/admin/legal', permission: 'legal.manage' },
         { group: 'Website', label: 'Announcements', icon: Send, href: '/admin/mail/broadcasts', permission: 'mail.broadcast' },
         { group: 'Website', label: 'Greetings', icon: PartyPopper, href: '/admin/mail/occasions', permission: 'mail.occasions' },

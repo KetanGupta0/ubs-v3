@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Marketing\AssistantController;
 use App\Http\Controllers\Marketing\EnrolController;
 use App\Http\Controllers\Marketing\HomeController;
 use App\Http\Controllers\Marketing\InternshipController;
@@ -92,5 +93,12 @@ Route::post('/enquiries', [LeadController::class, 'store'])
 Route::post('/solutions/{solution}/demo', [LeadController::class, 'demo'])
     ->middleware('throttle:6,1,demo')
     ->name('solutions.demo');
+
+// The assistant (§9.2): limited here per address, and again in the controller.
+Route::middleware('throttle:20,1,assistant')->group(function () {
+    Route::post('/assistant/start', [AssistantController::class, 'start'])->name('assistant.start');
+    Route::post('/assistant/message', [AssistantController::class, 'message'])->name('assistant.message');
+    Route::post('/assistant/lead', [AssistantController::class, 'lead'])->name('assistant.lead');
+});
 
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');

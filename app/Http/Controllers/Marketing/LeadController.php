@@ -2,15 +2,12 @@
 
 namespace App\Http\Controllers\Marketing;
 
-use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Lead;
 use App\Models\Service;
 use App\Models\Solution;
-use App\Models\User;
-use App\Notifications\LeadAcknowledgement;
-use App\Notifications\LeadReceived;
+use App\Services\Leads\LeadNotifier;
 use App\Support\Identifier;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -154,18 +151,6 @@ class LeadController extends Controller
      */
     protected function notify(Lead $lead): void
     {
-        $lead->loadMissing(['solution', 'service', 'course']);
-
-        try {
-            $admins = User::query()->role(Role::Admin)->active()->get();
-
-            if ($admins->isNotEmpty()) {
-                Notification::send($admins, new LeadReceived($lead));
-            }
-
-            Notification::route('mail', $lead->email)->notify(new LeadAcknowledgement($lead));
-        } catch (\Throwable $e) {
-            report($e);
-        }
+        app(LeadNotifier::class)->notify($lead);
     }
 }
