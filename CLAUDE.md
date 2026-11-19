@@ -807,6 +807,29 @@ group), `resources/js/pages/admin/reports`, `resources/js/components/Charts`.
 - **A saved view stores the query, not the rows**, and `screen` is checked to be
   a path on this platform before it is stored.
 
+## Monitoring
+
+`App\Support\Monitoring`, `config/sentry.php`, `resources/js/support/errorReports.js`.
+
+- **A fault goes to Sentry; the person never does (X23).** `config/sentry.php` fixes in
+  code, not `.env`, that no request body, cookie, IP or SQL value is sent and that
+  tracing is off. `ErrorReports::beforeSend()` takes out the query string, every header
+  but the browser's, route parameters that are not plain numbers (an unsubscribe
+  address, a reset token), quoted values in driver messages, the arguments in each stack
+  frame, and addresses, long numbers and tokens anywhere. Production connections also
+  mask bindings in a failed query's own message. Nothing is sent without
+  `SENTRY_LARAVEL_DSN`.
+- **A fault in a browser reaches Sentry through our server.** `errorReports.js` posts Vue
+  errors, page errors and rejected promises from this site's own scripts to
+  `/client-errors` (a few per page load, each once; network failures and extensions
+  left out), which logs them and passes them on, capped per address and per day. The
+  page carries no Sentry script and no key.
+- **`/health` is for UptimeRobot.** It sits outside every middleware group, so it needs no
+  session, and answers 503 naming what failed: the database, the scheduler, the queue
+  or storage. The scheduler touches `storage/framework/scheduler-heartbeat` every
+  minute; the dashboard says when it stopped, and Settings, Providers shows the same
+  checks.
+
 ## Migration from v2
 
 `php artisan legacy:import` and `legacy:reconcile`, `App\Services\Legacy`, tests in

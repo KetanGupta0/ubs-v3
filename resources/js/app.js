@@ -6,6 +6,7 @@ import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { ZiggyVue } from 'ziggy-js';
 
 import { applyStoredTheme } from '@/support/theme';
+import { installErrorReports } from '@/support/errorReports';
 
 // Applied before the first paint so a dark mode user never sees a white flash.
 applyStoredTheme();
@@ -23,10 +24,12 @@ createInertiaApp({
     resolve: (name) =>
         resolvePageComponent(`./pages/${name}.vue`, import.meta.glob('./pages/**/*.vue')),
     setup({ el, App, props, plugin }) {
-        createApp({ render: () => h(App, props) })
-            .use(plugin)
-            .use(ZiggyVue)
-            .mount(el);
+        const app = createApp({ render: () => h(App, props) }).use(plugin).use(ZiggyVue);
+
+        // A fault in the browser reaches us, and Sentry once it is set up.
+        installErrorReports(app);
+
+        app.mount(el);
     },
     progress: {
         color: '#06B6D4',

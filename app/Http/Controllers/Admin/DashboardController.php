@@ -18,6 +18,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Mail\MailBudget;
 use App\Support\Money;
+use App\Support\Monitoring\Health;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -120,6 +121,33 @@ class DashboardController extends Controller
     protected function needsAttention(): array
     {
         $items = [];
+
+        /*
+         * On shared hosting everything that is not a page waits for the cron
+         * entry: the queue, mail, reminders, renewals. Nothing on a page looks
+         * wrong when it stops, so it is said here first.
+         */
+        $health = Health::checks();
+
+        if ($health['scheduler'] !== 'ok') {
+            $items[] = [
+                'tone' => 'danger',
+                'title' => $health['scheduler'] === 'never_ran'
+                    ? 'The scheduler has never run on this server'
+                    : 'The scheduler has not run since '.Health::lastBeat()?->format('j M, g:i a'),
+                'body' => 'The queue, mail, reminders and renewals all wait for it. Check the cron entry in hPanel; docs/HOSTING.md has the line.',
+                'href' => '/admin/settings?tab=providers',
+                'action' => 'How it is running',
+            ];
+        } elseif ($health['queue'] !== 'ok') {
+            $items[] = [
+                'tone' => 'warning',
+                'title' => 'Queued work has been waiting more than '.Health::QUEUE_LATE_MINUTES.' minutes',
+                'body' => 'Mail and notifications go out from the queue. The scheduler is running, so check that QUEUE_FROM_SCHEDULER is true in .env, or whether there is more queued than a minute\'s run gets through.',
+                'href' => '/admin/settings?tab=providers',
+                'action' => 'How it is running',
+            ];
+        }
 
         $mail = MailBudget::summary();
 

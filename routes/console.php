@@ -1,5 +1,6 @@
 <?php
 
+use App\Support\Monitoring\Health;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -44,6 +45,10 @@ Schedule::command('reports:send')->hourly();
 
 // Class and deadline reminders. Each goes once, whatever the schedule does.
 Schedule::command('lms:remind')->everyFiveMinutes()->withoutOverlapping(10);
+
+// A beat every minute, so /health and the dashboard can tell when the cron
+// entry stopped running: the queue, mail and reminders all stop with it.
+Schedule::call(fn () => Health::beat())->everyMinute()->name('health:heartbeat');
 
 /*
  * Shared hosting has no long running worker, so the queue is drained here,

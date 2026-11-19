@@ -10,6 +10,7 @@ use App\Services\Admin\Auditor;
 use App\Services\Mail\MailBudget;
 use App\Support\HumanCheck;
 use App\Support\MessageCatalogue;
+use App\Support\Monitoring\Health;
 use App\Support\SiteIdentity;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -75,6 +76,13 @@ class SettingsController extends Controller
                 ],
                 ['name' => 'Human check on registration forms', 'configured' => HumanCheck::enabled(), 'detail' => 'Cloudflare Turnstile'],
                 ['name' => 'AI review of flagged quiz attempts', 'configured' => filled(config('services.anthropic.key')), 'detail' => 'Claude API'],
+                ['name' => 'Error tracking', 'configured' => filled(config('sentry.dsn')), 'detail' => 'Sentry: faults on the server and in browsers, never personal details'],
+            ],
+
+            // What an uptime monitor reads at /health, for the owner to see here.
+            'health' => [
+                'checks' => Health::checks(),
+                'lastBeat' => Health::lastBeat()?->diffForHumans(),
             ],
         ]);
     }

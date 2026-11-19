@@ -37,6 +37,12 @@ class GuardImpersonation
             return $next($request);
         }
 
+        // A fault the page reports writes nothing to the person's record, and
+        // a bug seen while viewing as them is still a bug.
+        if ($request->routeIs('client-errors')) {
+            return $next($request);
+        }
+
         if ($this->impersonation->expired()) {
             $this->impersonation->stop();
 

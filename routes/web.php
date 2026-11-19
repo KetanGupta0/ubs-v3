@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Account\NotificationController;
 use App\Http\Controllers\Admin\ImpersonationController;
+use App\Http\Controllers\ClientErrorController;
 use App\Http\Controllers\DesignController;
 use App\Http\Controllers\Mail\MessageController;
 use App\Http\Controllers\Mail\UnsubscribeController;
@@ -35,6 +36,15 @@ Route::middleware(['auth', 'password.owned'])->group(function () {
     Route::get('views/{view}', [SavedViewController::class, 'apply'])->whereNumber('view')->name('views.apply');
     Route::delete('views/{view}', [SavedViewController::class, 'destroy'])->whereNumber('view')->name('views.destroy');
 });
+
+/*
+ * A fault in somebody's browser, reported by the page (Step I). Open to
+ * visitors too, because public pages break as well; the throttle and a daily
+ * cap in the controller bound it.
+ */
+Route::post('client-errors', ClientErrorController::class)
+    ->middleware('throttle:10,1,client-errors')
+    ->name('client-errors');
 
 /*
  * Greetings and announcements (§8): stopping them from the link in one, which

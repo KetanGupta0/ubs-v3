@@ -32,6 +32,39 @@ const props = defineProps({
     templates: { type: Array, default: () => [] },
     mail: { type: Object, required: true },
     providers: { type: Array, default: () => [] },
+    health: { type: Object, required: true },
+});
+
+/* What /health reports, in words. */
+const healthRows = computed(() => {
+    const { checks, lastBeat } = props.health;
+    const words = {
+        ok: 'Working',
+        late: 'Late',
+        never_ran: 'Has never run',
+        backed_up: 'Backed up',
+        unreachable: 'Unreachable',
+        not_writable: 'Not writable',
+    };
+
+    return [
+        { name: 'Database', state: checks.database, detail: 'Every page needs it.' },
+        {
+            name: 'Scheduler',
+            state: checks.scheduler,
+            // Outside production a scheduler that never ran is not a fault: it runs when somebody starts it.
+            unseen: !lastBeat && checks.scheduler === 'ok',
+            detail: lastBeat
+                ? `Last ran ${lastBeat}. Runs the queue, mail, reminders and renewals every minute.`
+                : 'Has not run on this server yet. In production it needs the one cron entry in hPanel.',
+        },
+        { name: 'Queue', state: checks.queue, detail: 'Mail and notifications wait here until the scheduler sends them.' },
+        { name: 'Storage', state: checks.storage, detail: 'Uploads, logs and cached PDFs are written here.' },
+    ].map((row) => ({
+        ...row,
+        label: row.unseen ? 'Not seen yet' : (words[row.state] ?? row.state),
+        tone: row.unseen ? 'neutral' : (row.state === 'ok' ? 'success' : 'danger'),
+    }));
 });
 
 /* Viewing settings is a separate permission from changing them. */
@@ -343,6 +376,29 @@ function saveMail() {
                             <UiBadge :tone="provider.configured ? 'success' : 'warning'" size="sm">
                                 <component :is="provider.configured ? Check : X" class="mr-1 h-3 w-3" />
                                 {{ provider.configured ? 'Configured' : 'Not configured' }}
+                            </UiBadge>
+                        </li>
+                    </ul>
+                </FormSection>
+
+                <FormSection
+                    title="How it is running"
+                    description="The same checks an uptime monitor reads at /health, which answers 503 when any of them fails."
+                >
+                    <ul class="divide-y" style="border-color: var(--border-subtle)">
+                        <li
+                            v-for="row in healthRows"
+                            :key="row.name"
+                            class="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                        >
+                            <div class="min-w-0">
+                                <p class="text-sm font-medium">{{ row.name }}</p>
+                                <p class="text-xs" style="color: var(--text-muted)">{{ row.detail }}</p>
+                            </div>
+
+                            <UiBadge :tone="row.tone" size="sm">
+                                <component :is="row.tone === 'danger' ? X : Check" v-if="row.tone !== 'neutral'" class="mr-1 h-3 w-3" />
+                                {{ row.label }}
                             </UiBadge>
                         </li>
                     </ul>

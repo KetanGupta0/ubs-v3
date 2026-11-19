@@ -59,6 +59,9 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // In production a failed query's message shows its placeholders,
+            // not the values: a name or an address in an error is a leak.
+            'mask_bindings_in_exception_messages' => env('APP_ENV') === 'production',
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
@@ -97,6 +100,9 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
+            // In production a failed query's message shows its placeholders,
+            // not the values: a name or an address in an error is a leak.
+            'mask_bindings_in_exception_messages' => env('APP_ENV') === 'production',
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
