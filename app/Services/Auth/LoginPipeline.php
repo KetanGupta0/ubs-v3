@@ -114,6 +114,44 @@ class LoginPipeline
      * A forced password change outranks everything, because an account still
      * holding an admin generated password is not yet fully theirs.
      */
+    /**
+     * The same completion for the mobile API, which signs in with a token
+     * rather than a session (Step I): the last sign in, the audit entry and a
+     * student's activity, exactly as complete() records them, and a token for
+     * this device. One token per device, so signing in again on the same
+     * handset replaces its access rather than piling up live credentials.
+     *
+     * @param  array{device_name: string, device_identifier?: ?string, platform?: ?string, app_version?: ?string, push_token?: ?string}  $device
+     */
+    public function completeWithToken(User $user, string $method, array $device): string
+    {
+        if ($identifier = $device['device_identifier'] ?? null) {
+            $user->tokens()->where('device_identifier', $identifier)->delete();
+        }
+
+        $token = $user->createToken($device['device_name'], ['*']);
+
+        $token->accessToken->forceFill(array_filter([
+            'device_identifier' => $device['device_identifier'] ?? null,
+            'platform' => $device['platform'] ?? null,
+            'app_version' => $device['app_version'] ?? null,
+            'push_token' => $device['push_token'] ?? null,
+        ]))->save();
+
+        $user->forceFill([
+            'last_login_at' => now(),
+            'last_login_ip' => $this->request->ip(),
+        ])->save();
+
+        $this->auditor->record(AuthEvent::LoginSucceeded, $user, $user->email, true, null, $method);
+
+        if ($user->isStudent()) {
+            app(Activity::class)->record($user, 'signed.in', meta: ['method' => $method]);
+        }
+
+        return $token->plainTextToken;
+    }
+
     public function destinationFor(User $user): string
     {
         if ($user->must_change_password) {

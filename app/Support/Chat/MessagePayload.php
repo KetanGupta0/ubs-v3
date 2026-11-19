@@ -19,7 +19,11 @@ class MessagePayload
     public const MEDIA_MINUTES = 30;
 
     /** @return array<string, mixed> */
-    public static function for(Message $message): array
+    /**
+     * @param  string  $mediaRoute  The web's signed media route, or the app's
+     *                              (api.v1.chat.media), which takes a token.
+     */
+    public static function for(Message $message, string $mediaRoute = 'chat.media'): array
     {
         return [
             'id' => $message->id,
@@ -40,7 +44,7 @@ class MessagePayload
 
             // A link only exists while the media does, and only for a while.
             'mediaUrl' => $message->hasMedia() && ! $message->trashed()
-                ? URL::temporarySignedRoute('chat.media', now()->addMinutes(self::MEDIA_MINUTES), [
+                ? URL::temporarySignedRoute($mediaRoute, now()->addMinutes(self::MEDIA_MINUTES), [
                     'message' => $message->id,
                 ])
                 : null,

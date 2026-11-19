@@ -29,7 +29,7 @@ class EnsurePasswordIsOwned
 
         if ($user?->must_change_password && ! $this->isExempt($request)) {
             return $request->expectsJson()
-                ? response()->json(['message' => 'Set your own password before continuing.'], 423)
+                ? response()->json(['message' => 'Set your own password before continuing.', 'code' => 'password_change_required'], 423)
                 : redirect()->route('password.change');
         }
 
@@ -39,6 +39,10 @@ class EnsurePasswordIsOwned
     /** Routes that must stay reachable, or the user could never get out. */
     protected function isExempt(Request $request): bool
     {
-        return $request->routeIs('password.change', 'password.change.store', 'logout', 'verification.*');
+        return $request->routeIs(
+            'password.change', 'password.change.store', 'logout', 'verification.*',
+            // The app's way through: who am I, choose a password, or sign out.
+            'api.v1.me', 'api.v1.auth.password', 'api.v1.auth.logout', 'api.v1.auth.logout-all',
+        );
     }
 }

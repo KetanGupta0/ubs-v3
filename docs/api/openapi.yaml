@@ -1,0 +1,1489 @@
+openapi: 3.1.0
+info:
+  title: Unboundbyte platform API
+  version: 1.0.0
+  description: |
+    The API the Unboundbyte apps use: one sign in for students, clients and staff,
+    then the student's courses, classes and results, the client's projects, documents
+    and invoices, and chat for everybody.
+
+    Read `docs/API.md` first. In short:
+
+    - **Versioned in the path.** Everything is under `/api/v1`. Within v1 a field is
+      only ever added, never renamed, retyped or removed; ignore fields you do not
+      know. A breaking change is `/api/v2`, with v1 kept running alongside.
+    - **A bearer token per device.** Sign in with a password or a one time code and
+      keep the `token`. Send it as `Authorization: Bearer <token>`. If the account has
+      two-step sign in, the answer is a short lived `challenge_token` instead, which
+      only `POST /auth/two-factor` accepts.
+    - **Every property listed is always present**, with `null` where its type allows,
+      unless the schema says it may be absent.
+    - **Money** is shown as a ready made string such as `₹49,999.00`; where an amount
+      is given as a number it is in paise and its name ends in `Minor`.
+    - **Times** are ISO 8601 with the offset, in India time; dates are `YYYY-MM-DD`.
+    - **ETags.** Every `GET` answer carries an `ETag`; send it back as
+      `If-None-Match` and an unchanged answer is an empty `304`.
+    - **A temporary password** has to be replaced first: until then every endpoint
+      except `/me`, `/auth/password` and signing out answers `423` with
+      `code: password_change_required`.
+
+    This document is checked against the server by `tests/Feature/Api/ContractTest.php`:
+    every route is documented here, every operation here is a route, and every answer
+    the tests receive matches its schema.
+  contact:
+    name: Unboundbyte Solutions
+servers:
+  - url: https://unboundbyte.com/api/v1
+    description: Production
+  - url: http://localhost:8000/api/v1
+    description: A development machine (php artisan serve)
+
+security:
+  - token: []
+
+tags:
+  - name: Signing in
+  - name: Account and devices
+  - name: Client
+  - name: Student
+  - name: Chat
+  - name: Licences
+
+paths:
+  # ------------------------------------------------------------------ sign in
+  /auth/login:
+    post:
+      tags: [Signing in]
+      summary: Sign in with a password
+      description: |
+        Answers the same way for an unknown account and a wrong password. Five wrong
+        tries for one identifier from one address are refused for a while.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/DeviceDetails'
+                - type: object
+                  required: [identifier, password]
+                  properties:
+                    identifier: { type: string, description: 'Email address or mobile number', maxLength: 255 }
+                    password: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/SignedIn' }
+        '202': { $ref: '#/components/responses/TwoFactorChallenge' }
+        '403': { $ref: '#/components/responses/Suspended' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/Throttled' }
+
+  /auth/code:
+    post:
+      tags: [Signing in]
+      summary: Ask for a one time code
+      description: The same answer whether or not the account exists. The code goes by email or SMS to the identifier given.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [identifier]
+              properties:
+                identifier: { type: string, maxLength: 255 }
+      responses:
+        '200':
+          description: A code is on its way if the account exists.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, sent_to]
+                properties:
+                  message: { type: string }
+                  sent_to: { type: string, description: 'The identifier, partly hidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/Throttled' }
+
+  /auth/code/verify:
+    post:
+      tags: [Signing in]
+      summary: Sign in with the one time code
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/DeviceDetails'
+                - type: object
+                  required: [identifier, code]
+                  properties:
+                    identifier: { type: string, maxLength: 255 }
+                    code: { type: string, minLength: 6, maxLength: 6 }
+      responses:
+        '200': { $ref: '#/components/responses/SignedIn' }
+        '202': { $ref: '#/components/responses/TwoFactorChallenge' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/Throttled' }
+
+  /auth/two-factor:
+    post:
+      tags: [Signing in]
+      summary: Answer the two-step challenge
+      description: Takes the `challenge_token` from a `202`, never a full token. A recovery code is accepted in place of the app's code.
+      security:
+        - challengeToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/DeviceDetails'
+                - type: object
+                  required: [code]
+                  properties:
+                    code: { type: string, maxLength: 20 }
+      responses:
+        '200': { $ref: '#/components/responses/SignedIn' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/Throttled' }
+
+  # ------------------------------------------------------- account and devices
+  /me:
+    get:
+      tags: [Account and devices]
+      summary: Who is signed in
+      description: Open even while a temporary password waits to be replaced.
+      responses:
+        '200':
+          description: The account.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/User' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /auth/password:
+    post:
+      tags: [Account and devices]
+      summary: Choose a password
+      description: |
+        Replaces a temporary password, or changes one. `current_password` is needed
+        when the account has a password at all. This device stays signed in; every
+        other device is signed out.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password, password_confirmation]
+              properties:
+                current_password: { type: string }
+                password: { type: string, minLength: 10, description: 'At least ten characters, with upper and lower case letters and a number' }
+                password_confirmation: { type: string }
+      responses:
+        '200':
+          description: Changed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, data]
+                properties:
+                  message: { type: string }
+                  data: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/Throttled' }
+
+  /auth/refresh:
+    post:
+      tags: [Account and devices]
+      summary: Swap this device's token for a new one
+      description: The token sent stops working at once. The device's details and push token carry over.
+      responses:
+        '200':
+          description: The new token.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token]
+                properties:
+                  token: { type: string }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '423': { $ref: '#/components/responses/PasswordChangeRequired' }
+        '429': { $ref: '#/components/responses/Throttled' }
+
+  /auth/logout:
+    post:
+      tags: [Account and devices]
+      summary: Sign this device out
+      responses:
+        '200': { $ref: '#/components/responses/Message' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /auth/logout-all:
+    post:
+      tags: [Account and devices]
+      summary: Sign every device out, this one included
+      responses:
+        '200': { $ref: '#/components/responses/Message' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /devices:
+    get:
+      tags: [Account and devices]
+      summary: The devices signed in to this account
+      responses:
+        '200':
+          description: Most recently used first; this device has `current`.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Device' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '423': { $ref: '#/components/responses/PasswordChangeRequired' }
+
+  /devices/{device}:
+    delete:
+      tags: [Account and devices]
+      summary: Sign one device out
+      parameters:
+        - { name: device, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { $ref: '#/components/responses/Message' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '423': { $ref: '#/components/responses/PasswordChangeRequired' }
+
+  /devices/push-token:
+    post:
+      tags: [Account and devices]
+      summary: Register this device for push notifications
+      description: Kept against this device's token now; notifications are pushed once the apps are released (X25).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [push_token]
+              properties:
+                push_token: { type: string, maxLength: 500 }
+                platform: { type: string, enum: [ios, android, web] }
+      responses:
+        '200': { $ref: '#/components/responses/Message' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '423': { $ref: '#/components/responses/PasswordChangeRequired' }
+
+  # ------------------------------------------------------------------- client
+  /client/overview:
+    get:
+      tags: [Client]
+      summary: What the organisation's dashboard leads with
+      responses:
+        '200':
+          description: Totals and the five most recently active projects.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [totals, projects]
+                properties:
+                  totals:
+                    type: object
+                    required: [activeProjects, openTickets, outstanding, proposalsAwaiting]
+                    properties:
+                      activeProjects: { type: integer }
+                      openTickets: { type: integer }
+                      outstanding: { $ref: '#/components/schemas/MoneyLabel' }
+                      proposalsAwaiting: { type: integer }
+                  projects:
+                    type: array
+                    items: { $ref: '#/components/schemas/Project' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '423': { $ref: '#/components/responses/PasswordChangeRequired' }
+
+  /client/projects:
+    get:
+      tags: [Client]
+      summary: Every project of the organisation
+      responses:
+        '200':
+          description: Most recently updated first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Project' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /client/projects/{project}:
+    get:
+      tags: [Client]
+      summary: One project, with its milestones and updates
+      parameters:
+        - { name: project, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: The project.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/ProjectDetail' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /client/documents:
+    get:
+      tags: [Client]
+      summary: The organisation's documents
+      description: The latest version of each, newest first, at most 100.
+      responses:
+        '200':
+          description: Documents.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Document' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /client/documents/{document}/download:
+    get:
+      tags: [Client]
+      summary: Download a document
+      parameters:
+        - { name: document, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { $ref: '#/components/responses/File' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /client/tickets:
+    get:
+      tags: [Client]
+      summary: The organisation's support tickets
+      description: Newest first, at most 100.
+      responses:
+        '200':
+          description: Tickets.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Ticket' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+    post:
+      tags: [Client]
+      summary: Raise a ticket
+      description: The support desk is told at once. The response clock is the active contract's, or the one named.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, body, priority]
+              properties:
+                subject: { type: string, maxLength: 200 }
+                body: { type: string, maxLength: 5000 }
+                priority: { type: string, enum: [low, normal, high, urgent] }
+                category: { type: [string, 'null'], maxLength: 40 }
+                contract_id: { type: [integer, 'null'] }
+                project_id: { type: [integer, 'null'] }
+      responses:
+        '201':
+          description: Raised.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [id, reference]
+                    properties:
+                      id: { type: integer }
+                      reference: { type: string }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+
+  /client/payments:
+    get:
+      tags: [Client]
+      summary: What the organisation owes, and what it has paid
+      responses:
+        '200':
+          description: Payments.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [pending, summary]
+                properties:
+                  pending:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, reference, title, total, totalMinor, dueOn, overdue]
+                      properties:
+                        id: { type: integer }
+                        reference: { type: string }
+                        title: { type: string }
+                        total: { $ref: '#/components/schemas/MoneyLabel' }
+                        totalMinor: { type: integer, description: 'In paise' }
+                        dueOn: { $ref: '#/components/schemas/NullableDate' }
+                        overdue: { type: boolean }
+                  summary:
+                    type: object
+                    required: [paid, outstanding]
+                    properties:
+                      paid: { $ref: '#/components/schemas/MoneyLabel' }
+                      outstanding: { $ref: '#/components/schemas/MoneyLabel' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /client/transactions:
+    get:
+      tags: [Client]
+      summary: Payments made, newest first
+      responses:
+        '200':
+          description: Transactions, at most 100.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [reference, amount, status, method, invoice, at, receiptUrl]
+                      properties:
+                        reference: { type: string }
+                        amount: { $ref: '#/components/schemas/MoneyLabel' }
+                        status: { type: string }
+                        method: { type: [string, 'null'] }
+                        invoice: { type: [string, 'null'], description: 'The invoice number' }
+                        at: { $ref: '#/components/schemas/DateTime' }
+                        receiptUrl: { type: [string, 'null'], format: uri, description: 'For a successful payment: GET it with the token' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /client/receipts/{reference}:
+    get:
+      tags: [Client]
+      summary: Download the receipt for a payment
+      parameters:
+        - { name: reference, in: path, required: true, schema: { type: string } }
+      responses:
+        '200': { $ref: '#/components/responses/File' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /client/invoices:
+    get:
+      tags: [Client]
+      summary: The organisation's invoices, newest first
+      responses:
+        '200':
+          description: Invoices, at most 100.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, number, total, balance, status, issuedAt, pdfUrl]
+                      properties:
+                        id: { type: integer }
+                        number: { type: string }
+                        total: { $ref: '#/components/schemas/MoneyLabel' }
+                        balance: { $ref: '#/components/schemas/MoneyLabel' }
+                        status: { type: string }
+                        issuedAt: { $ref: '#/components/schemas/DateTime' }
+                        pdfUrl: { type: string, format: uri }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /client/invoices/{invoice}/pdf:
+    get:
+      tags: [Client]
+      summary: Download an invoice as issued
+      parameters:
+        - { name: invoice, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { $ref: '#/components/responses/File' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # --------------------------------------------------------------------- chat
+  /chat:
+    get:
+      tags: [Chat]
+      summary: The rooms this person can open
+      responses:
+        '200':
+          description: Rooms.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Room' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /chat/{conversation}/messages:
+    get:
+      tags: [Chat]
+      summary: A room's messages, oldest first
+      description: At most 100. Pass the last id you hold as `after` to get only what is new; a removed message comes back with `removed` and no body.
+      parameters:
+        - { name: conversation, in: path, required: true, schema: { type: integer } }
+        - { name: after, in: query, required: false, schema: { type: integer } }
+      responses:
+        '200':
+          description: Messages.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Message' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      tags: [Chat]
+      summary: Send a message
+      description: Text, a picture or a voice note; a file's type is judged from its bytes, and pictures are re-encoded, which removes their location.
+      parameters:
+        - { name: conversation, in: path, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: '#/components/schemas/NewMessage' }
+          application/json:
+            schema: { $ref: '#/components/schemas/NewMessage' }
+      responses:
+        '201':
+          description: Sent.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/Message' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/Throttled' }
+
+  /chat/{conversation}/read:
+    post:
+      tags: [Chat]
+      summary: Mark a room read up to now
+      parameters:
+        - { name: conversation, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: The ids of the messages this marked read.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [read]
+                properties:
+                  read:
+                    type: array
+                    items: { type: integer }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /chat/media/{message}:
+    get:
+      tags: [Chat]
+      summary: A message's picture or voice note
+      description: Use the `mediaUrl` of a message as given, with the token. It is signed and expires after a while; fetch the messages again for a fresh one.
+      parameters:
+        - { name: message, in: path, required: true, schema: { type: integer } }
+        - { name: expires, in: query, required: true, schema: { type: integer } }
+        - { name: signature, in: query, required: true, schema: { type: string } }
+      responses:
+        '200': { $ref: '#/components/responses/File' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ------------------------------------------------------------------ student
+  /student/overview:
+    get:
+      tags: [Student]
+      summary: What the student's dashboard leads with
+      responses:
+        '200':
+          description: Totals, the next class and every enrolment.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [totals, nextClass, courses]
+                properties:
+                  totals:
+                    type: object
+                    required: [courses, unreadNotices, outstanding, points]
+                    properties:
+                      courses: { type: integer }
+                      unreadNotices: { type: integer }
+                      outstanding: { $ref: '#/components/schemas/MoneyLabel' }
+                      points: { type: integer }
+                  nextClass:
+                    oneOf:
+                      - $ref: '#/components/schemas/Session'
+                      - type: 'null'
+                  courses:
+                    type: array
+                    items: { $ref: '#/components/schemas/Enrolment' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '423': { $ref: '#/components/responses/PasswordChangeRequired' }
+
+  /student/courses:
+    get:
+      tags: [Student]
+      summary: Every enrolment
+      responses:
+        '200':
+          description: Enrolments.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Enrolment' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /student/courses/{course}:
+    get:
+      tags: [Student]
+      summary: A course's modules and lessons, each with whether it is open
+      description: A sealed lesson is listed with its `lock`, which says why and, for one that opens on a date, `opensAt`.
+      parameters:
+        - { name: course, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: The course.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/CourseDetail' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /student/courses/{course}/lessons/{lesson}:
+    get:
+      tags: [Student]
+      summary: A lesson's content, or why it is sealed
+      parameters:
+        - { name: course, in: path, required: true, schema: { type: integer } }
+        - { name: lesson, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: The lesson, open.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data: { $ref: '#/components/schemas/Lesson' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '423':
+          description: |
+            Sealed: the lesson's title, summary and `lock`, which says why in words to
+            show the student. (A temporary password is the other `423`, told apart by
+            its `code`.)
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    required: [data]
+                    properties:
+                      data: { $ref: '#/components/schemas/SealedLesson' }
+                  - $ref: '#/components/schemas/Error'
+
+  /student/courses/{course}/lessons/{lesson}/complete:
+    post:
+      tags: [Student]
+      summary: Mark a lesson done
+      description: Refused with `403` for a sealed lesson.
+      parameters:
+        - { name: course, in: path, required: true, schema: { type: integer } }
+        - { name: lesson, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200':
+          description: The course progress now.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: object
+                    required: [progress]
+                    properties:
+                      progress: { type: integer, minimum: 0, maximum: 100 }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /student/courses/{course}/materials/{material}:
+    get:
+      tags: [Student]
+      summary: Download a handout
+      description: Use a material's `downloadUrl`. Refused for a handout on a sealed lesson or one marked view only.
+      parameters:
+        - { name: course, in: path, required: true, schema: { type: integer } }
+        - { name: material, in: path, required: true, schema: { type: integer } }
+      responses:
+        '200': { $ref: '#/components/responses/File' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /student/classes:
+    get:
+      tags: [Student]
+      summary: Classes coming up, and the last twenty held
+      description: A class's `joinUrl` is only sent once its join window is open.
+      responses:
+        '200':
+          description: Classes.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [upcoming, past]
+                properties:
+                  upcoming:
+                    type: array
+                    items: { $ref: '#/components/schemas/Session' }
+                  past:
+                    type: array
+                    items: { $ref: '#/components/schemas/Session' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /student/assignments:
+    get:
+      tags: [Student]
+      summary: Assignments, with what was submitted and the marks
+      responses:
+        '200':
+          description: Assignments.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Assignment' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /student/results:
+    get:
+      tags: [Student]
+      summary: The result card for each course
+      responses:
+        '200':
+          description: Results.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [courseId, course, batch, result]
+                      properties:
+                        courseId: { type: integer }
+                        course: { type: string }
+                        batch: { type: [string, 'null'] }
+                        result: { $ref: '#/components/schemas/ResultCard' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /student/announcements:
+    get:
+      tags: [Student]
+      summary: Announcements for the student's batches
+      responses:
+        '200':
+          description: Announcements, pinned first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, title, body, author, pinned, publishedAt]
+                      properties:
+                        id: { type: integer }
+                        title: { type: string }
+                        body: { type: string }
+                        author: { type: string }
+                        pinned: { type: boolean }
+                        publishedAt: { $ref: '#/components/schemas/DateTime' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /student/certificates:
+    get:
+      tags: [Student]
+      summary: Certificates issued to the student
+      responses:
+        '200':
+          description: Certificates; one withdrawn says so in `valid`.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, number, title, issuedAt, grade, valid, verificationUrl]
+                      properties:
+                        id: { type: integer }
+                        number: { type: string }
+                        title: { type: string }
+                        issuedAt: { $ref: '#/components/schemas/DateTime' }
+                        grade: { type: [string, 'null'] }
+                        valid: { type: boolean }
+                        verificationUrl: { type: string, format: uri, description: 'The public page anybody can check it on' }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  /student/payments:
+    get:
+      tags: [Student]
+      summary: Fees asked for and paid
+      responses:
+        '200':
+          description: Payment requests.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, reference, title, total, status, dueOn, overdue]
+                      properties:
+                        id: { type: integer }
+                        reference: { type: string }
+                        title: { type: string }
+                        total: { $ref: '#/components/schemas/MoneyLabel' }
+                        status: { type: string }
+                        dueOn: { $ref: '#/components/schemas/NullableDate' }
+                        overdue: { type: boolean }
+        '304': { $ref: '#/components/responses/NotModified' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+
+  # ---------------------------------------------------------------- licences
+  /licences/check:
+    post:
+      tags: [Licences]
+      summary: Check a licence key for a site
+      description: For software we sold, not for the apps. `docs/LICENCE_API.md` is what its developers read. No token; the key is the credential, and an address may ask 30 times a minute.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [key, site]
+              properties:
+                key: { type: string, maxLength: 64 }
+                site: { type: string, maxLength: 255 }
+                product: { type: [string, 'null'], maxLength: 180 }
+                version: { type: [string, 'null'], maxLength: 30 }
+      responses:
+        '200':
+          description: Whether the key is good for this site, and why not if not.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LicenceAnswer' }
+        '422': { $ref: '#/components/responses/ValidationFailed' }
+        '429': { $ref: '#/components/responses/Throttled' }
+
+components:
+  securitySchemes:
+    token:
+      type: http
+      scheme: bearer
+      description: A device's token from signing in.
+    challengeToken:
+      type: http
+      scheme: bearer
+      description: The `challenge_token` from a `202`, good for ten minutes and for `/auth/two-factor` only.
+
+  responses:
+    SignedIn:
+      description: Signed in. Keep the token; `must_change_password` means the password has to be chosen first (`POST /auth/password`).
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [token, must_change_password, data]
+            properties:
+              token: { type: string }
+              must_change_password: { type: boolean }
+              data: { $ref: '#/components/schemas/User' }
+    TwoFactorChallenge:
+      description: Two-step sign in is on. Send the code from the authenticator app to `/auth/two-factor` with this challenge token.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [two_factor_required, challenge_token, expires_in]
+            properties:
+              two_factor_required: { type: boolean, const: true }
+              challenge_token: { type: string }
+              expires_in: { type: integer, description: 'Seconds' }
+    Message:
+      description: Done.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [message]
+            properties:
+              message: { type: string }
+    File:
+      description: The file, with its name in `Content-Disposition`.
+      content:
+        application/octet-stream:
+          schema: { type: string, format: binary }
+    NotModified:
+      description: Nothing changed since the `ETag` sent as `If-None-Match`. No body.
+    Unauthenticated:
+      description: No token, or one that was signed out, refreshed or never existed.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Forbidden:
+      description: Signed in, but this is not for this account (a student asking for client records, a sealed lesson).
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    Suspended:
+      description: The account is suspended. `code` is `account_suspended`.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    NotFound:
+      description: Not found, or not this account's; the two are answered the same.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    PasswordChangeRequired:
+      description: The account is on a temporary password. `code` is `password_change_required`; choose one with `POST /auth/password`.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+    ValidationFailed:
+      description: Something sent was not acceptable; `errors` says what, by field.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationError' }
+    Throttled:
+      description: Too many tries. Wait `retry_after` seconds when it is given, or the `Retry-After` header.
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [message]
+            properties:
+              message: { type: string }
+              retry_after: { type: integer }
+
+  schemas:
+    DateTime:
+      type: string
+      format: date-time
+    NullableDateTime:
+      type: [string, 'null']
+      format: date-time
+    NullableDate:
+      type: [string, 'null']
+      format: date
+    MoneyLabel:
+      type: string
+      description: An amount ready to show, such as ₹49,999.00.
+
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+        code: { type: string, description: 'A machine readable reason, where there is one' }
+
+    ValidationError:
+      type: object
+      required: [message, errors]
+      properties:
+        message: { type: string }
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items: { type: string }
+
+    DeviceDetails:
+      type: object
+      required: [device_name]
+      properties:
+        device_name: { type: string, maxLength: 120, description: "Shown in the account's list of devices, such as Priya's Pixel 9" }
+        device_identifier: { type: string, maxLength: 120, description: 'Stable for this installation; signing in again replaces its token' }
+        platform: { type: string, enum: [ios, android, web] }
+        app_version: { type: string, maxLength: 20 }
+
+    User:
+      type: object
+      required: [id, name, email, mobile, role, status, avatar_url, email_verified, mobile_verified, two_factor_enabled]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: [string, 'null'], format: email }
+        mobile: { type: [string, 'null'] }
+        role: { type: string, enum: [admin, client, student] }
+        status: { type: string }
+        avatar_url: { type: [string, 'null'], format: uri }
+        email_verified: { type: boolean }
+        mobile_verified: { type: boolean }
+        two_factor_enabled: { type: boolean }
+
+    Device:
+      type: object
+      required: [id, name, platform, appVersion, lastUsedAt, signedInAt, current]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        platform: { type: [string, 'null'] }
+        appVersion: { type: [string, 'null'] }
+        lastUsedAt: { $ref: '#/components/schemas/NullableDateTime' }
+        signedInAt: { $ref: '#/components/schemas/DateTime' }
+        current: { type: boolean, description: 'The device asking' }
+
+    Project:
+      type: object
+      required: [id, code, name, status, statusLabel, phase, progress, targetDate, overdue]
+      properties:
+        id: { type: integer }
+        code: { type: [string, 'null'] }
+        name: { type: string }
+        status: { type: string }
+        statusLabel: { type: string }
+        phase: { type: [string, 'null'] }
+        progress: { type: integer, minimum: 0, maximum: 100 }
+        targetDate: { $ref: '#/components/schemas/NullableDate' }
+        overdue: { type: boolean }
+
+    ProjectDetail:
+      description: A project as listed, with its summary, manager, milestones and the updates the client may see.
+      type: object
+      required: [id, code, name, status, statusLabel, phase, progress, targetDate, overdue, summary, manager, milestones, updates]
+      properties:
+        id: { type: integer }
+        code: { type: [string, 'null'] }
+        name: { type: string }
+        status: { type: string }
+        statusLabel: { type: string }
+        phase: { type: [string, 'null'] }
+        progress: { type: integer, minimum: 0, maximum: 100 }
+        targetDate: { $ref: '#/components/schemas/NullableDate' }
+        overdue: { type: boolean }
+        summary: { type: [string, 'null'] }
+        manager: { type: [string, 'null'] }
+        milestones:
+          type: array
+          items:
+            type: object
+            required: [id, title, dueDate, complete, overdue]
+            properties:
+              id: { type: integer }
+              title: { type: string }
+              dueDate: { $ref: '#/components/schemas/NullableDate' }
+              complete: { type: boolean }
+              overdue: { type: boolean }
+        updates:
+          type: array
+          items:
+            type: object
+            required: [id, title, body, author, at]
+            properties:
+              id: { type: integer }
+              title: { type: string }
+              body: { type: [string, 'null'] }
+              author: { type: string }
+              at: { $ref: '#/components/schemas/DateTime' }
+
+    Document:
+      type: object
+      required: [id, name, size, kind, version, at, downloadUrl]
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        size: { type: string, description: 'Ready to show, such as 2.4 MB' }
+        kind: { type: string }
+        version: { type: integer }
+        at: { $ref: '#/components/schemas/DateTime' }
+        downloadUrl: { type: string, format: uri, description: 'GET it with the token' }
+
+    Ticket:
+      type: object
+      required: [id, reference, subject, status, priority, open, sla, at]
+      properties:
+        id: { type: integer }
+        reference: { type: string }
+        subject: { type: string }
+        status: { type: string }
+        priority: { type: string, enum: [low, normal, high, urgent] }
+        open: { type: boolean }
+        sla: { type: string, description: 'Where the response clock stands, in words' }
+        at: { $ref: '#/components/schemas/DateTime' }
+
+    Room:
+      type: object
+      required: [id, type, title, preview, lastMessageAt, unread]
+      properties:
+        id: { type: integer }
+        type: { type: string }
+        title: { type: string }
+        preview: { type: [string, 'null'] }
+        lastMessageAt: { $ref: '#/components/schemas/NullableDateTime' }
+        unread: { type: integer }
+
+    NewMessage:
+      type: object
+      required: [kind]
+      properties:
+        kind: { type: string, enum: [text, image, audio] }
+        body: { type: [string, 'null'], maxLength: 4000 }
+        file: { type: string, format: binary, description: 'A picture or a voice note, 12 MB at most' }
+        reply_to_id: { type: [integer, 'null'] }
+        duration: { type: [number, 'null'], description: 'A voice note, in seconds' }
+        peaks:
+          type: array
+          maxItems: 200
+          items: { type: number }
+
+    Message:
+      type: object
+      required: [id, conversationId, kind, body, removed, sender, sentAt, sentAtLabel, dayLabel, edited, mediaUrl, mediaMime, width, height, duration, durationLabel, peaks, replyTo, readBy, deliveredTo, mine]
+      properties:
+        id: { type: integer }
+        conversationId: { type: integer }
+        kind: { type: string, enum: [text, image, audio] }
+        body: { type: [string, 'null'] }
+        removed: { type: boolean }
+        sender:
+          type: object
+          required: [id, name, avatarUrl, role]
+          properties:
+            id: { type: integer }
+            name: { type: string }
+            avatarUrl: { type: [string, 'null'] }
+            role: { type: [string, 'null'] }
+        sentAt: { $ref: '#/components/schemas/DateTime' }
+        sentAtLabel: { type: string }
+        dayLabel: { type: string }
+        edited: { type: boolean }
+        mediaUrl: { type: [string, 'null'], format: uri, description: 'Signed and expiring: GET it with the token' }
+        mediaMime: { type: [string, 'null'] }
+        width: { type: [integer, 'null'] }
+        height: { type: [integer, 'null'] }
+        duration: { type: [number, 'null'] }
+        durationLabel: { type: [string, 'null'] }
+        peaks:
+          type: array
+          items: { type: number }
+        replyTo:
+          oneOf:
+            - type: 'null'
+            - type: object
+              required: [id, sender, preview, kind]
+              properties:
+                id: { type: integer }
+                sender: { type: string }
+                preview: { type: string }
+                kind: { type: string }
+        readBy: { type: array }
+        deliveredTo: { type: integer }
+        mine: { type: boolean }
+
+    Enrolment:
+      type: object
+      required: [id, title, type, batch, status, progress, hasPaid, paymentId]
+      properties:
+        id: { type: integer, description: "The course's id" }
+        title: { type: string }
+        type: { type: string, enum: [course, internship, programme] }
+        batch: { type: [string, 'null'] }
+        status: { type: string }
+        progress: { type: integer, minimum: 0, maximum: 100 }
+        hasPaid: { type: boolean }
+        paymentId: { type: [integer, 'null'] }
+
+    CourseDetail:
+      description: An enrolment as listed, with the course's modules.
+      type: object
+      required: [id, title, type, batch, status, progress, hasPaid, paymentId, modules]
+      properties:
+        id: { type: integer, description: "The course's id" }
+        title: { type: string }
+        type: { type: string, enum: [course, internship, programme] }
+        batch: { type: [string, 'null'] }
+        status: { type: string }
+        progress: { type: integer, minimum: 0, maximum: 100 }
+        hasPaid: { type: boolean }
+        paymentId: { type: [integer, 'null'] }
+        modules:
+          type: array
+          items: { $ref: '#/components/schemas/Module' }
+
+    Lock:
+      type: object
+      description: Whether a lesson is open, and if not why, in words to show the student. A lesson that opens on a date carries `opensAt`.
+      required: [open, reason, kind]
+      properties:
+        open: { type: boolean }
+        reason: { type: [string, 'null'] }
+        kind: { type: [string, 'null'], description: 'payment, schedule, prerequisite or score' }
+        opensAt: { $ref: '#/components/schemas/DateTime' }
+      additionalProperties: true
+
+    Module:
+      type: object
+      required: [id, title, summary, lessons]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        summary: { type: [string, 'null'] }
+        lessons:
+          type: array
+          items:
+            type: object
+            required: [id, title, summary, duration, completed, lock]
+            properties:
+              id: { type: integer }
+              title: { type: string }
+              summary: { type: [string, 'null'] }
+              duration: { type: [string, 'null'] }
+              completed: { type: boolean }
+              lock: { $ref: '#/components/schemas/Lock' }
+
+    SealedLesson:
+      type: object
+      required: [id, title, summary, lock]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        summary: { type: [string, 'null'] }
+        lock: { $ref: '#/components/schemas/Lock' }
+
+    Lesson:
+      type: object
+      required: [id, title, summary, content, videoUrl, duration, completed, lock, materials]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        summary: { type: [string, 'null'] }
+        content: { type: [string, 'null'] }
+        videoUrl: { type: [string, 'null'], format: uri }
+        duration: { type: [string, 'null'] }
+        completed: { type: boolean }
+        lock: { $ref: '#/components/schemas/Lock' }
+        materials:
+          type: array
+          items:
+            type: object
+            required: [id, title, kind, size, isLink, url, downloadUrl]
+            properties:
+              id: { type: integer }
+              title: { type: string }
+              kind: { type: string }
+              size: { type: [string, 'null'] }
+              isLink: { type: boolean }
+              url: { type: [string, 'null'], format: uri, description: 'For a link: where it points' }
+              downloadUrl: { type: [string, 'null'], format: uri, description: 'For a file that may be saved: GET it with the token' }
+
+    Session:
+      type: object
+      required: [id, title, agenda, batch, scheduledAt, duration, status, live, joinable, joinUrl, recordingUrl]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        agenda: { type: [string, 'null'] }
+        batch: { type: [string, 'null'] }
+        scheduledAt: { $ref: '#/components/schemas/DateTime' }
+        duration: { type: integer, description: 'Minutes' }
+        status: { type: string }
+        live: { type: boolean }
+        joinable: { type: boolean }
+        joinUrl: { type: [string, 'null'], format: uri }
+        recordingUrl: { type: [string, 'null'], format: uri }
+
+    Assignment:
+      type: object
+      required: [id, title, course, isProject, dueAt, overdue, submitted, marks, maxMarks, feedback]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        course: { type: string }
+        isProject: { type: boolean }
+        dueAt: { $ref: '#/components/schemas/NullableDateTime' }
+        overdue: { type: boolean }
+        submitted: { type: boolean }
+        marks: { type: [number, 'null'] }
+        maxMarks: { type: [number, 'null'] }
+        feedback: { type: [string, 'null'] }
+
+    ResultCard:
+      type: object
+      required: [overall, grade, passMark, passing, shortOnAttendance, attendanceFloor, weights, quizzes, assignments, attendance, progress, complete]
+      properties:
+        overall: { type: [number, 'null'], description: 'Out of 100, from what has been marked so far' }
+        grade: { type: [string, 'null'] }
+        passMark: { type: number }
+        passing: { type: boolean }
+        shortOnAttendance: { type: boolean }
+        attendanceFloor: { type: number }
+        weights:
+          type: object
+          additionalProperties: { type: number }
+        quizzes:
+          type: object
+          required: [percent]
+          properties:
+            percent: { type: [number, 'null'] }
+          additionalProperties: true
+        assignments:
+          type: object
+          required: [percent]
+          properties:
+            percent: { type: [number, 'null'] }
+          additionalProperties: true
+        attendance:
+          type: object
+          required: [percent]
+          properties:
+            percent: { type: [number, 'null'] }
+          additionalProperties: true
+        progress: { type: integer }
+        complete: { type: boolean }
+
+    LicenceAnswer:
+      type: object
+      required: [valid, status, check_again_after]
+      properties:
+        valid: { type: boolean }
+        status: { type: string, enum: [active, invalid, revoked, site_limit] }
+        message: { type: string, description: 'For an administrator, when the key is not good' }
+        product: { type: string }
+        site: { type: string }
+        development: { type: boolean }
+        licence: { type: object, additionalProperties: true }
+        updates: { type: object, additionalProperties: true }
+        sites: { type: object, additionalProperties: true }
+        check_again_after: { type: integer, description: 'Seconds' }
+      additionalProperties: true

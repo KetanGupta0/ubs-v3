@@ -5,6 +5,10 @@ use App\Http\Controllers\Api\V1\Chat\ChatApiController;
 use App\Http\Controllers\Api\V1\Client\ClientApiController;
 use App\Http\Controllers\Api\V1\LicenceCheckController;
 use App\Http\Controllers\Api\V1\Student\StudentApiController;
+use App\Http\Controllers\Chat\ChatController;
+use App\Http\Controllers\Client\DocumentController;
+use App\Http\Controllers\Client\TransactionController;
+use App\Http\Controllers\Student\CourseController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -52,11 +56,33 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
      * the `two-factor` ability fails the check, so the half finished sign in it
      * represents cannot reach anything else.
      */
-    Route::middleware(['auth:sanctum', 'abilities:'.AuthController::ACCESS_ABILITY])->group(function () {
+    /*
+     * A temporary password has to be replaced before anything else opens, as
+     * on the web: every endpoint but these few answers 423 until it is
+     * (password.owned). A GET answer carries an ETag, so an app holding a
+     * copy asks with If-None-Match and gets an empty 304 when nothing moved.
+     */
+    Route::middleware([
+        'auth:sanctum',
+        'abilities:'.AuthController::ACCESS_ABILITY,
+        'password.owned',
+        'cache.headers:private;etag',
+    ])->group(function () {
         Route::get('me', [AuthController::class, 'me'])->name('me');
-        Route::post('devices/push-token', [AuthController::class, 'registerPushToken'])->name('devices.push-token');
+        Route::post('auth/password', [AuthController::class, 'changePassword'])
+            ->middleware('throttle:10,1')
+            ->name('auth.password');
+        Route::post('auth/refresh', [AuthController::class, 'refresh'])
+            ->middleware('throttle:10,1')
+            ->name('auth.refresh');
         Route::post('auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
         Route::post('auth/logout-all', [AuthController::class, 'logoutAll'])->name('auth.logout-all');
+
+        Route::get('devices', [AuthController::class, 'devices'])->name('devices.index');
+        Route::delete('devices/{device}', [AuthController::class, 'revokeDevice'])
+            ->whereNumber('device')
+            ->name('devices.destroy');
+        Route::post('devices/push-token', [AuthController::class, 'registerPushToken'])->name('devices.push-token');
 
         /*
          * The client module.
@@ -76,6 +102,17 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('payments', [ClientApiController::class, 'payments'])->name('payments.index');
             Route::get('transactions', [ClientApiController::class, 'transactions'])->name('transactions.index');
             Route::get('invoices', [ClientApiController::class, 'invoices'])->name('invoices.index');
+
+            // Files, by token: the portal's own actions, which scope every read
+            // to the person asking.
+            Route::get('documents/{document}/download', [DocumentController::class, 'download'])
+                ->whereNumber('document')
+                ->name('documents.download');
+            Route::get('invoices/{invoice}/pdf', [TransactionController::class, 'invoicePdf'])
+                ->whereNumber('invoice')
+                ->name('invoices.pdf');
+            Route::get('receipts/{reference}', [TransactionController::class, 'receipt'])
+                ->name('receipts.show');
         });
 
         /*
@@ -96,6 +133,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('{conversation}/read', [ChatApiController::class, 'read'])
                 ->whereNumber('conversation')
                 ->name('read');
+
+            // A picture or a voice note: signed and expiring as on the web,
+            // and checked against who is asking.
+            Route::get('media/{message}', [ChatController::class, 'media'])
+                ->whereNumber('message')
+                ->middleware('signed')
+                ->name('media');
         });
 
         /* ------------------------------------------------ the student app */
@@ -113,6 +157,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 ->whereNumber('course')
                 ->whereNumber('lesson')
                 ->name('lessons.complete');
+            Route::get('courses/{course}/materials/{material}', [CourseController::class, 'downloadMaterial'])
+                ->whereNumber('course')
+                ->whereNumber('material')
+                ->name('materials.download');
             Route::get('classes', [StudentApiController::class, 'classes'])->name('classes.index');
             Route::get('assignments', [StudentApiController::class, 'assignments'])->name('assignments.index');
             Route::get('results', [StudentApiController::class, 'results'])->name('results');

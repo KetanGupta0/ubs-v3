@@ -128,10 +128,12 @@ One `users` table for all three roles. `role` picks the dashboard, permissions
 decide what a staff account may do once inside.
 
 Every route in converges on `App\Services\Auth\LoginPipeline`: password, one
-time code, Google and the mobile API all call `complete()`. Suspension checks,
-the two factor gate and the audit entry live there and nowhere else, so a new
-sign in route cannot accidentally skip one. Add routes in, never a second
-pipeline.
+time code and Google call `complete()`, and the mobile API `completeWithToken()`,
+which records the same and issues the device's token. Suspension checks
+(`refusalReason()`), the two factor gate (`requiresTwoFactor()`) and the audit
+entry live there and nowhere else, so a new sign in route cannot accidentally skip
+one. Add routes in, never a second pipeline. Until November 2026 the API had its own
+copy, and a temporary password opened the whole app.
 
 Rules that are easy to break and expensive to get wrong:
 
@@ -370,6 +372,10 @@ plus `App\Services\Billing` and `App\Services\Payments`.
 - **An invoice freezes who was billed and by whom.** It is issued when the request
   is raised, not when it is paid, and re-rendering it from live settings is never
   correct. The PDF is cached on disk for the same reason.
+- **A client's ticket is raised through `App\Services\Support\Tickets`,** from the portal
+  and the app alike: the contract and project re-resolved through the client's own
+  relations, the clock copied from the contract, the desk told. Until November 2026 a
+  ticket raised from the app told nobody.
 - **A ticket belongs to whoever raised it** (`support_tickets.requester_id`): a client,
   or a student at `/student/support`. A student's ticket has no contract and so no
   response clock. `client()` on the model is the same relation, kept for the client code.
@@ -750,6 +756,27 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   student is told every time. The private note is for us and never reaches them.
 - `/verify` answers identically for a code that never existed and one that was
   mistyped, and shows nothing about the holder beyond what confirms the document.
+
+## The API for the apps
+
+`routes/api.php`, `App\Http\Controllers\Api\V1`, `docs/API.md`, `docs/api/openapi.yaml`.
+
+- **The document is the contract (X25).** `docs/api/openapi.yaml` lists every route under
+  `/api/v1`, and `tests/Feature/Api/ContractTest.php` holds the server to it on the demo
+  data: a route missing from it, a documented route that does not exist, or an answer
+  with a field it does not list, without one it does, or of the wrong type, fails. Change
+  the document in the same commit as the endpoint. Within v1 fields are only added; a
+  breaking change is `/api/v2` beside v1.
+- **The app is held to the web's rules.** `password.owned` answers `423`
+  (`password_change_required`) to everything but `/me`, `/auth/password` and signing
+  out until a temporary password is replaced, and the two-step step takes only a
+  challenge token: Sanctum's `can()` is true of a full token for every ability. Files
+  (documents, invoices, receipts, handouts, chat media) are served to the app by the
+  portal's own actions on token routes, so a URL in an answer always opens with the
+  token. Every `GET` carries an ETag (`cache.headers:private;etag`).
+- **Devices are tokens.** One per `device_identifier`; `/auth/refresh` swaps it, `/devices`
+  lists and signs out. Push tokens are kept now and used once the apps and a Firebase
+  project exist.
 
 ## Chat
 

@@ -151,6 +151,11 @@ class StudentApiController extends Controller
                 'kind' => $material->kind(),
                 'size' => $material->sizeLabel(),
                 'isLink' => $material->isLink(),
+                // A link opens where it points; a file downloads with the same token.
+                'url' => $material->isLink() ? $material->external_url : null,
+                'downloadUrl' => ! $material->isLink() && $material->is_downloadable
+                    ? route('api.v1.student.materials.download', [$course, $material->id])
+                    : null,
             ]),
         ]]);
     }

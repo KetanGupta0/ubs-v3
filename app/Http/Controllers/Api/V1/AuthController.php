@@ -9,6 +9,7 @@ use App\Enums\OtpResult;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Services\Auth\AuthAuditor;
+use App\Services\Auth\LoginPipeline;
 use App\Services\Auth\OtpService;
 use App\Services\Auth\TwoFactorService;
 use App\Support\Identifier;
@@ -16,7 +17,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * Authentication for the mobile applications.
@@ -46,7 +49,7 @@ class AuthController extends Controller
 
     protected const MAX_ATTEMPTS = 5;
 
-    public function login(Request $request, AuthAuditor $auditor): JsonResponse
+    public function login(Request $request, AuthAuditor $auditor, LoginPipeline $pipeline): JsonResponse
     {
         $validated = $request->validate($this->deviceRules() + [
             'identifier' => ['required', 'string', 'max:255'],
@@ -77,17 +80,17 @@ class AuthController extends Controller
 
         RateLimiter::clear($key);
 
-        if (! $user->canSignIn()) {
+        if ($refusal = $pipeline->refusalReason($user)) {
             $auditor->failure(AuthEvent::LoginFailed, $user->email, 'suspended', $user, 'api');
 
-            return response()->json(['message' => 'This account has been suspended.'], 403);
+            return response()->json(['message' => $refusal, 'code' => 'account_suspended'], 403);
         }
 
-        if ($user->hasTwoFactorEnabled()) {
+        if ($pipeline->requiresTwoFactor($user)) {
             return $this->challengeResponse($user, $validated, $auditor);
         }
 
-        return $this->issueToken($user, $validated, 'api.password', $auditor);
+        return $this->issueToken($user, $validated, 'api.password', $pipeline);
     }
 
     public function requestCode(Request $request, OtpService $otp, AuthAuditor $auditor): JsonResponse
@@ -131,7 +134,7 @@ class AuthController extends Controller
         ]);
     }
 
-    public function verifyCode(Request $request, OtpService $otp, AuthAuditor $auditor): JsonResponse
+    public function verifyCode(Request $request, OtpService $otp, AuthAuditor $auditor, LoginPipeline $pipeline): JsonResponse
     {
         $validated = $request->validate($this->deviceRules() + [
             'identifier' => ['required', 'string', 'max:255'],
@@ -149,28 +152,30 @@ class AuthController extends Controller
 
         $user = $otp->userFor($identifier, OtpPurpose::Login);
 
-        if (! $user || ! $user->canSignIn()) {
+        if (! $user || $pipeline->refusalReason($user)) {
             throw ValidationException::withMessages(['code' => OtpResult::Incorrect->message()]);
         }
 
         $auditor->record(AuthEvent::OtpVerified, $user, $identifier, true, null, 'api');
 
-        if ($user->hasTwoFactorEnabled()) {
+        if ($pipeline->requiresTwoFactor($user)) {
             return $this->challengeResponse($user, $validated, $auditor);
         }
 
-        return $this->issueToken($user, $validated, 'api.otp', $auditor);
+        return $this->issueToken($user, $validated, 'api.otp', $pipeline);
     }
 
     /**
      * Answer the two factor challenge, authenticated by the challenge token.
      */
-    public function twoFactor(Request $request, TwoFactorService $twoFactor, AuthAuditor $auditor): JsonResponse
+    public function twoFactor(Request $request, TwoFactorService $twoFactor, AuthAuditor $auditor, LoginPipeline $pipeline): JsonResponse
     {
         $user = $request->user();
         $token = $user->currentAccessToken();
 
-        abort_unless($token && $token->can(self::CHALLENGE_ABILITY), 403, 'This token cannot answer a challenge.');
+        // Only a challenge token: can() is true of a full token too, which
+        // holds every ability, and that is not a challenge to answer.
+        abort_unless($token && in_array(self::CHALLENGE_ABILITY, $token->abilities ?? [], true), 403, 'This token cannot answer a challenge.');
 
         $validated = $request->validate($this->deviceRules() + [
             'code' => ['required', 'string', 'max:20'],
@@ -198,7 +203,12 @@ class AuthController extends Controller
         // The challenge token has done its job.
         $token->delete();
 
-        return $this->issueToken($user, $validated, 'api.2fa', $auditor);
+        // Suspended while the challenge was open: refused like any sign in.
+        if ($refusal = $pipeline->refusalReason($user)) {
+            return response()->json(['message' => $refusal, 'code' => 'account_suspended'], 403);
+        }
+
+        return $this->issueToken($user, $validated, 'api.2fa', $pipeline);
     }
 
     public function me(Request $request): JsonResponse
@@ -229,6 +239,102 @@ class AuthController extends Controller
         ]))->save();
 
         return response()->json(['message' => 'Push token registered.']);
+    }
+
+    /**
+     * Choose a password, as the web forces after a temporary one (Step I).
+     * Until this is done every other endpoint answers 423
+     * (password_change_required). The device that changed it stays signed
+     * in; every other device holding the old credential is signed out.
+     */
+    public function changePassword(Request $request, AuthAuditor $auditor): JsonResponse
+    {
+        $user = $request->user();
+
+        $rules = ['password' => ['required', 'confirmed', Password::defaults()]];
+
+        // An account made through Google has no password to confirm.
+        if ($user->hasPassword()) {
+            $rules['current_password'] = ['required', 'string'];
+        }
+
+        $validated = $request->validate($rules);
+
+        if ($user->hasPassword() && ! Hash::check($validated['current_password'], $user->password)) {
+            throw ValidationException::withMessages(['current_password' => 'That is not your current password.']);
+        }
+
+        if ($user->hasPassword() && Hash::check($validated['password'], $user->password)) {
+            throw ValidationException::withMessages(['password' => 'Choose a password you have not used here before.']);
+        }
+
+        $user->forceFill(['password' => $validated['password'], 'must_change_password' => false])->save();
+
+        $current = $user->currentAccessToken();
+        $user->tokens()->whereKeyNot($current->getKey())->delete();
+
+        $auditor->success(AuthEvent::PasswordChanged, $user, 'api');
+
+        return response()->json(['message' => 'Password updated.', 'data' => $this->userPayload($user->fresh())]);
+    }
+
+    /**
+     * A new token for this device in place of the one presented (Step I), so
+     * an app can rotate its credential without signing in again. The old one
+     * stops working at once; the device's details and push token carry over.
+     */
+    public function refresh(Request $request, AuthAuditor $auditor): JsonResponse
+    {
+        $user = $request->user();
+        $old = $user->currentAccessToken();
+
+        $new = $user->createToken($old->name, ['*']);
+        $new->accessToken->forceFill([
+            'device_identifier' => $old->device_identifier,
+            'platform' => $old->platform,
+            'app_version' => $old->app_version,
+            'push_token' => $old->push_token,
+        ])->save();
+
+        $old->delete();
+        $auditor->success(AuthEvent::TokenRevoked, $user, 'api.refresh');
+
+        return response()->json(['token' => $new->plainTextToken]);
+    }
+
+    /** The devices signed in to this account, this one marked (Step I). */
+    public function devices(Request $request): JsonResponse
+    {
+        $current = $request->user()->currentAccessToken();
+
+        return response()->json([
+            'data' => $request->user()->tokens()
+                ->latest('last_used_at')
+                ->get()
+                // A half finished two-step sign in is not a device.
+                ->reject(fn (PersonalAccessToken $token) => in_array(self::CHALLENGE_ABILITY, $token->abilities ?? [], true))
+                ->map(fn (PersonalAccessToken $token) => [
+                    'id' => $token->id,
+                    'name' => $token->name,
+                    'platform' => $token->platform,
+                    'appVersion' => $token->app_version,
+                    'lastUsedAt' => $token->last_used_at?->toIso8601String(),
+                    'signedInAt' => $token->created_at->toIso8601String(),
+                    'current' => $token->is($current),
+                ])
+                ->values(),
+        ]);
+    }
+
+    /** Sign a device out (Step I). Somebody else's device is not found. */
+    public function revokeDevice(Request $request, int $device, AuthAuditor $auditor): JsonResponse
+    {
+        $token = $request->user()->tokens()->whereKey($device)->firstOrFail();
+        $token->delete();
+
+        $auditor->success(AuthEvent::TokenRevoked, $request->user(), 'api.device');
+
+        return response()->json(['message' => 'Signed out on that device.']);
     }
 
     public function logout(Request $request, AuthAuditor $auditor): JsonResponse
@@ -279,32 +385,13 @@ class AuthController extends Controller
         ], 202);
     }
 
-    protected function issueToken(User $user, array $validated, string $method, AuthAuditor $auditor): JsonResponse
+    protected function issueToken(User $user, array $validated, string $method, LoginPipeline $pipeline): JsonResponse
     {
-        // One token per device, so signing in again on the same handset
-        // replaces its access rather than accumulating live credentials.
-        if ($identifier = $validated['device_identifier'] ?? null) {
-            $user->tokens()->where('device_identifier', $identifier)->delete();
-        }
-
-        $token = $user->createToken($validated['device_name'], ['*']);
-
-        $token->accessToken->forceFill(array_filter([
-            'device_identifier' => $validated['device_identifier'] ?? null,
-            'platform' => $validated['platform'] ?? null,
-            'app_version' => $validated['app_version'] ?? null,
-        ]))->save();
-
-        $user->forceFill([
-            'last_login_at' => now(),
-            'last_login_ip' => request()->ip(),
-        ])->save();
-
-        $auditor->record(AuthEvent::TokenIssued, $user, $user->email, true, null, $method);
+        $token = $pipeline->completeWithToken($user, $method, $validated);
 
         return response()->json([
-            'token' => $token->plainTextToken,
-            'must_change_password' => $user->must_change_password,
+            'token' => $token,
+            'must_change_password' => (bool) $user->must_change_password,
             'data' => $this->userPayload($user),
         ]);
     }

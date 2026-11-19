@@ -81,7 +81,7 @@ class ChatApiController extends Controller
 
         return response()->json([
             'data' => $messages->map(fn (Message $message) => [
-                ...MessagePayload::for($message),
+                ...MessagePayload::for($message, 'api.v1.chat.media'),
                 'mine' => $message->sender_id === $user->id,
             ]),
         ]);
@@ -129,7 +129,7 @@ class ChatApiController extends Controller
         }
 
         return response()->json([
-            'data' => [...MessagePayload::for($message->loadMissing(['sender', 'replyTo.sender'])), 'mine' => true],
+            'data' => [...MessagePayload::for($message->loadMissing(['sender', 'replyTo.sender']), 'api.v1.chat.media'), 'mine' => true],
         ], 201);
     }
 

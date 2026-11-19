@@ -10,6 +10,7 @@ use App\Models\Project;
 use App\Models\Proposal;
 use App\Models\SupportTicket;
 use App\Models\Transaction;
+use App\Services\Support\Tickets;
 use App\Support\Money;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -110,9 +111,9 @@ class ClientApiController extends Controller
                     'kind' => $document->kind(),
                     'version' => $document->version,
                     'at' => $document->created_at->toIso8601String(),
-                    // A URL, not the bytes. The download still goes through a
-                    // controller that checks who is asking.
-                    'downloadUrl' => url("/client/documents/{$document->id}/download"),
+                    // A URL, not the bytes: the download takes the same token and
+                    // checks again who is asking.
+                    'downloadUrl' => route('api.v1.client.documents.download', $document->id),
                 ]),
         ]);
     }
@@ -138,32 +139,19 @@ class ClientApiController extends Controller
         ]);
     }
 
-    public function storeTicket(Request $request): JsonResponse
+    public function storeTicket(Request $request, Tickets $tickets): JsonResponse
     {
-        $client = $request->user()->clientAccount();
-
         $validated = $this->validatedInput($request, [
             'subject' => ['required', 'string', 'max:200'],
             'body' => ['required', 'string', 'max:5000'],
             'priority' => ['required', Rule::in(SupportTicket::PRIORITIES)],
+            'category' => ['nullable', 'string', 'max:40'],
+            'contract_id' => ['nullable', 'integer'],
             'project_id' => ['nullable', 'integer'],
         ]);
 
-        $contract = $client->maintenanceContracts()->active()->first();
-
-        $ticket = SupportTicket::query()->create([
-            'requester_id' => $request->user()->id,
-            'contract_id' => $contract?->id,
-            'project_id' => $validated['project_id']
-                ? Project::query()->forClient($client)->find($validated['project_id'])?->id
-                : null,
-            'subject' => $validated['subject'],
-            'body' => $validated['body'],
-            'priority' => $validated['priority'],
-            'status' => 'open',
-            'response_due_at' => $contract ? now()->addHours($contract->response_hours) : null,
-            'resolution_due_at' => $contract ? now()->addHours($contract->resolution_hours) : null,
-        ]);
+        // The same way the portal raises one: the desk hears of it (Step I).
+        $ticket = $tickets->raiseForClient($request->user()->clientAccount(), $request->user(), $validated);
 
         return response()->json([
             'data' => ['id' => $ticket->id, 'reference' => $ticket->reference],
@@ -213,7 +201,7 @@ class ClientApiController extends Controller
                     'invoice' => $transaction->invoice?->number,
                     'at' => $transaction->created_at->toIso8601String(),
                     'receiptUrl' => $transaction->isSuccessful()
-                        ? url("/client/receipts/{$transaction->reference}")
+                        ? route('api.v1.client.receipts.show', $transaction->reference)
                         : null,
                 ]),
         ]);
@@ -234,7 +222,7 @@ class ClientApiController extends Controller
                     'balance' => Money::display($invoice->balance()),
                     'status' => $invoice->status,
                     'issuedAt' => $invoice->issued_at->toIso8601String(),
-                    'pdfUrl' => url("/client/invoices/{$invoice->id}/pdf"),
+                    'pdfUrl' => route('api.v1.client.invoices.pdf', $invoice->id),
                 ]),
         ]);
     }

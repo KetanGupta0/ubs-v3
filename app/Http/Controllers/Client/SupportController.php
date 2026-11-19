@@ -6,11 +6,9 @@ use App\Models\MaintenanceContract;
 use App\Models\Project;
 use App\Models\SupportTicket;
 use App\Models\TicketMessage;
-use App\Models\User;
-use App\Notifications\TicketRaised;
+use App\Services\Support\Tickets;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -89,7 +87,7 @@ class SupportController extends ClientController
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, Tickets $tickets): RedirectResponse
     {
         $client = $this->client($request);
 
@@ -102,32 +100,9 @@ class SupportController extends ClientController
             'priority' => ['required', Rule::in(SupportTicket::PRIORITIES)],
         ]);
 
-        // Both references are re-resolved through the client's own relations,
-        // so an id typed into the request body cannot attach this ticket to
-        // somebody else's contract.
-        $contract = $validated['contract_id']
-            ? MaintenanceContract::query()->forClient($client)->find($validated['contract_id'])
-            : MaintenanceContract::query()->forClient($client)->active()->first();
-
-        $project = $validated['project_id']
-            ? Project::query()->forClient($client)->find($validated['project_id'])
-            : null;
-
-        $ticket = SupportTicket::query()->create([
-            // The person, not the organisation: who to answer.
-            'requester_id' => $request->user()->id,
-            'contract_id' => $contract?->id,
-            'project_id' => $project?->id ?? $contract?->project_id,
-            'subject' => $validated['subject'],
-            'body' => $validated['body'],
-            'category' => $validated['category'] ?? null,
-            'priority' => $validated['priority'],
-            'status' => 'open',
-            'response_due_at' => $contract ? now()->addHours($contract->response_hours) : null,
-            'resolution_due_at' => $contract ? now()->addHours($contract->resolution_hours) : null,
-        ]);
-
-        $this->notifyStaff($ticket);
+        // The contract and project are re-resolved through the client's own
+        // relations, and the desk is told, in one place for the portal and the app.
+        $ticket = $tickets->raiseForClient($client, $request->user(), $validated);
 
         return redirect()
             ->route('client.tickets.show', $ticket->id)
@@ -233,14 +208,5 @@ class SupportController extends ClientController
             'at' => $ticket->created_at->format('j M Y'),
             'ago' => $ticket->created_at->diffForHumans(),
         ];
-    }
-
-    protected function notifyStaff(SupportTicket $ticket): void
-    {
-        $recipients = User::query()->holdingPermission('support.manage')->active()->get();
-
-        if ($recipients->isNotEmpty()) {
-            Notification::send($recipients, new TicketRaised($ticket));
-        }
     }
 }
