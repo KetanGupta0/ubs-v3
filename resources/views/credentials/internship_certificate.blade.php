@@ -15,7 +15,7 @@
         .frame { position: absolute; top: 10mm; left: 10mm; width: 276mm; height: 187mm; border: 2px solid #4f46e5; }
         .frame-inner { position: absolute; top: 12.5mm; left: 12.5mm; width: 271mm; height: 182mm; border: 1px solid #c7d2fe; }
         .content { position: absolute; top: 24mm; left: 20mm; width: 257mm; text-align: center; }
-        .brand { font-size: 20px; font-weight: bold; color: #4f46e5; letter-spacing: .04em; }
+        .brand { height: 13mm; }
         .legal { font-size: 9.5px; color: #6b7280; margin-top: 2px; }
         .kicker { margin-top: 12mm; font-size: 10px; letter-spacing: .28em; text-transform: uppercase; color: #6b7280; }
         .name { margin-top: 4mm; font-size: 32px; font-weight: bold; }
@@ -38,7 +38,7 @@
     <div class="frame-inner"></div>
 
     <div class="content">
-        <div class="brand">{{ $company['trading'] }}</div>
+        <div class="brand">{{ \App\Support\PdfBrand::img(13) }}</div>
         <div class="legal">{{ $company['name'] }}</div>
 
         <div class="kicker">Certificate of internship</div>

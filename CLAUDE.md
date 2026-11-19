@@ -719,6 +719,13 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   signatory, no verification code and no number, plus a blank page. Give each box
   an explicit top, left, width and height, and render it to an image and look.
   Tests assert each certificate is one page.
+- **Every PDF carries the company logo,** through `App\Support\PdfBrand::img($mm)`: the
+  BrandLogo lockup as a PNG (`public/brand/logo-pdf.png`, made by
+  `node resources/brand/render-pdf-logo.cjs`), handed to dompdf as data, because dompdf
+  has neither the Sora typeface nor reliable SVG gradients. `PdfBrandTest` lists every
+  view a PDF is rendered from and fails one without the logo, so a new PDF goes on that
+  list. Pages keep 12 mm margins (letters 14 to 16 mm). A PDF already issued keeps the
+  look it was issued with.
 - **Course fees are inclusive of tax**, because that is the figure the page
   showed. `Money::taxableWithin()` works the taxable amount back out of it.
 - **A fee paid in full opens the course in one place,** `Invoicer::recordPayment()`,

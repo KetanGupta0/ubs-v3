@@ -2,8 +2,8 @@
 <table class="head">
     <tr>
         <td>
-            <div class="name">{{ $from['trading_name'] ?? $from['name'] ?? '' }}</div>
-            <div class="muted">{{ $from['name'] ?? '' }}</div>
+            <div class="logo">{{ \App\Support\PdfBrand::img(11) }}</div>
+            <div class="legal">{{ $from['name'] ?? '' }}</div>
             @if(!empty($from['address']))<div class="muted">{{ $from['address'] }}</div>@endif
             <div class="muted">{{ collect([$from['city'] ?? null, $from['state'] ?? null, $from['postal_code'] ?? null])->filter()->join(', ') }}</div>
             @if(!empty($from['gstin']))<div class="muted">GSTIN: {{ $from['gstin'] }}</div>@endif

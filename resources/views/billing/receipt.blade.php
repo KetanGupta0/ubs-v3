@@ -6,9 +6,10 @@
     <meta charset="utf-8">
     <title>Receipt {{ $transaction->reference }}</title>
     <style>
-        @page { margin: 30mm 18mm; }
+        @page { margin: 12mm 12mm 14mm; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #1f2430; line-height: 1.6; }
-        .name { font-size: 17px; font-weight: bold; color: #4f46e5; }
+        .logo { margin-bottom: 2.5mm; }
+        .legal { font-size: 11px; font-weight: bold; color: #1f2430; }
         .muted { color: #6b7280; }
         .label { font-size: 8.5px; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; }
         .stamp { margin: 22px 0; padding: 14px 16px; border: 1.5px solid #16a34a; background: #f0fdf4; }
@@ -22,8 +23,8 @@
 <body>
 @php($from = $invoice?->billed_from ?? [])
 
-<div class="name">{{ $from['trading_name'] ?? config('company.name') }}</div>
-<div class="muted">{{ $from['name'] ?? config('company.legal_name') }}</div>
+<div class="logo">{{ \App\Support\PdfBrand::img(11) }}</div>
+<div class="legal">{{ $from['name'] ?? config('company.legal_name') }}</div>
 @if(!empty($from['gstin']))<div class="muted">GSTIN: {{ $from['gstin'] }}</div>@endif
 
 <h2 style="margin-top:22px">Payment receipt</h2>

@@ -6,12 +6,13 @@
     <meta charset="utf-8">
     <title>Credit note {{ $note->number }}</title>
     <style>
-        @page { margin: 26mm 16mm; }
+        @page { margin: 12mm 12mm 14mm; }
         * { box-sizing: border-box; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 10.5px; color: #1f2430; line-height: 1.5; }
         .head { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
         .head td { vertical-align: top; }
-        .name { font-size: 17px; font-weight: bold; color: #4f46e5; }
+        .logo { margin-bottom: 2.5mm; }
+        .legal { font-size: 11px; font-weight: bold; color: #1f2430; }
         .label { font-size: 8.5px; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; }
         .title { font-size: 15px; font-weight: bold; text-align: right; }
         .muted { color: #6b7280; }
@@ -42,8 +43,8 @@
 <table class="head">
     <tr>
         <td>
-            <div class="name">{{ $from['trading_name'] ?? $from['name'] }}</div>
-            <div class="muted">{{ $from['name'] }}</div>
+            <div class="logo">{{ \App\Support\PdfBrand::img(11) }}</div>
+            <div class="legal">{{ $from['name'] }}</div>
             @if(!empty($from['address']))<div class="muted">{{ $from['address'] }}</div>@endif
             <div class="muted">{{ collect([$from['city'] ?? null, $from['state'] ?? null, $from['postal_code'] ?? null])->filter()->join(', ') }}</div>
             @if(!empty($from['gstin']))<div class="muted">GSTIN: {{ $from['gstin'] }}</div>@endif

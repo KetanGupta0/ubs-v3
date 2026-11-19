@@ -2,6 +2,7 @@
      exact file that was signed by its SHA-256, so anybody holding the
      original can check that this is what was agreed. --}}
 <div style="page-break-before: always"></div>
+<div class="logo">{{ \App\Support\PdfBrand::img(9) }}</div>
 <h1>Certificate of signing</h1>
 <p class="muted">
     {{ $documentLabel }} {{ $number }}{{ $version > 1 ? ', version '.$version : '' }}: {{ $title }}.

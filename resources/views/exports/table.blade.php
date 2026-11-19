@@ -4,13 +4,12 @@
     <meta charset="utf-8">
     <title>{{ $title }}</title>
     <style>
-        @page { margin: 22mm 14mm 18mm; }
+        @page { margin: 12mm 12mm 16mm; }
         * { box-sizing: border-box; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 9.5px; color: #151B33; margin: 0; }
 
         .masthead { border-bottom: 2px solid #4F46E5; padding-bottom: 8px; margin-bottom: 14px; }
-        .brand { font-size: 15px; font-weight: bold; color: #0B1020; }
-        .brand span { color: #4F46E5; }
+        .brand { height: 9mm; }
         .legal { font-size: 8px; color: #66719B; margin-top: 2px; }
         .title { font-size: 12px; font-weight: bold; margin-top: 10px; }
         .meta { font-size: 8.5px; color: #66719B; margin-top: 2px; }
@@ -26,13 +25,13 @@
         tbody tr:nth-child(even) td { background: #F6F7FB; }
 
         .empty { text-align: center; padding: 28px; color: #66719B; }
-        .footer { position: fixed; bottom: -12mm; left: 0; right: 0; font-size: 8px; color: #8792B8; }
+        .footer { position: fixed; bottom: -10mm; left: 0; right: 0; font-size: 8px; color: #8792B8; }
         .footer .page:after { content: counter(page); }
     </style>
 </head>
 <body>
     <div class="masthead">
-        <div class="brand">unbound<span>byte</span></div>
+        <div class="brand">{{ \App\Support\PdfBrand::img(9) }}</div>
         <div class="legal">Unboundbyte Solutions Private Limited</div>
         <div class="title">{{ $title }}</div>
         <div class="meta">

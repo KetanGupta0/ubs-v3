@@ -5,10 +5,10 @@
     <meta charset="utf-8">
     <title>{{ $college->name }} — {{ $month->format('F Y') }}</title>
     <style>
-        @page { margin: 14mm 12mm; }
+        @page { margin: 10mm 10mm 12mm; }
         body { font-family: DejaVu Sans, sans-serif; font-size: 9.5px; color: #1f2430; }
         .head { border-bottom: 2px solid #4f46e5; padding-bottom: 6px; margin-bottom: 12px; }
-        .brand { font-size: 14px; font-weight: bold; color: #4f46e5; }
+        .brand { height: 9mm; margin-bottom: 1mm; }
         .muted { color: #6b7280; font-size: 8.5px; }
         h1 { font-size: 12px; margin: 10px 0 2px; }
         table { width: 100%; border-collapse: collapse; margin-top: 8px; }
@@ -23,7 +23,7 @@
 </head>
 <body>
 <div class="head">
-    <div class="brand">{{ $company['trading'] }}</div>
+    <div class="brand">{{ \App\Support\PdfBrand::img(9) }}</div>
     <div class="muted">{{ $company['name'] }}@if($company['email']) · {{ $company['email'] }}@endif</div>
 </div>
 

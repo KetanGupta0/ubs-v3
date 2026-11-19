@@ -1,12 +1,13 @@
 {{-- One look for every client document, written for dompdf: plain flow, tables
      for columns, no positioning a printer would argue with. --}}
 <style>
-    @page { margin: 22mm 16mm 20mm; }
+    @page { margin: 12mm 12mm 14mm; }
     * { box-sizing: border-box; }
     body { font-family: DejaVu Sans, sans-serif; font-size: 10.5px; color: #1f2430; line-height: 1.55; }
     .head { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
     .head td { vertical-align: top; }
-    .name { font-size: 16px; font-weight: bold; color: #4f46e5; }
+    .logo { margin-bottom: 2.5mm; }
+    .legal { font-size: 11px; font-weight: bold; color: #1f2430; }
     .label { font-size: 8.5px; text-transform: uppercase; letter-spacing: .06em; color: #6b7280; }
     .doctitle { font-size: 15px; font-weight: bold; text-align: right; }
     .right { text-align: right; }
