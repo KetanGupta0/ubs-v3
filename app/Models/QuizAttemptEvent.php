@@ -21,7 +21,13 @@ class QuizAttemptEvent extends Model
     public const CREATED_AT = null;
 
     /** What the browser may report. Everything else is the server's to write. */
-    public const FROM_BROWSER = ['focus_lost', 'focus_back', 'fullscreen_exit', 'fullscreen_enter', 'paste', 'copy'];
+    public const FROM_BROWSER = ['focus_lost', 'focus_back', 'fullscreen_exit', 'fullscreen_enter', 'paste', 'copy', 'blocked', 'message_seen'];
+
+    /** What a proctored page blocks, and so may report trying (§9.1a). */
+    public const BLOCKABLE = ['copy', 'cut', 'paste', 'menu', 'drag', 'shortcut', 'print'];
+
+    /** Why the questions were covered: the tab, the window, or full screen. */
+    public const LEFT_BY = ['tab', 'window', 'fullscreen'];
 
     public const LABELS = [
         'started' => 'Started',
@@ -37,6 +43,13 @@ class QuizAttemptEvent extends Model
         'copy' => 'Copied from the question',
         'ip_changed' => 'Network changed',
         'device_changed' => 'Carried on in another browser',
+        'consented' => 'Agreed to the proctoring rules',
+        'blocked' => 'Tried something switched off',
+        'proctor_message' => 'Message from the proctor',
+        'message_seen' => 'Read the proctor\'s message',
+        'time_added' => 'Given more time',
+        'ended_by_proctor' => 'Ended by the proctor',
+        'ended_for_exits' => 'Submitted for leaving too often',
     ];
 
     protected $guarded = ['id'];

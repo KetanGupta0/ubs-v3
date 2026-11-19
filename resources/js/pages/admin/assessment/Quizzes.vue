@@ -138,6 +138,7 @@ function remove(quiz) {
                         <h2 class="flex flex-wrap items-center gap-2 text-sm font-semibold">
                             {{ quiz.title }}
                             <UiBadge v-if="!quiz.isPublished" tone="warning" size="sm">draft</UiBadge>
+                            <UiBadge v-if="quiz.proctoring && quiz.proctoring !== 'off'" tone="brand" size="sm">proctored</UiBadge>
                             <UiBadge v-if="quiz.awaitingMarking" tone="accent" size="sm">
                                 <AlertCircle class="mr-1 h-3 w-3" />{{ quiz.awaitingMarking }} to mark
                             </UiBadge>
@@ -155,6 +156,9 @@ function remove(quiz) {
                     <div class="flex shrink-0 items-center gap-1">
                         <UiButton :href="`${base}/quizzes/${quiz.id}`" variant="secondary" size="xs">
                             Questions
+                        </UiButton>
+                        <UiButton :href="`/admin/proctoring/quizzes/${quiz.id}`" variant="ghost" size="xs">
+                            Proctoring
                         </UiButton>
                         <UiButton variant="ghost" size="xs" :aria-label="`Settings for ${quiz.title}`" @click="openForm(quiz)">
                             <Pencil class="h-3.5 w-3.5" />

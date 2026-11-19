@@ -67,6 +67,7 @@ class AssessmentController extends Controller
                     'oneAtATime' => $quiz->one_at_a_time,
                     'allowBack' => $quiz->allow_back,
                     'answersAfterClose' => $quiz->answers_after_close,
+                    'proctoring' => $quiz->proctoring,
                     'showAnswers' => $quiz->show_answers,
                     'opensAt' => $quiz->opens_at?->format('Y-m-d\TH:i'),
                     'closesAt' => $quiz->closes_at?->format('Y-m-d\TH:i'),

@@ -27,6 +27,13 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+// The settings file Safe Exam Browser opens a final assessment with (X10). The
+// browser fetches it signed out, so the link is signed and short lived instead.
+Route::get('student/quizzes/{quiz}/safe-exam-browser', [QuizController::class, 'safeExamBrowserFile'])
+    ->whereNumber('quiz')
+    ->middleware('signed')
+    ->name('quizzes.safe-exam-browser');
+
 Route::middleware(['auth', 'password.owned', 'role:student'])
     ->prefix('student')
     ->name('student.')

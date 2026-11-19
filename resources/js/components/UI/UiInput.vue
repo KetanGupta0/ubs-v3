@@ -17,9 +17,28 @@ const props = defineProps({
     size: { type: String, default: 'md' },
     invalid: { type: Boolean, default: false },
     disabled: { type: Boolean, default: false },
+    /*
+     * `v-model.number` and `v-model.trim`. Undeclared, the modifiers were
+     * ignored and landed on the element as `modelmodifiers="[object Object]"`,
+     * so every number field sent a string.
+     */
+    modelModifiers: { type: Object, default: () => ({}) },
 });
 
-defineEmits(['update:modelValue']);
+const emit = defineEmits(['update:modelValue']);
+
+/** As Vue's own v-model does: trimmed, and a number where it reads as one. */
+function input(event) {
+    let value = event.target.value;
+
+    if (props.modelModifiers.trim) value = value.trim();
+    if (props.modelModifiers.number && value !== '') {
+        const number = parseFloat(value);
+        value = Number.isNaN(number) ? value : number;
+    }
+
+    emit('update:modelValue', value);
+}
 
 const field = useField();
 const isInvalid = computed(() => props.invalid || field.value.invalid);
@@ -61,7 +80,7 @@ const classes = computed(() => [
             :disabled="disabled"
             :aria-invalid="isInvalid || undefined"
             :class="[classes, $slots.leading && 'pl-10', $slots.trailing && 'pr-10']"
-            @input="$emit('update:modelValue', $event.target.value)"
+            @input="input"
         >
 
         <span v-if="$slots.trailing" class="absolute inset-y-0 right-2 flex items-center">

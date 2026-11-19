@@ -21,9 +21,9 @@ class AttemptEvents
 
     public const PER_ATTEMPT = 2000;
 
-    public function record(QuizAttempt $attempt, string $type, ?int $questionId = null, ?int $seconds = null, ?array $detail = null, ?string $ip = null): void
+    public function record(QuizAttempt $attempt, string $type, ?int $questionId = null, ?int $seconds = null, ?array $detail = null, ?string $ip = null): QuizAttemptEvent
     {
-        QuizAttemptEvent::query()->create([
+        return QuizAttemptEvent::query()->create([
             'quiz_attempt_id' => $attempt->id,
             'type' => $type,
             'question_id' => $questionId,
@@ -46,6 +46,7 @@ class AttemptEvents
         }
 
         $paper = collect($attempt->question_ids ?? [])->map(fn ($id) => (int) $id);
+        $away = $this->away($attempt);
         $kept = 0;
 
         foreach (array_slice($reported, 0, self::PER_REPORT) as $event) {
@@ -55,15 +56,85 @@ class AttemptEvents
                 continue;
             }
 
+            // Nobody leaves twice without coming back. A page closing reports
+            // leaving full screen, and the page opening again reports it too:
+            // that is one departure, and counting it twice would bring a
+            // proctored student nearer being submitted for nothing.
+            if ($type === 'focus_lost' && $away) {
+                continue;
+            }
+
+            if (in_array($type, ['focus_lost', 'focus_back'], true)) {
+                $away = $type === 'focus_lost';
+            }
+
             $question = isset($event['question_id']) && $paper->contains((int) $event['question_id']) ? (int) $event['question_id'] : null;
             $seconds = isset($event['seconds']) && is_numeric($event['seconds']) ? max(0, min((int) $event['seconds'], 86400)) : null;
-            $length = isset($event['length']) && is_numeric($event['length']) ? max(0, min((int) $event['length'], 1000000)) : null;
+            $detail = $this->detail($attempt, $type, $event);
 
-            $this->record($attempt, $type, $question, $seconds, $length !== null ? ['length' => $length] : null, $ip);
+            // Blocked needs to say what; read needs a message that was sent.
+            if (($type === 'blocked' && ! isset($detail['what'])) || ($type === 'message_seen' && ! isset($detail['message']))) {
+                continue;
+            }
+
+            $this->record($attempt, $type, $question, $seconds, $detail ?: null, $ip);
             $kept++;
         }
 
         return $kept;
+    }
+
+    /**
+     * Whether the student is away from the quiz as far as the record goes:
+     * they left and have not come back, and the page has not since said it is
+     * in full screen and in focus.
+     */
+    protected function away(QuizAttempt $attempt): bool
+    {
+        $last = QuizAttemptEvent::query()
+            ->where('quiz_attempt_id', $attempt->id)
+            ->whereIn('type', ['focus_lost', 'focus_back'])
+            ->latest('id')
+            ->value('type');
+
+        $back = ($attempt->live_state['fullscreen'] ?? false) && ($attempt->live_state['focused'] ?? false);
+
+        return $last === 'focus_lost' && ! $back;
+    }
+
+    /**
+     * The little a browser may add to an event, each from a fixed list or a
+     * plain number, so nothing it types reaches the record as text.
+     *
+     * @param  array<string, mixed>  $event
+     * @return array<string, int|string>
+     */
+    protected function detail(QuizAttempt $attempt, string $type, array $event): array
+    {
+        $detail = [];
+
+        if (isset($event['length']) && is_numeric($event['length'])) {
+            $detail['length'] = max(0, min((int) $event['length'], 1000000));
+        }
+
+        if ($type === 'blocked' && in_array($event['what'] ?? null, QuizAttemptEvent::BLOCKABLE, true)) {
+            $detail['what'] = $event['what'];
+
+            if (is_string($event['key'] ?? null) && preg_match('/^[A-Za-z0-9+]{1,24}$/', $event['key'])) {
+                $detail['key'] = $event['key'];
+            }
+        }
+
+        if ($type === 'focus_lost' && in_array($event['why'] ?? null, QuizAttemptEvent::LEFT_BY, true)) {
+            $detail['why'] = $event['why'];
+        }
+
+        if ($type === 'message_seen' && is_numeric($event['message'] ?? null)
+            && QuizAttemptEvent::query()->where('quiz_attempt_id', $attempt->id)->where('type', 'proctor_message')->whereKey((int) $event['message'])->exists()) {
+            $detail['message'] = (int) $event['message'];
+        }
+
+        return $detail;
     }
 
     /**

@@ -63,6 +63,15 @@ function key(answer) {
                 </UiButton>
             </div>
 
+            <!-- Ended for them (§9.1a): who, and why, in plain words. -->
+            <UiCard v-if="attempt.endedReason">
+                <p class="text-sm font-semibold">{{ attempt.endedByProctor ? 'The proctor ended this attempt' : 'This attempt was submitted for you' }}</p>
+                <p class="mt-1 text-sm" style="color: var(--text-base)">{{ attempt.endedReason }}</p>
+                <p class="mt-2 text-sm" style="color: var(--text-muted)">
+                    What you had answered was marked. Your trainer looks at what happened and decides whether you can sit it again.
+                </p>
+            </UiCard>
+
             <!-- ------------------------------------------------- the score -->
             <UiCard>
                 <div class="flex flex-wrap items-center justify-between gap-4">

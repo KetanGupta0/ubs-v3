@@ -137,6 +137,32 @@ class IntegrityChecks
             ];
         }
 
+        // Proctored (§9.1a): every time they left, and anything switched off they tried.
+        if ($attempt->isProctored()) {
+            $exits = $attempt->events->where('type', 'focus_lost')->count();
+            $blocked = $attempt->events->where('type', 'blocked');
+            $parts = array_filter([
+                $exits ? 'left the quiz '.$exits.' '.($exits === 1 ? 'time' : 'times') : null,
+                $blocked->isNotEmpty() ? 'tried something switched off '.$blocked->count().' '.($blocked->count() === 1 ? 'time' : 'times') : null,
+            ]);
+
+            if ($parts !== []) {
+                $flags[] = [
+                    'type' => 'lockdown',
+                    'summary' => ucfirst(implode(' and ', $parts)).' during a proctored sitting.',
+                    'evidence' => ['exits' => $exits, 'blocked' => $blocked->countBy(fn (QuizAttemptEvent $event) => $event->detail['what'] ?? 'other')->all()],
+                ];
+            }
+
+            if ($attempt->ended_reason) {
+                $flags[] = [
+                    'type' => 'ended',
+                    'summary' => ($attempt->ended_by ? 'Ended by the proctor: ' : 'Submitted for them: ').$attempt->ended_reason,
+                    'evidence' => ['by' => $attempt->ended_by],
+                ];
+            }
+        }
+
         // Carried on in another browser.
         $switches = $attempt->events->where('type', 'device_changed')->count();
 

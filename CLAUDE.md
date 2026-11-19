@@ -282,6 +282,9 @@ Rules for the marketing pages:
   its words, which every one of those fields refuses: a quiz, assignment, material
   or certificate design set for one batch or course could not be set back, and a
   lesson's prerequisite or quiz gate could not be taken off.
+- **`UiInput` honours `v-model.number` and `.trim`.** Until November 2026 it declared
+  neither, so every number field sent a string and the modifier landed on the element
+  as `modelmodifiers="[object Object]"`.
 - **`UiCheckbox` binds to a boolean or to a list.** With `v-model` on an array
   and a `:value`, it adds or removes that value. Until November 2026 the list form
   was declared and never handled, so every box showed ticked and the first click
@@ -593,6 +596,32 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   before starting what is noted (`Quiz::rulesForStudents()`). Time on a question
   counts only when it was the one question on the screen; on a one page quiz the
   whole sitting is judged, because people read ahead and then answer in a run.
+- **A proctored quiz is started in a sitting, agreed to, on a computer (§9.1a).**
+  `App\Services\Lms\Proctoring` holds the rules: `refusal()` (a phone or tablet, Safe
+  Exam Browser missing, no sitting open for the student's batch) and `begin()`, which
+  ties the attempt to its `quiz_slots` row, records the agreement and ends the clock
+  with the sitting at the latest. The camera (`live`) is refused until there is a
+  video relay (X12), and the guardian consent and webcam exemption of X4 come with it.
+- **The lockdown notices; the server counts.** `useLockdown` keeps the page in full
+  screen, covers the questions whenever the student leaves full screen, the tab or the
+  window, switches off copying, pasting, the right click, dragging and the shortcuts
+  for the developer tools, printing and going back, and reports each try. The page is
+  the bare `ExamLayout`, because every link on screen is a way out. Exits are counted
+  on the server from the event log, one departure once however many pages report it
+  (`AttemptEvents::away()`): a reload made one leaving count twice until November 2026.
+  A quiz with `max_exits` is submitted for the student at that count.
+- **A proctored page beats every five seconds** with whether it is in full screen and
+  in focus, and hears back the proctor's unread messages, the clock and whether the
+  attempt has ended. The console (`quiz.proctor`) gets changes on `quiz-proctor.{id}`
+  at once (`ProctorUpdate`: stored first, broadcast second) and polls besides. A proctor
+  messages, adds time (an hour at most at once) or ends an attempt, each with a reason
+  through `Auditor`; an ended attempt is marked as it stands, the student is told why,
+  and a resit is the trainer's decision.
+- **Safe Exam Browser is checked on every request of the attempt (X10).** Each carries
+  a SHA-256 of its own full address followed by the configuration key or the browser
+  exam key, compared in `Proctoring::inSafeExamBrowser()` with the keys on the quiz; the
+  settings file reaches SEB by a signed link, because SEB fetches it signed out. The
+  suite can only fake the header, so a final assessment is tried in SEB itself first.
 - **Points are awarded once per reason.** `leaderboard_points` is unique on
   student, source and reason, and `Activity::did()` writes the log and the points
   together so the register, the leaderboard and the student's own history cannot

@@ -37,6 +37,7 @@ use App\Http\Controllers\Admin\OccasionController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\PageCopyController;
 use App\Http\Controllers\Admin\PeopleController;
+use App\Http\Controllers\Admin\ProctoringController;
 use App\Http\Controllers\Admin\ProjectController;
 use App\Http\Controllers\Admin\ProposalController;
 use App\Http\Controllers\Admin\RegistrationFormController;
@@ -487,6 +488,28 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::post('courses/{course:id}/assignments', [AssessmentController::class, 'storeAssignment'])->name('assignments.store');
             Route::put('courses/{course:id}/assignments/{assignment}', [AssessmentController::class, 'updateAssignment'])->name('assignments.update');
             Route::delete('courses/{course:id}/assignments/{assignment}', [AssessmentController::class, 'destroyAssignment'])->name('assignments.destroy');
+
+            // Setting up a proctored quiz (§9.1a): how it is watched, its sittings, Safe Exam Browser.
+            Route::get('proctoring/quizzes/{quiz}', [ProctoringController::class, 'settings'])->whereNumber('quiz')->name('proctoring.settings');
+            Route::put('proctoring/quizzes/{quiz}', [ProctoringController::class, 'updateSettings'])->whereNumber('quiz')->name('proctoring.update');
+            Route::post('proctoring/quizzes/{quiz}/safe-exam-browser', [ProctoringController::class, 'uploadSebFile'])->whereNumber('quiz')->name('proctoring.seb');
+            Route::post('proctoring/quizzes/{quiz}/slots', [ProctoringController::class, 'storeSlot'])->whereNumber('quiz')->name('proctoring.slots.store');
+            Route::delete('proctoring/slots/{slot}', [ProctoringController::class, 'destroySlot'])->whereNumber('slot')->name('proctoring.slots.destroy');
+        });
+
+        /*
+         * Watching a proctored quiz (§9.1a). Its own permission: a proctor sees
+         * and acts on a sitting without being able to change the course.
+         */
+        Route::middleware('permission:quiz.proctor')->group(function () {
+            Route::get('proctoring', [ProctoringController::class, 'index'])->name('proctoring.index');
+            Route::get('proctoring/quizzes/{quiz}/console', [ProctoringController::class, 'console'])->whereNumber('quiz')->name('proctoring.console');
+            Route::get('proctoring/quizzes/{quiz}/console/status', [ProctoringController::class, 'status'])->whereNumber('quiz')->name('proctoring.status');
+            Route::middleware('throttle:60,1,proctor-actions')->group(function () {
+                Route::post('proctoring/attempts/{attempt}/message', [ProctoringController::class, 'message'])->whereNumber('attempt')->name('proctoring.message');
+                Route::post('proctoring/attempts/{attempt}/time', [ProctoringController::class, 'addTime'])->whereNumber('attempt')->name('proctoring.time');
+                Route::post('proctoring/attempts/{attempt}/end', [ProctoringController::class, 'end'])->whereNumber('attempt')->name('proctoring.end');
+            });
         });
 
         /*

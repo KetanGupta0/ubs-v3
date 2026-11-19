@@ -9,9 +9,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Quiz extends Model
 {
+    /**
+     * How a quiz is watched (§9.1a): not at all, in a locked down browser with
+     * staff seeing each student's status live, or that plus the camera, which
+     * needs a video relay (X12).
+     */
+    public const PROCTORING = ['off', 'lockdown', 'live'];
+
     protected $guarded = ['id'];
 
     protected $attributes = [
+        'proctoring' => 'off',
+        'require_seb' => false,
         'attempts_allowed' => 1,
         'pass_percent' => 50,
         'shuffle_questions' => true,
@@ -37,7 +46,39 @@ class Quiz extends Model
             'answers_after_close' => 'boolean',
             'is_published' => 'boolean',
             'pool_size' => 'integer',
+            'max_exits' => 'integer',
+            'require_seb' => 'boolean',
+            'seb_config_keys' => 'array',
+            'seb_exam_keys' => 'array',
         ];
+    }
+
+    public function isProctored(): bool
+    {
+        return in_array($this->proctoring, ['lockdown', 'live'], true);
+    }
+
+    /** When it may be sat, if it is proctored: somebody is watching then. */
+    public function slots(): HasMany
+    {
+        return $this->hasMany(QuizSlot::class)->orderBy('starts_at');
+    }
+
+    /** The sitting open now for somebody on this batch, if there is one. */
+    public function openSlotFor(?int $batchId): ?QuizSlot
+    {
+        return $this->slots()->forBatch($batchId)
+            ->where('starts_at', '<=', now())
+            ->where('ends_at', '>', now())
+            ->reorder('ends_at', 'desc')
+            ->first();
+    }
+
+    /** The sitting open now or coming next for somebody on this batch. */
+    public function nextSlotFor(?int $batchId): ?QuizSlot
+    {
+        return $this->openSlotFor($batchId)
+            ?? $this->slots()->forBatch($batchId)->where('starts_at', '>', now())->first();
     }
 
     /**
@@ -73,7 +114,31 @@ class Quiz extends Model
             'We note when the quiz loses focus or you leave it, when you paste or copy, a change of network or device, and how long you spend on each question.',
             'A person looks at anything unusual. Nothing noted here fails you by itself, and you will hear what was decided and can reply.',
             $this->answers_after_close && $this->show_answers ? 'The answers are shown once the quiz has closed for everybody.' : null,
+            ...$this->proctoringRules(),
         ]));
+    }
+
+    /**
+     * What a proctored quiz adds (§9.1a), said before the start because it is
+     * what the student agrees to.
+     *
+     * @return array<int, string|null>
+     */
+    protected function proctoringRules(): array
+    {
+        if (! $this->isProctored()) {
+            return [];
+        }
+
+        return [
+            'This quiz is proctored. You sit it on a laptop or computer, in full screen, during a scheduled sitting, and a member of staff sees live whether you are in it and answering.',
+            'Copying, pasting, right-clicking and the developer tools are switched off. Leaving full screen or switching away covers the questions until you come back, and every time is logged.',
+            $this->max_exits ? "After leaving {$this->max_exits} ".($this->max_exits === 1 ? 'time' : 'times').', the quiz is submitted with what you have answered.' : null,
+            'The clock does not stop while the questions are covered. Only the proctor can give you more time, for example after your connection drops.',
+            'The proctor may send you a message, which appears over the quiz, and can end the attempt with a reason.',
+            $this->require_seb ? 'It is taken in Safe Exam Browser. An ordinary browser cannot start it.' : null,
+            'Nobody sees your screen or your camera, and nothing is recorded.',
+        ];
     }
 
     public function course(): BelongsTo

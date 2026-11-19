@@ -731,6 +731,23 @@ Both features use the Claude API through the official PHP SDK
   questions taken through the page were always marked wrong. It also found that an empty
   choice in a select ("Every batch", "No prerequisite", "Decide for me") could never be
   picked, so a quiz set for one batch could not be set back to all of them.*
+- *Proctored quizzes, lockdown (§9.1a), built 2026-11-19. A quiz's Proctoring settings,
+  reached from its course's Quizzes page, choose lockdown, after how many departures it
+  is submitted, and Safe Exam Browser with its keys and settings file; its sittings say
+  when it can be started and for which batch. The student reads what is watched and
+  agrees, and Start puts the page in full screen; a phone or tablet is turned away.
+  During the sitting the page is the quiz alone: leaving full screen, the tab or the
+  window covers the questions and is counted, and copying, pasting, the right click and
+  the shortcuts for the developer tools, printing and going back are switched off and
+  noted. Learning → Proctoring lists the sittings; the console shows every student live
+  over the socket, and who has not started; a proctor sends a message that shows over
+  the quiz, gives more time, or ends an attempt with a reason the student is told. Each
+  is audited, and the integrity checks flag what left or was tried.*
+- *Waiting for a video relay (X12): the camera, and with it the guardian consent and
+  the webcam exemption (X4). Choosing "live" is refused until then.*
+- *Safe Exam Browser is checked from its request headers, which the tests fake. It
+  needs one run in Safe Exam Browser itself, on Windows or macOS, before the first
+  final assessment.*
 
 ### 9.1a Proctored quizzes: lockdown and live camera
 

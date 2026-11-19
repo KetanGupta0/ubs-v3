@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Conversation;
+use App\Models\Quiz;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
@@ -32,4 +33,9 @@ Broadcast::channel('conversation.{conversationId}', function (User $user, int $c
         'avatarUrl' => $user->avatar_url,
         'role' => $user->role->value,
     ];
+});
+
+// A proctored quiz's console (§9.1a): the same permission as the page.
+Broadcast::channel('quiz-proctor.{quizId}', function (User $user, int $quizId) {
+    return $user->hasPermission('quiz.proctor') && Quiz::query()->whereKey($quizId)->exists();
 });

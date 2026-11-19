@@ -10,28 +10,90 @@
  * the page reports what only it can see: leaving the quiz, pasting, copying
  * (§9.1). The student was told all of this before starting. None of it is a
  * verdict; a person looks at anything unusual.
+ *
+ * A proctored attempt (§9.1a) is also locked down (`useLockdown`) and sends a
+ * heartbeat every few seconds, which carries back the proctor's messages, any
+ * time they added, and whether the attempt has been ended.
  */
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { AlertTriangle, ArrowLeft, ArrowRight, Clock, MonitorSmartphone, Send } from 'lucide-vue-next';
+import { AlertTriangle, ArrowLeft, ArrowRight, Clock, Eye, MonitorSmartphone, Send, ShieldAlert } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
+import ExamLayout from '@/layouts/ExamLayout.vue';
 import UiBadge from '@/components/UI/UiBadge.vue';
 import UiButton from '@/components/UI/UiButton.vue';
 import UiCard from '@/components/UI/UiCard.vue';
 import UiCheckbox from '@/components/UI/UiCheckbox.vue';
 import UiTextarea from '@/components/UI/UiTextarea.vue';
+import { useLockdown } from '@/composables/useLockdown';
 
 const props = defineProps({
     quiz: { type: Object, required: true },
     attempt: { type: Object, required: true },
     questions: { type: Array, default: () => [] },
     saved: { type: Object, default: () => ({}) },
+    proctoring: { type: Object, default: null },
 });
 
 const base = `/student/quizzes/${props.quiz.id}/attempts/${props.attempt.id}`;
 const form = useForm({ answers: { ...props.saved } });
 const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+/* ------------------------------------------------------ proctored (§9.1a) */
+
+const proctored = Boolean(props.proctoring) && !props.attempt.elsewhere;
+const lockdown = useLockdown({ enabled: proctored, needsFullscreen: !props.proctoring?.inSeb, report, flush: flushEvents });
+const covered = lockdown.covered;
+const exits = ref(props.proctoring?.exits ?? 0);
+const maxExits = props.proctoring?.maxExits ?? null;
+const messages = ref([...(props.proctoring?.messages ?? [])]);
+const dismissed = new Set();
+let finishing = false;
+let moving = false; // to the next question or the result, on purpose
+const Layout = proctored ? ExamLayout : AppLayout;
+
+// Leaving shows at once on the cover; the heartbeat then brings the server's count.
+watch(covered, (now) => now && (exits.value += 1));
+
+const coverTitle = computed(() => ({
+    fullscreen: 'Return to full screen to carry on',
+    tab: 'You left the quiz',
+    window: 'You left the quiz window',
+})[lockdown.why.value] ?? 'You left the quiz');
+
+const exitsLeft = computed(() => (maxExits ? Math.max(0, maxExits - exits.value) : null));
+
+function acknowledge(message) {
+    dismissed.add(message.id);
+    messages.value = messages.value.filter((item) => item.id !== message.id);
+    report({ type: 'message_seen', message: message.id });
+    flushEvents();
+}
+
+/** What the heartbeat heard back: the clock, the count, messages, or the end. */
+function heard(data) {
+    if (data.ended) return finished(data.review);
+
+    if (typeof data.secondsRemaining === 'number' && Math.abs(data.secondsRemaining - (remaining.value ?? 0)) > 2) {
+        remaining.value = data.secondsRemaining;
+    }
+    if (typeof data.exits === 'number') exits.value = data.exits;
+
+    for (const message of data.messages ?? []) {
+        if (!dismissed.has(message.id) && !messages.value.some((item) => item.id === message.id)) messages.value.push(message);
+    }
+}
+
+/** Ended by the proctor, for leaving too often, or the time: out of full screen and to the result. */
+async function finished(review) {
+    if (finishing) return;
+    finishing = true;
+    clearInterval(flusher);
+    clearInterval(ticker);
+    await lockdown.release();
+    router.visit(review);
+}
 
 /* ------------------------------------------------------------ layout */
 
@@ -88,7 +150,10 @@ async function saveNow(questionId) {
         });
 
         // Carried on in another browser since: show that, rather than answer into nothing.
-        if (response.status === 409) router.reload();
+        if (response.status === 409) {
+            moving = true;
+            router.reload();
+        }
     } catch {
         // Kept on the page and sent with the submission anyway.
     }
@@ -126,13 +191,21 @@ function go(delta) {
 function next() {
     const current = props.questions[0];
     clearTimeout(timers[current.id]); // sent now, with the answer
-    router.post(`${base}/next`, { question_id: current.id, response: form.answers[current.id] ?? null, seconds: secondsSinceMark() }, { preserveScroll: false });
+    moving = true;
+    router.post(`${base}/next`, { question_id: current.id, response: form.answers[current.id] ?? null, seconds: secondsSinceMark() }, {
+        preserveScroll: false,
+        onFinish: () => (moving = false),
+    });
 }
 
 function submit() {
     Object.values(timers).forEach(clearTimeout); // the submission carries every answer
     flushEvents(true);
-    form.transform((data) => ({ answers: data.answers })).post(base);
+    moving = true;
+    form.transform((data) => ({ answers: data.answers })).post(base, {
+        onSuccess: () => proctored && lockdown.release(),
+        onFinish: () => (moving = false),
+    });
 }
 
 /* ---------------------------------------- what only the page can see */
@@ -146,16 +219,25 @@ function report(event) {
     if (buffer.length >= 10) flushEvents();
 }
 
-function flushEvents(leaving = false) {
-    if (!buffer.length) return;
+// On a proctored attempt this goes every few seconds, empty or not: it is the
+// heartbeat that tells the proctor the student is still there.
+async function flushEvents(leaving = false) {
+    if (!buffer.length && !proctored) return;
     const events = buffer.splice(0, buffer.length);
-    fetch(`${base}/events`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrf() },
-        credentials: 'same-origin',
-        keepalive: leaving,
-        body: JSON.stringify({ events }),
-    }).catch(() => {});
+
+    try {
+        const response = await fetch(`${base}/events`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': csrf() },
+            credentials: 'same-origin',
+            keepalive: leaving,
+            body: JSON.stringify({ events, state: proctored ? lockdown.state() : null }),
+        });
+
+        if (proctored && !leaving && response.ok) heard(await response.json());
+    } catch {
+        // The next beat tries again.
+    }
 }
 
 function wentAway() {
@@ -178,11 +260,13 @@ const onFocus = () => cameBack();
 const onLeave = () => flushEvents(true);
 
 function onPaste(questionId, event) {
+    if (proctored) return; // switched off, and reported as tried
     const text = event.clipboardData?.getData('text') ?? '';
     report({ type: 'paste', question_id: questionId, length: text.length });
 }
 
 function onCopy(questionId) {
+    if (proctored) return;
     const length = window.getSelection()?.toString().length ?? 0;
     if (length > 0) report({ type: 'copy', question_id: questionId, length });
 }
@@ -198,18 +282,22 @@ function carryOnHere() {
 onMounted(() => {
     if (props.attempt.elsewhere) return;
 
-    document.addEventListener('visibilitychange', onVisibility);
-    window.addEventListener('blur', onBlur);
-    window.addEventListener('focus', onFocus);
+    // Proctored, the lockdown watches leaving, and says why.
+    if (!proctored) {
+        document.addEventListener('visibilitychange', onVisibility);
+        window.addEventListener('blur', onBlur);
+        window.addEventListener('focus', onFocus);
+    }
     window.addEventListener('pagehide', onLeave);
     flusher = setInterval(() => flushEvents(), 5000);
+    if (proctored) flushEvents();
 
     if (remaining.value !== null) {
         ticker = setInterval(() => {
             remaining.value = Math.max(0, remaining.value - 1);
             // Out of time submits what is there. The server would mark it the
             // same way on the next request; doing it here avoids the surprise.
-            if (remaining.value === 0) {
+            if (remaining.value === 0 && !finishing) {
                 clearInterval(ticker);
                 submit();
             }
@@ -224,14 +312,67 @@ onBeforeUnmount(() => {
     window.removeEventListener('pagehide', onLeave);
     clearInterval(flusher);
     clearInterval(ticker);
-    flushEvents(true);
+
+    // Proctored, and the page went without the attempt finishing or moving on:
+    // that is leaving the quiz, whichever way it happened.
+    if (proctored && !finishing && !moving) report({ type: 'focus_lost', why: 'tab' });
+    if (!finishing) flushEvents(true);
 });
 </script>
 
 <template>
     <Head :title="quiz.title" />
 
-    <AppLayout :title="quiz.title">
+    <component :is="Layout" :title="quiz.title">
+        <!-- Proctored: the questions are covered while the student is away (§9.1a). -->
+        <div
+            v-if="proctored && covered"
+            class="fixed inset-0 z-50 flex items-center justify-center p-6"
+            style="background: var(--surface-sunken)"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="cover-title"
+        >
+            <div class="max-w-md text-center">
+                <ShieldAlert class="mx-auto h-10 w-10" style="color: var(--color-warn-500)" />
+                <p id="cover-title" class="mt-4 text-lg font-semibold">{{ coverTitle }}</p>
+                <p class="mt-2 text-sm" style="color: var(--text-muted)">
+                    The questions are covered until you come back. Leaving is logged, the proctor can see it, and the clock keeps running.
+                </p>
+                <p class="mt-3 text-sm font-medium">
+                    Left {{ exits }} {{ exits === 1 ? 'time' : 'times' }}.
+                    <template v-if="exitsLeft === 0">That is as often as this quiz allows, so it is being submitted.</template>
+                    <template v-else-if="exitsLeft !== null">{{ exitsLeft }} more and it is submitted with what you have answered.</template>
+                </p>
+                <UiButton class="mt-6" @click="lockdown.returnToFullscreen()">
+                    {{ lockdown.why.value === 'fullscreen' ? 'Return to full screen' : 'Back to the quiz' }}
+                </UiButton>
+            </div>
+        </div>
+
+        <!-- A message from the proctor shows over everything, until it is read. -->
+        <div
+            v-if="proctored && messages.length"
+            class="fixed inset-x-0 top-4 z-[60] mx-auto w-[min(32rem,calc(100%-2rem))] rounded-[var(--radius-card)] border-2 p-4 shadow-lg"
+            style="background: var(--surface-raised); border-color: var(--color-brand-500)"
+            role="alertdialog"
+            aria-labelledby="proctor-message"
+        >
+            <p class="text-xs font-semibold" style="color: var(--color-brand-500)">Message from the proctor · {{ messages[0].at }}</p>
+            <p id="proctor-message" class="mt-1.5 text-sm" style="color: var(--text-strong)">{{ messages[0].text }}</p>
+            <UiButton class="mt-3" size="sm" @click="acknowledge(messages[0])">OK</UiButton>
+        </div>
+
+        <!-- Something switched off was tried: said, briefly. -->
+        <div
+            v-if="proctored && lockdown.warning.value"
+            class="fixed inset-x-0 bottom-24 z-[55] mx-auto w-fit max-w-[90vw] rounded-full px-4 py-2 text-sm font-medium shadow-lg sm:bottom-8"
+            style="background: var(--surface-inverse); color: var(--text-inverse)"
+            role="status"
+        >
+            {{ lockdown.warning.value }}
+        </div>
+
         <div class="mx-auto max-w-3xl space-y-5">
             <!-- Open in another browser: one place at a time. -->
             <UiCard v-if="attempt.elsewhere">
@@ -254,7 +395,14 @@ onBeforeUnmount(() => {
                     :style="{ borderColor: clock && !running ? 'var(--color-danger-500)' : 'var(--border-subtle)', background: 'var(--surface)' }"
                 >
                     <div class="min-w-0">
-                        <p class="text-sm font-semibold">{{ quiz.title }}</p>
+                        <p class="flex flex-wrap items-center gap-2 text-sm font-semibold">
+                            {{ quiz.title }}
+                            <UiBadge v-if="proctored" tone="brand" size="sm" :title="'A member of staff can see whether you are in the quiz and answering. Not your screen, not your camera, and nothing is recorded.'">
+                                <Eye class="mr-1 h-3 w-3" aria-hidden="true" />
+                                Proctored
+                            </UiBadge>
+                            <UiBadge v-if="proctored && exits" tone="warning" size="sm">Left {{ exits }}{{ maxExits ? ` of ${maxExits}` : '' }}</UiBadge>
+                        </p>
                         <p class="text-xs" style="color: var(--text-muted)">
                             Attempt {{ attempt.number }} ·
                             <template v-if="quiz.oneAtATime">question {{ locked ? attempt.currentIndex + 1 : step + 1 }} of {{ attempt.total }}</template>
@@ -379,5 +527,5 @@ onBeforeUnmount(() => {
                 </form>
             </template>
         </div>
-    </AppLayout>
+    </component>
 </template>

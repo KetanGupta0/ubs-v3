@@ -7,16 +7,20 @@ use App\Models\Quiz;
 use App\Models\QuizAnswer;
 use App\Models\QuizAttempt;
 use App\Services\Lms\AttemptEvents;
+use App\Services\Lms\Proctoring;
 use App\Services\Lms\QuizGrader;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cookie;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Sitting a quiz.
@@ -26,12 +30,20 @@ use RuntimeException;
  * living only in the browser is a timer the browser can stop.
  *
  * The correct answers never reach the client while an attempt is open.
+ *
+ * A proctored quiz (§9.1a) adds its own rules through `Proctoring`: a sitting
+ * open for the student's batch, their agreement, a laptop or computer, and Safe
+ * Exam Browser on every request where the quiz requires it.
  */
 class QuizController extends StudentController
 {
     protected const DEVICE_COOKIE = 'quiz_device';
 
     protected const ELSEWHERE = 'This attempt carried on in another browser.';
+
+    protected const NEEDS_SEB = 'This quiz is taken in Safe Exam Browser. Open it from there.';
+
+    public function __construct(protected Proctoring $proctoring) {}
 
     public function show(Request $request, int $quiz): Response
     {
@@ -63,6 +75,7 @@ class QuizController extends StudentController
                 'showAnswers' => $record->show_answers,
                 'rules' => $record->rulesForStudents(),
             ],
+            'proctoring' => $record->isProctored() ? $this->proctoringFor($request, $record) : null,
             'openAttemptId' => $open?->id,
             'attempts' => $attempts->whereNotNull('submitted_at')->values()->map(fn (QuizAttempt $attempt) => [
                 'id' => $attempt->id,
@@ -91,8 +104,21 @@ class QuizController extends StudentController
             return redirect()->route('student.quizzes.attempt', [$quiz, $open->id]);
         }
 
+        if ($record->isProctored()) {
+            if ($reason = $this->proctoring->refusal($record, $enrolment, $request)) {
+                return back()->withErrors(['quiz' => $reason]);
+            }
+
+            // What they are agreeing to was on the page above the button.
+            $this->validatedInput($request, ['agree' => ['accepted']], [
+                'agree.accepted' => 'Tick that you have read how this quiz is proctored, to start.',
+            ]);
+        }
+
         try {
-            $attempt = $grader->start($record, $this->student($request), $enrolment->batch_id, $this->device($request), $request->ip());
+            $attempt = $record->isProctored()
+                ? $this->proctoring->begin($record, $this->student($request), $enrolment, $this->device($request), $request->ip())
+                : $grader->start($record, $this->student($request), $enrolment->batch_id, $this->device($request), $request->ip());
         } catch (RuntimeException $e) {
             return back()->withErrors(['quiz' => $e->getMessage()]);
         }
@@ -107,6 +133,10 @@ class QuizController extends StudentController
 
         if (! $open->isOpen()) {
             return redirect()->route('student.quizzes.review', [$quiz, $open->id]);
+        }
+
+        if ($this->sebMissing($request, $record, $open)) {
+            return redirect()->route('student.quizzes.show', $quiz)->with('error', self::NEEDS_SEB);
         }
 
         $paper = $open->paper();
@@ -146,6 +176,15 @@ class QuizController extends StudentController
                 'total' => $paper->count(),
                 'elsewhere' => $elsewhere,
             ],
+            // How this attempt is watched, fixed when it started (§9.1a).
+            'proctoring' => $open->isProctored() ? [
+                'mode' => $open->proctoring,
+                'maxExits' => $record->max_exits,
+                // Safe Exam Browser keeps the window full screen by itself.
+                'inSeb' => (bool) $record->require_seb,
+                'exits' => $open->events()->where('type', 'focus_lost')->count(),
+                'messages' => $elsewhere ? [] : $this->proctoring->unreadMessages($open),
+            ] : null,
             'questions' => $elsewhere ? [] : $shown->map(fn (Question $question) => $question->forAttempt($open->optionOrderFor($question)))->values(),
             'saved' => $elsewhere ? (object) [] : (object) $saved->all(),
         ]);
@@ -157,8 +196,18 @@ class QuizController extends StudentController
         $record = $this->readable($request, $quiz);
         $open = $this->ownAttempt($request, $record, $attempt);
 
+        if ($this->sebMissing($request, $record, $open)) {
+            return redirect()->route('student.quizzes.show', $quiz)->with('error', self::NEEDS_SEB);
+        }
+
+        // A proctored quiz moves to another computer, never to a phone.
+        if ($open->isProctored() && $this->proctoring->looksLikePhone($request)) {
+            return back()->with('error', 'This quiz is sat on a laptop or computer, not on a phone or tablet.');
+        }
+
         if ($open->isOpen()) {
             $events->notice($open, $request->ip(), $this->device($request));
+            $this->proctoring->announce($open);
         }
 
         return redirect()->route('student.quizzes.attempt', [$quiz, $open->id]);
@@ -171,6 +220,10 @@ class QuizController extends StudentController
         $open = $this->ownAttempt($request, $record, $attempt);
         $validated = $this->answerInput($request);
 
+        if ($this->sebMissing($request, $record, $open)) {
+            return response()->json(['message' => self::NEEDS_SEB], 403);
+        }
+
         if (! $this->inThisBrowser($request, $open)) {
             return response()->json(['message' => self::ELSEWHERE], 409);
         }
@@ -181,6 +234,8 @@ class QuizController extends StudentController
             return response()->json(['message' => $e->getMessage()], 422);
         }
 
+        $this->proctoring->announce($open);
+
         return response()->json(['saved' => true]);
     }
 
@@ -190,6 +245,10 @@ class QuizController extends StudentController
         $record = $this->readable($request, $quiz);
         $open = $this->ownAttempt($request, $record, $attempt);
         $validated = $this->answerInput($request);
+
+        if ($this->sebMissing($request, $record, $open)) {
+            return redirect()->route('student.quizzes.show', $quiz)->with('error', self::NEEDS_SEB);
+        }
 
         if (! $this->inThisBrowser($request, $open)) {
             return redirect()->route('student.quizzes.attempt', [$quiz, $open->id])->with('error', self::ELSEWHERE);
@@ -202,27 +261,62 @@ class QuizController extends StudentController
         }
 
         $grader->advance($open);
+        $this->proctoring->announce($open);
 
         return redirect()->route('student.quizzes.attempt', [$quiz, $open->id]);
     }
 
-    /** What the browser saw: leaving the quiz, pasting, copying (§9.1, layer 2). */
+    /**
+     * What the browser saw: leaving the quiz, pasting, copying (§9.1, layer 2).
+     * On a proctored attempt this is also its heartbeat: it says whether the
+     * page is in full screen and in focus, and hears back the proctor's
+     * messages, the clock, and whether the attempt has been ended.
+     */
     public function events(Request $request, int $quiz, int $attempt, AttemptEvents $events): JsonResponse
     {
         $record = $this->readable($request, $quiz);
         $open = $this->ownAttempt($request, $record, $attempt);
 
-        $validated = $this->validatedInput($request, ['events' => ['required', 'array', 'max:'.AttemptEvents::PER_REPORT]]);
+        $validated = $this->validatedInput($request, [
+            'events' => ['present', 'array', 'max:'.AttemptEvents::PER_REPORT],
+            'state' => ['nullable', 'array'],
+        ]);
 
-        $kept = $open->isOpen() && $this->inThisBrowser($request, $open) ? $events->fromBrowser($open, $validated['events'], $request->ip()) : 0;
+        if ($this->sebMissing($request, $record, $open)) {
+            return response()->json(['message' => self::NEEDS_SEB], 403);
+        }
 
-        return response()->json(['kept' => $kept]);
+        $here = $open->isOpen() && $this->inThisBrowser($request, $open);
+        $kept = $here ? $events->fromBrowser($open, $validated['events'] ?? [], $request->ip()) : 0;
+
+        if ($here && $open->isProctored()) {
+            $changed = $this->proctoring->heard($open, $validated['state'] ?? [], $kept);
+
+            if (! $this->proctoring->enforceExits($open) && $changed) {
+                $this->proctoring->announce($open);
+            }
+        }
+
+        $open->refresh();
+
+        return response()->json([
+            'kept' => $kept,
+            'ended' => ! $open->isOpen(),
+            'review' => route('student.quizzes.review', [$quiz, $open->id], false),
+            'secondsRemaining' => $open->secondsRemaining(),
+            'exits' => $open->isProctored() ? $open->events()->where('type', 'focus_lost')->count() : null,
+            'messages' => $here && $open->isProctored() ? $this->proctoring->unreadMessages($open) : [],
+        ]);
     }
 
     public function submit(Request $request, int $quiz, int $attempt, QuizGrader $grader): RedirectResponse
     {
         $record = $this->readable($request, $quiz);
         $open = $this->ownAttempt($request, $record, $attempt);
+
+        if ($open->isOpen() && $this->sebMissing($request, $record, $open)) {
+            return redirect()->route('student.quizzes.show', $quiz)->with('error', self::NEEDS_SEB);
+        }
 
         // Carried on in another browser: submitted from there, not from here.
         if ($open->isOpen() && ! $this->inThisBrowser($request, $open)) {
@@ -234,6 +328,7 @@ class QuizController extends StudentController
         ]);
 
         $grader->submit($open, $validated['answers'] ?? []);
+        $this->proctoring->announce($open->fresh());
 
         return redirect()
             ->route('student.quizzes.review', [$quiz, $open->id])
@@ -269,6 +364,9 @@ class QuizController extends StudentController
                 'passed' => $done->passed,
                 'needsReview' => $done->needs_review,
                 'at' => $done->submitted_at->format('j M Y, g:i a'),
+                // Ended by the proctor, or for leaving too often: said plainly.
+                'endedReason' => $done->ended_reason,
+                'endedByProctor' => $done->ended_by !== null,
             ],
             // Answers, and the key, only once the attempt is closed, only if the
             // quiz was set to show them, and, where it waits for everybody, only
@@ -292,6 +390,56 @@ class QuizController extends StudentController
                 ])
                 : [],
         ]);
+    }
+
+    /**
+     * The settings file that opens this quiz in Safe Exam Browser (X10). The
+     * browser fetches it on its own, signed out, so the link is signed instead
+     * and lasts a few hours; the file holds settings, never anybody's details.
+     */
+    public function safeExamBrowserFile(int $quiz): StreamedResponse
+    {
+        $record = Quiz::query()->published()->where('require_seb', true)->whereNotNull('seb_config_path')->findOrFail($quiz);
+
+        abort_unless(Storage::disk('local')->exists($record->seb_config_path), 404);
+
+        return Storage::disk('local')->download($record->seb_config_path, Str::slug($record->title).'.seb', [
+            'Content-Type' => 'application/seb',
+        ]);
+    }
+
+    /**
+     * What the quiz page says about a proctored quiz: the sitting, whether it
+     * can be started from here and why not, and Safe Exam Browser.
+     *
+     * @return array<string, mixed>
+     */
+    protected function proctoringFor(Request $request, Quiz $quiz): array
+    {
+        $enrolment = $this->enrolment($request, $quiz->course_id);
+        $slot = $quiz->nextSlotFor($enrolment->batch_id);
+        $launch = null;
+
+        if ($quiz->require_seb && $quiz->seb_config_path) {
+            $signed = URL::temporarySignedRoute('quizzes.safe-exam-browser', now()->addHours(6), ['quiz' => $quiz->id]);
+            $launch = preg_replace('#^http(s?)://#', 'seb$1://', $signed);
+        }
+
+        return [
+            'mode' => $quiz->proctoring,
+            'maxExits' => $quiz->max_exits,
+            'slot' => $slot ? ['window' => $slot->window(), 'open' => $slot->isOpen(), 'note' => $slot->note] : null,
+            'refusal' => $this->proctoring->refusal($quiz, $enrolment, $request),
+            'requireSeb' => $quiz->require_seb,
+            'inSeb' => $quiz->require_seb && $this->proctoring->inSafeExamBrowser($quiz, $request),
+            'sebLaunchUrl' => $launch,
+        ];
+    }
+
+    /** Safe Exam Browser is required for this attempt's quiz and this request is not from it. */
+    protected function sebMissing(Request $request, Quiz $quiz, QuizAttempt $attempt): bool
+    {
+        return $attempt->isProctored() && $quiz->require_seb && ! $this->proctoring->inSafeExamBrowser($quiz, $request);
     }
 
     /** The answers in the order the paper was set, which is the order the student saw. */

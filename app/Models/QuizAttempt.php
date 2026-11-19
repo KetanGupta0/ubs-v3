@@ -23,11 +23,30 @@ class QuizAttempt extends Model
             'passed' => 'boolean',
             'needs_review' => 'boolean',
             'question_ids' => 'array',
+            'consented_at' => 'datetime',
+            'seen_at' => 'datetime',
+            'live_state' => 'array',
             'option_orders' => 'array',
             'current_index' => 'integer',
             'flags' => 'array',
             'flagged_at' => 'datetime',
         ];
+    }
+
+    /** The sitting a proctored attempt was started in. */
+    public function slot(): BelongsTo
+    {
+        return $this->belongsTo(QuizSlot::class, 'quiz_slot_id');
+    }
+
+    public function endedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'ended_by');
+    }
+
+    public function isProctored(): bool
+    {
+        return in_array($this->proctoring, ['lockdown', 'live'], true);
     }
 
     public function events(): HasMany

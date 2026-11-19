@@ -23,7 +23,7 @@ import {
     BookOpen, Award, Users, Briefcase, Megaphone, Settings, BarChart3, Inbox,
     UserPlus, Package, ShieldCheck, Building2, Wrench, HelpCircle, UserCog,
     ScrollText, FileSignature, Files, LifeBuoy as LifeBuoyIcon, Banknote,
-    ShieldAlert, ClipboardPen, NotebookPen, MessageCircleQuestion, BellRing, TrendingUp, Flag,
+    ShieldAlert, ClipboardPen, NotebookPen, MessageCircleQuestion, BellRing, TrendingUp, Flag, MonitorCheck,
 } from 'lucide-vue-next';
 
 export const navigation = {
@@ -62,6 +62,7 @@ export const navigation = {
         { group: 'Learning', label: 'Registration forms', icon: ClipboardPen, href: '/admin/registration-forms', permission: 'students.view' },
         { group: 'Learning', label: 'Classes', icon: Video, href: '/admin/classes?filter[when]=upcoming', permission: 'students.view' },
         { group: 'Learning', label: 'Marking', icon: ClipboardList, href: '/admin/marking', permission: 'students.view' },
+        { group: 'Learning', label: 'Proctoring', icon: MonitorCheck, href: '/admin/proctoring', permission: 'quiz.proctor' },
         { group: 'Learning', label: 'Questions', icon: MessageCircleQuestion, href: '/admin/doubts?filter[status]=open', permission: 'lms.doubts' },
         { group: 'Learning', label: 'Reviews', icon: Star, href: '/admin/reviews?filter[status]=pending', permission: 'catalogue.view' },
         { group: 'Learning', label: 'Certificate designs', icon: Award, href: '/admin/certificate-templates', permission: 'catalogue.manage' },

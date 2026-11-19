@@ -28,6 +28,7 @@ class PermissionSeeder extends Seeder
                 'students.create' => 'Create student accounts',
                 'students.update' => 'Edit students',
                 'lms.doubts' => 'Answer students\' questions on lessons',
+                'quiz.proctor' => 'Watch proctored quizzes live: message a student, give more time, end an attempt',
             ],
             'Support access' => [
                 'people.view_as' => 'See the platform as a student or client, read only',
