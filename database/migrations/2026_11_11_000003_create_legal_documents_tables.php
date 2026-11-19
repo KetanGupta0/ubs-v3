@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('status', 20)->default('draft');
             $table->string('intro', 500)->nullable();
             $table->mediumText('body');
-            $table->string('change_note', 300)->nullable();
+            $table->longText('change_note')->nullable();
             $table->timestamp('published_at')->nullable();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();
