@@ -90,6 +90,34 @@ it('ignores a mark for somebody who is not on the batch', function () {
     expect(Attendance::query()->where('user_id', $stranger->id)->count())->toBe(0);
 });
 
+it('shows the register of a finished batch with the marks it holds', function () {
+    $held = liveClass();
+    $this->enrolment->update(['status' => 'completed']);
+
+    $dropped = User::factory()->student()->create(['name' => 'Dropped and marked']);
+    $droppedUnmarked = User::factory()->student()->create(['name' => 'Dropped, never marked']);
+    $moved = User::factory()->student()->create(['name' => 'Moved elsewhere']);
+
+    foreach ([$dropped, $droppedUnmarked] as $user) {
+        Enrollment::query()->create(['user_id' => $user->id, 'course_id' => $this->course->id, 'batch_id' => $this->batch->id, 'status' => 'dropped', 'enrolled_at' => now()->subWeeks(2)]);
+    }
+
+    foreach ([$this->student, $dropped, $moved] as $user) {
+        Attendance::query()->create(['live_session_id' => $held->id, 'user_id' => $user->id, 'status' => 'present']);
+    }
+
+    $rows = collect($this->actingAs($this->owner)
+        ->get("/admin/batches/{$this->batch->id}/sessions/{$held->id}/register")
+        ->assertOk()
+        ->viewData('page')['props']['rows'])->keyBy('userId');
+
+    expect($rows->keys()->sort()->values()->all())->toBe(collect([$this->student->id, $dropped->id, $moved->id])->sort()->values()->all())
+        ->and($rows[$this->student->id]['enrolment'])->toBe('completed')
+        ->and($rows[$dropped->id]['enrolment'])->toBe('dropped')
+        ->and($rows[$moved->id]['enrolment'])->toBeNull()
+        ->and($rows->pluck('status')->unique()->values()->all())->toBe(['present']);
+});
+
 it('holds a certificate back when attendance is below the course minimum', function () {
     $held = collect(range(1, 4))->map(fn (int $day) => liveClass($day));
 

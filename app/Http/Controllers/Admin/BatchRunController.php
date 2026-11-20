@@ -235,12 +235,43 @@ class BatchRunController extends Controller
     {
         abort_unless($session->batch_id === $batch->id, 404);
 
-        $enrolments = $batch->enrollments()->active()->with('user:id,name,email')->get();
-
         $marks = Attendance::query()
             ->where('live_session_id', $session->id)
+            ->with('user:id,name,email')
             ->get()
             ->keyBy('user_id');
+
+        // Everybody the class was for, not only who is studying today: once a
+        // batch finishes its students are "completed", and until November 2026
+        // that left every register of a finished batch empty, with the marks
+        // still stored behind it. A dropped student is listed where they have a
+        // mark; somebody marked who has no place on the batch at all (v2 kept
+        // marks after moving a student) is shown as such and cannot be marked.
+        $enrolments = $batch->enrollments()
+            ->where(fn ($query) => $query->where('status', '!=', 'dropped')->orWhereIn('user_id', $marks->keys()))
+            ->with('user:id,name,email')
+            ->get()
+            ->unique('user_id');
+
+        $rows = $enrolments->map(fn (Enrollment $enrolment) => [
+            'userId' => $enrolment->user_id,
+            'name' => $enrolment->user->name,
+            'email' => $enrolment->user->email,
+            'enrolment' => $enrolment->status,
+            'status' => $marks[$enrolment->user_id]->status ?? 'absent',
+            'note' => $marks[$enrolment->user_id]->note ?? null,
+            'nextWarningLevel' => StudentWarning::nextLevelFor($enrolment->user_id, $batch->id),
+        ])->concat(
+            $marks->toBase()->diffKeys($enrolments->keyBy('user_id'))->filter(fn (Attendance $mark) => $mark->user)->map(fn (Attendance $mark) => [
+                'userId' => $mark->user_id,
+                'name' => $mark->user->name,
+                'email' => $mark->user->email,
+                'enrolment' => null,
+                'status' => $mark->status,
+                'note' => $mark->note,
+                'nextWarningLevel' => 'notice',
+            ]),
+        );
 
         return Inertia::render('admin/batches/Register', [
             'batch' => ['id' => $batch->id, 'name' => $batch->name, 'course' => $batch->course?->title],
@@ -251,14 +282,7 @@ class BatchRunController extends Controller
                 'duration' => $session->duration_minutes,
                 'recordingUrl' => $session->recording_url,
             ],
-            'rows' => $enrolments->map(fn (Enrollment $enrolment) => [
-                'userId' => $enrolment->user_id,
-                'name' => $enrolment->user->name,
-                'email' => $enrolment->user->email,
-                'status' => $marks[$enrolment->user_id]->status ?? 'absent',
-                'note' => $marks[$enrolment->user_id]->note ?? null,
-                'nextWarningLevel' => StudentWarning::nextLevelFor($enrolment->user_id, $batch->id),
-            ])->sortBy('name')->values(),
+            'rows' => $rows->sortBy('name')->values(),
             'statuses' => Attendance::STATUSES,
         ]);
     }

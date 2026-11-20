@@ -40,6 +40,8 @@ const labels = {
     excused: { label: 'Excused', icon: ShieldQuestion, tone: 'neutral' },
 };
 
+const enrolmentLabels = { completed: 'completed', dropped: 'dropped', on_hold: 'on hold' };
+
 const noting = ref(null);
 
 const counts = computed(() =>
@@ -47,7 +49,9 @@ const counts = computed(() =>
 );
 
 function setAll(status) {
-    form.marks.forEach((mark) => { mark.status = status; });
+    form.marks.forEach((mark, index) => {
+        if (props.rows[index].enrolment !== null) mark.status = status;
+    });
 }
 
 function save() {
@@ -96,6 +100,12 @@ function save() {
                             <span class="min-w-0 flex-1">
                                 <span class="flex flex-wrap items-center gap-2">
                                     <span class="text-sm font-medium">{{ rows[index].name }}</span>
+                                    <UiBadge v-if="rows[index].enrolment === null" tone="neutral" size="sm">
+                                        not on this batch
+                                    </UiBadge>
+                                    <UiBadge v-else-if="rows[index].enrolment !== 'active'" tone="neutral" size="sm">
+                                        {{ enrolmentLabels[rows[index].enrolment] ?? rows[index].enrolment }}
+                                    </UiBadge>
                                     <UiBadge
                                         v-if="rows[index].nextWarningLevel !== 'notice'"
                                         tone="warning"
@@ -121,6 +131,8 @@ function save() {
                                         color: mark.status === status ? 'var(--text-strong)' : 'var(--text-muted)',
                                     }"
                                     :aria-pressed="mark.status === status"
+                                    :disabled="rows[index].enrolment === null"
+                                    :class="rows[index].enrolment === null ? 'cursor-not-allowed opacity-60' : ''"
                                     @click="mark.status = status"
                                 >
                                     <component :is="labels[status].icon" class="h-3 w-3" />
