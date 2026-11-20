@@ -285,7 +285,9 @@ Rules for the marketing pages:
   `hasPermission()` checks, and it is deliberately not fillable. Every other
   administrator, staff included, holds exactly what is in `permission_user`, so
   `permission:` middleware actually bites. Staff cannot widen their own
-  permissions and cannot restrict or suspend the owner.
+  permissions and cannot restrict or suspend the owner. The owner is named from the
+  shell with `php artisan app:owner {email}` (`--replace` hands it over), audited; no
+  screen sets it.
 - **Creating an account is `App\Services\Admin\AccountCreator`.** It sets a
   temporary password, forces a change before anything else opens, and records a
   `credential_deliveries` row per channel. A delivery failure marks the row failed

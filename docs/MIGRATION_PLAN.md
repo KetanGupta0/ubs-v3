@@ -503,9 +503,14 @@ QR code points.
    php artisan legacy:import --dry-run --generation-one=/private/gen1.txt --course-map=/private/course-map.json --storage=/private/v2-storage
    php artisan legacy:import --generation-one=/private/gen1.txt --course-map=/private/course-map.json --storage=/private/v2-storage
    php artisan legacy:reconcile
+   php artisan app:owner <the owner's own staff address>
    php artisan app:preflight
    ```
    Stop if `legacy:reconcile` or `app:preflight` fails. Nothing is visible to anybody yet.
+   v2's administrators arrive with no permissions, so until `app:owner` names one, nobody
+   can open more than the dashboard (the rehearsal of 2026-11-20 met exactly that). It
+   refuses anybody who is not an active administrator, and a second owner without
+   `--replace`, and it is audited.
 4. Point Razorpay's webhook at v3; fetch payments captured during the window from the Razorpay
    dashboard and record them by hand (offline payment), which opens the course as any payment does.
 5. Connect `unboundbytesolution.com` to v3 in hPanel (v2's site gives the domain up first);
