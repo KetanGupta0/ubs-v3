@@ -6,6 +6,7 @@ use App\Models\Batch;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\LiveSession;
+use App\Services\Lms\Performance;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\LegacyDatabase;
 
@@ -123,7 +124,7 @@ it('brings classes and attendance across as present, and invents no absences', f
 
     importAll($this);
 
-    expect(LiveSession::query()->where('title', 'Week 1')->sole()->status)->toBe('completed')
+    expect(LiveSession::query()->where('title', 'Week 1')->sole()->status)->toBe('held')
         ->and(LiveSession::query()->where('title', 'Cancelled')->sole()->status)->toBe('cancelled')
         ->and(LiveSession::query()->where('title', 'Next week')->sole()->status)->toBe('scheduled')
         ->and(LiveSession::query()->where('title', 'Week 1')->sole()->meet_link)->toBe('https://meet.google.com/abc-defg-hij');
@@ -132,6 +133,20 @@ it('brings classes and attendance across as present, and invents no absences', f
     expect($attendance->status)->toBe('present')
         ->and($attendance->note)->toBe('Marked by hand on the old site')
         ->and(Attendance::query()->where('status', 'absent')->count())->toBe(0);
+
+    // The performance pages and the batch view count held classes, so an
+    // imported past class has to be one of them.
+    expect(app(Performance::class)->heldCount(Batch::query()->sole()))->toBe(1);
+});
+
+it('turns classes an earlier import left as "completed" into held ones', function () {
+    LegacyDatabase::insert('live_classes', ['batch_id' => $this->batch, 'title' => 'Week 1', 'join_url' => 'https://meet.google.com/a', 'scheduled_at' => now()->subWeek()]);
+    importAll($this);
+    LiveSession::query()->where('title', 'Week 1')->update(['status' => 'completed']);
+
+    (require database_path('migrations/2026_11_20_000001_mark_imported_classes_held.php'))->up();
+
+    expect(LiveSession::query()->where('title', 'Week 1')->sole()->status)->toBe('held');
 });
 
 it('runs the whole chain again without a single duplicate', function () {

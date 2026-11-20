@@ -9,7 +9,10 @@ use Illuminate\Support\Carbon;
 
 /**
  * v2 live classes → v3 live sessions. A cancelled class stays cancelled, a
- * past one is completed, and anything still ahead keeps its join link.
+ * past one is held, and anything still ahead keeps its join link. A session's
+ * statuses are scheduled, held and cancelled: until November 2026 a past class
+ * came across as "completed", which nothing in v3 counts, so every imported
+ * class was missing from the performance pages and the batch's attendance.
  */
 class SessionsStep extends Step
 {
@@ -62,7 +65,7 @@ class SessionsStep extends Step
                 'recording_url' => $row->recording_url,
                 'status' => match (true) {
                     (bool) $row->is_cancelled => 'cancelled',
-                    $at->copy()->addMinutes((int) ($row->duration_minutes ?: 60))->isPast() => 'completed',
+                    $at->copy()->addMinutes((int) ($row->duration_minutes ?: 60))->isPast() => 'held',
                     default => 'scheduled',
                 },
             ])->save();
