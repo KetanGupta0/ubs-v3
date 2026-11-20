@@ -76,7 +76,7 @@
 </div>
 
 <div class="verify">
-    Verify at {{ url('/verify') }} with the code
+    Verify at {{ \App\Support\Printed::url('/verify') }} with the code
     <span class="code">{{ $document->verification_code }}</span>.
 </div>
 </body>

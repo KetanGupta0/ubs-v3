@@ -396,6 +396,22 @@ Run after every import, printed and saved:
 
 ### Before the day (each a must)
 
+*Updated 2026-11-20:* v3 runs on a temporary Hostinger domain until the day; the permanent
+address is **https://unboundbytesolution.com**, where v2 runs now and where every printed
+QR code points.
+
+0. **`PRINTED_URL=https://unboundbytesolution.com` in v3's `.env`** before any certificate or
+   internship letter is issued or downloaded there, so what is printed carries the address
+   that stays (`app:preflight` warns while it is missing on a temporary domain).
+   **Rehearse with `--dry-run` only on the temporary site.** A real import there would make
+   real students' accounts on a second live site: `lms:remind` would start sending class and
+   deadline reminders from it while v2 still runs, a v2 password changed after the import
+   would not follow (a password is set only when an account is created), and a record removed
+   from v2 afterwards would stay. The real import is on the day, with v2 frozen. A full
+   rehearsal, with a real import and `legacy:reconcile`, belongs on a separate staging copy,
+   or on the temporary site with its cron entry off and its database exported first and
+   restored afterwards.
+
 1. **Mail set up (X15, decided 2026-11-19: Hostinger's own).** Set the plan's daily limit
    and the part kept for service mail under Settings, Mail, and send one test from
    Settings → Messages. A bulk credential send keeps inside the day's limit: what does not
@@ -442,7 +458,9 @@ Run after every import, printed and saved:
    Stop if `legacy:reconcile` or `app:preflight` fails. Nothing is visible to anybody yet.
 4. Point Razorpay's webhook at v3; fetch payments captured during the window from the Razorpay
    dashboard and record them by hand (offline payment), which opens the course as any payment does.
-5. Switch DNS / document root to v3. Old addresses are handled by v3 itself (`redirects` table,
+5. Connect `unboundbytesolution.com` to v3 in hPanel (v2's site gives the domain up first);
+   set `APP_URL=https://unboundbytesolution.com` and run `php artisan config:clear`.
+   Switch DNS / document root to v3. Old addresses are handled by v3 itself (`redirects` table,
    consulted only where v3 would answer 404): `/privacy-policy`, `/terms`, `/refund-policy`,
    every mapped `/training/{old-slug}`, and `/enroll/{slug}` → `/enrol/{slug}`. `/verify/{token}`
    answers v2's QR tokens directly. `/pages/{slug}` is the same path in both.

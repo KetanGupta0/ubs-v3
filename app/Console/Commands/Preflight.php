@@ -6,6 +6,7 @@ use App\Models\LegalDocument;
 use App\Models\Permission;
 use App\Services\Mail\MailBudget;
 use App\Support\Monitoring\Health;
+use App\Support\Printed;
 use Database\Seeders\PermissionSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Database\Migrations\Migrator;
@@ -39,6 +40,17 @@ class Preflight extends Command
         $this->check('The site address is HTTPS', str_starts_with((string) config('app.url'), 'https://'), 'APP_URL is '.config('app.url').'; links in mail and signed links use it.');
         $this->check('Cookies are sent over HTTPS only', (bool) config('session.secure'), 'Set SESSION_SECURE_COOKIE=true.', warnOnly: ! $production);
         $this->check('The time zone is India', config('app.timezone') === 'Asia/Kolkata', 'APP_TIMEZONE is '.config('app.timezone').'; class times and invoice dates would be out.');
+
+        // A certificate's QR code and "verify at" line can never be corrected once printed.
+        $printed = (string) config('company.printed_url');
+        $this->check('Documents print a full HTTPS address', $printed === '' || (str_starts_with($printed, 'https://') && filter_var($printed, FILTER_VALIDATE_URL)), 'PRINTED_URL is '.$printed.'; it must be the full https:// address certificates will carry.');
+        $this->check(
+            'Certificates print the permanent address',
+            $printed !== '' || ! Printed::isTemporary((string) config('app.url')),
+            'The site is on a temporary address; set PRINTED_URL to the domain it will keep before issuing a certificate, or its QR code points here for good.',
+            warnOnly: true,
+            pass: $printed !== '' ? 'Printed as '.$printed : null,
+        );
 
         // ---------------------------------------------------------- the host
         $this->check('PHP is 8.4 or later', version_compare(PHP_VERSION, '8.4.0', '>='), 'Running '.PHP_VERSION.'; select 8.4 in hPanel.');

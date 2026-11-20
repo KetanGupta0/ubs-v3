@@ -11,7 +11,7 @@ checked against this document on every test run.
 
 ## The rules that do not change
 
-- **Everything is under `/api/v1`.** Production is `https://unboundbyte.com/api/v1`.
+- **Everything is under `/api/v1`.** Production is `https://unboundbytesolution.com/api/v1`.
 - **Within v1, a field is only ever added.** Nothing is renamed, retyped or removed, and
   a new endpoint never changes an old one. Ignore fields you do not know. A change that
   would break an app is `/api/v2`, and v1 keeps running beside it until the apps have

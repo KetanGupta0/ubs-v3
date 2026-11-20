@@ -10,6 +10,7 @@ use App\Models\MentorReview;
 use App\Models\Setting;
 use App\Models\Submission;
 use App\Models\User;
+use App\Support\Printed;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
 use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
@@ -111,7 +112,7 @@ class Credentials
 
     protected function certificatePdf(Certificate $certificate, ?CertificateTemplate $template): string
     {
-        $verifyUrl = url('/verify/'.$certificate->verification_code);
+        $verifyUrl = Printed::url('/verify/'.$certificate->verification_code);
         $company = $this->company();
 
         // The premium layouts bring their own typefaces, and dompdf keeps what
@@ -168,7 +169,7 @@ class Credentials
             'signatoryTitle' => $template?->signatory_title ?? $company['trading'],
             'number' => $certificate->number,
             'code' => $certificate->verification_code,
-            'verifyAt' => preg_replace('~^https?://~', '', url('/verify')),
+            'verifyAt' => preg_replace('~^https?://~', '', Printed::url('/verify')),
         ];
     }
 

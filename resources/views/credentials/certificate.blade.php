@@ -89,7 +89,7 @@
                     @if($qr)
                         <img class="qr" src="{{ $qr }}" alt=""><br>
                     @endif
-                    Verify at {{ url('/verify') }}<br>
+                    Verify at {{ \App\Support\Printed::url('/verify') }}<br>
                     <span class="code">{{ $certificate->verification_code }}</span>
                 </td>
                 <td style="width: 34%; text-align: right">

@@ -724,6 +724,12 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   somebody turns one on. A layout that paints the page fills all 210 mm with a `fixed`
   box outside the 208 mm sheet. The pictures on the form come from
   `php resources/certificates/render-thumbnails.php`; run it after changing a layout.
+- **Anything printed carries the permanent address.** Certificates and internship letters
+  put `App\Support\Printed::url()` in their QR code and "verify at" line:
+  `company.printed_url` (`PRINTED_URL`, `https://unboundbytesolution.com`) when set, else
+  the address the site is reached at. Set it while the site runs on a temporary domain, or
+  everything printed there points at it for good; `app:preflight` warns. A PDF view never
+  writes `url('/verify')` itself, and `PrintedAddressTest` fails one that does.
 - **PDF layouts are written for dompdf, not for a browser.** It ignores `inset`,
   mishandles `bottom`, and a box exactly as tall as the page spills onto a second
   one. Until November 2026 that left every certificate with an open border, no

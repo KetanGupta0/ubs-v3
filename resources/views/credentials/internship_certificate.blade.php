@@ -77,7 +77,7 @@
                     <div class="sign">Authorised signatory<br>{{ $company['trading'] }}</div>
                 </td>
                 <td style="width: 32%" class="verify">
-                    Verify at {{ url('/verify') }}<br>
+                    Verify at {{ \App\Support\Printed::url('/verify') }}<br>
                     <span class="code">{{ $document->verification_code }}</span>
                 </td>
                 <td style="width: 34%; text-align: right">

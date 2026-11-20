@@ -25,6 +25,15 @@ return [
     'pan' => env('COMPANY_PAN'),
 
     /*
+    | The site's permanent address, as certificates and internship documents
+    | print it: in the QR code and the "verify at" line. Nothing printed can be
+    | changed afterwards, so while the site answers anywhere else (a temporary
+    | domain before it moves to its own) set this to the address it will keep,
+    | such as https://unboundbytesolution.com. Empty: the address the site is reached at.
+    */
+    'printed_url' => env('PRINTED_URL'),
+
+    /*
     | Sending credentials to many accounts at once, such as everybody brought
     | across from the old platform. Spread out so a mail or SMS provider's
     | rate limit does not fail half the list.

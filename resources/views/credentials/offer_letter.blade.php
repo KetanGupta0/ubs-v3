@@ -75,7 +75,7 @@
 </div>
 
 <div class="verify">
-    This letter can be verified at {{ url('/verify') }} with the code
+    This letter can be verified at {{ \App\Support\Printed::url('/verify') }} with the code
     <span class="code">{{ $document->verification_code }}</span>.
     Computer generated and valid without a signature.
 </div>

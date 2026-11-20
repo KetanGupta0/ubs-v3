@@ -33,7 +33,7 @@ info:
   contact:
     name: Unboundbyte Solutions
 servers:
-  - url: https://unboundbyte.com/api/v1
+  - url: https://unboundbytesolution.com/api/v1
     description: Production
   - url: http://localhost:8000/api/v1
     description: A development machine (php artisan serve)

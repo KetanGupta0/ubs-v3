@@ -66,6 +66,8 @@ capped at **100 emails a day**.
   written for MySQL 8, so staging runs on the same engine and version as production.
 - **`.env`** from `.env.example`, with at least: `APP_ENV=production`, `APP_DEBUG=false`,
   `APP_URL=https://…`, `APP_KEY` (`php artisan key:generate`, once, then never again),
+  `PRINTED_URL=https://unboundbytesolution.com` while the site runs on a temporary
+  domain (certificates and internship letters print it in their QR code for good),
   `SESSION_SECURE_COOKIE=true`, `QUEUE_CONNECTION=database`, `QUEUE_FROM_SCHEDULER=true`,
   `CACHE_STORE=database`, `LOG_STACK=daily`, `LOG_LEVEL=warning`, the mail settings for
   Hostinger's SMTP, and the provider keys as they arrive (Razorpay, MSG91, Pusher,

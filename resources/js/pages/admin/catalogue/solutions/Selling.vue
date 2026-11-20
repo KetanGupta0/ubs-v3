@@ -204,7 +204,7 @@ function removeVersion(row) {
 
                     <div v-if="demoOn" class="grid gap-4 sm:grid-cols-2">
                         <UiFormField label="Demo address" required hint="Hosted by us on its own subdomain, never inside this site." :error="settings.errors.demo_url" class="sm:col-span-2">
-                            <UiInput v-model="settings.demo_url" type="url" placeholder="https://hospital-demo.unboundbyte.com" />
+                            <UiInput v-model="settings.demo_url" type="url" placeholder="https://hospital-demo.unboundbytesolution.com" />
                         </UiFormField>
                         <UiFormField label="Demo username" :error="settings.errors.demo_username">
                             <UiInput v-model="settings.demo_username" maxlength="120" autocomplete="off" />
