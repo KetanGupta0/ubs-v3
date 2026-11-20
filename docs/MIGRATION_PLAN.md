@@ -451,6 +451,17 @@ QR code points.
    run, flagging attempts made on v2 under rules nobody was told, telling trainers and,
    with a key, sending them for AI review. The import now marks a closed quiz as checked.
 
+   *Rehearsal on the temporary site, 2026-11-20:* mail was found on smtp and moved to the
+   log first; the fix above deployed (files checked by SHA-256); v3 dumped to
+   `~/private/v3-before-rehearsal-2026-11-20-1525.sql.gz`. The real import matched the dry
+   run and **`legacy:reconcile` passed every strict check**: 188 accounts, 212 enrolments,
+   223 payments totalling 13,380,300 paise to the paisa (per student and per month too),
+   176 Razorpay ids once each, 188 certificate numbers and old QR links, revocations, 109
+   registers, quiz scores. Nothing was queued to send, and no closed quiz was left for the
+   integrity checks. `app:preflight` failed only on the site's own setup, each fixed on the
+   day by §9: debug on, `APP_ENV=local`, no `storage:link`, 37 permissions not seeded,
+   `QUEUE_FROM_SCHEDULER` unset, mail on the log.
+
 1. **Mail set up (X15, decided 2026-11-19: Hostinger's own).** Set the plan's daily limit
    and the part kept for service mail under Settings, Mail, and send one test from
    Settings → Messages. A bulk credential send keeps inside the day's limit: what does not
