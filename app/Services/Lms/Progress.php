@@ -2,6 +2,7 @@
 
 namespace App\Services\Lms;
 
+use App\Models\Attendance;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\Lesson;
@@ -14,9 +15,10 @@ use App\Models\User;
  * How far through a student is.
  *
  * Counted from finished lessons against published ones, recalculated whenever a
- * lesson is finished; for a course with no lessons, from the batch's classes
- * held, recalculated whenever a class changes (`LiveSession`) or a student joins
- * or moves batch (`Enrollment`). Stored on the enrolment so a list of twenty
+ * lesson is finished; for a course with no lessons, from the classes the
+ * student attended, recalculated whenever a mark changes (`Attendance`), a class
+ * is added, cancelled or removed (`LiveSession`) or a student joins or moves
+ * batch (`Enrollment`). Stored on the enrolment so a list of twenty
  * students does not run twenty counting queries to draw twenty progress bars.
  */
 class Progress
@@ -142,11 +144,24 @@ class Progress
         }
     }
 
+    /** After a student's mark on a class changed, if their course has no lessons. */
+    public function recalculateForMark(Attendance $mark): void
+    {
+        $batchId = LiveSession::query()->whereKey($mark->live_session_id)->value('batch_id');
+        $enrolment = $batchId ? Enrollment::query()->where('batch_id', $batchId)->where('user_id', $mark->user_id)->first() : null;
+
+        if ($enrolment) {
+            $this->recalculateTaughtLive($enrolment);
+        }
+    }
+
     /**
      * A course taught only in live classes (every course brought from v2 is one)
      * has no lessons to count, so how far through it somebody is reads as the
-     * batch's classes held out of those still scheduled. A finished enrolment
-     * never goes back down: a class added after it finished does not unfinish it.
+     * classes they attended (present or late) out of the batch's classes not
+     * cancelled. Owner's decision, 2026-11-20: their own figure, not the
+     * batch's. A finished enrolment never goes back down: a class added after
+     * it finished does not unfinish it.
      */
     protected function fromClasses(Enrollment $enrolment): int
     {
@@ -162,7 +177,13 @@ class Progress
             return $enrolment->progress_percent;
         }
 
-        $percent = (int) round((clone $classes)->where('status', 'held')->count() / $scheduled * 100);
+        $attended = Attendance::query()
+            ->counted()
+            ->where('user_id', $enrolment->user_id)
+            ->whereIn('live_session_id', (clone $classes)->select('id'))
+            ->count();
+
+        $percent = (int) round($attended / $scheduled * 100);
 
         if ($enrolment->status === 'completed') {
             $percent = max($percent, (int) $enrolment->progress_percent);

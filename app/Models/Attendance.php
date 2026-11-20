@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Lms\Progress;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,6 +14,18 @@ class Attendance extends Model
     protected $guarded = ['id'];
 
     protected $attributes = ['status' => 'absent'];
+
+    /** On a course with no lessons, progress is the classes attended, so a mark moves it. */
+    protected static function booted(): void
+    {
+        static::saved(function (Attendance $mark) {
+            if ($mark->wasRecentlyCreated || $mark->wasChanged('status')) {
+                app(Progress::class)->recalculateForMark($mark);
+            }
+        });
+
+        static::deleted(fn (Attendance $mark) => app(Progress::class)->recalculateForMark($mark));
+    }
 
     protected function casts(): array
     {

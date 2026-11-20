@@ -118,31 +118,36 @@ it('shows the register of a finished batch with the marks it holds', function ()
         ->and($rows->pluck('status')->unique()->values()->all())->toBe(['present']);
 });
 
-it('reads progress on a course without lessons from the classes held', function () {
+it('reads progress on a course without lessons from the classes the student attended', function () {
     $classes = collect(range(1, 4))->map(fn (int $day) => liveClass($day));
+    $register = fn (LiveSession $class, string $status) => $this->actingAs($this->owner)
+        ->post("/admin/batches/{$this->batch->id}/sessions/{$class->id}/register", [
+            'marks' => [['user_id' => $this->student->id, 'status' => $status]],
+        ]);
+
+    $register($classes[0], 'absent');
     expect($this->enrolment->fresh()->progress_percent)->toBe(0);
 
-    // Saving a register holds the class, and everybody on the batch moves on.
-    $this->actingAs($this->owner)->post("/admin/batches/{$this->batch->id}/sessions/{$classes[0]->id}/register", [
-        'marks' => [['user_id' => $this->student->id, 'status' => 'absent']],
-    ]);
-    expect($this->enrolment->fresh()->progress_percent)->toBe(25);
+    // Their own classes, out of the batch's: present and late count, excused does not.
+    $register($classes[0], 'present');
+    $register($classes[1], 'late');
+    $register($classes[2], 'excused');
+    expect($this->enrolment->fresh()->progress_percent)->toBe(50);
 
-    $classes[1]->update(['status' => 'held']);
     $classes[2]->update(['status' => 'cancelled']);
     expect($this->enrolment->fresh()->progress_percent)->toBe(67);
 
     $classes[3]->delete();
     expect($this->enrolment->fresh()->progress_percent)->toBe(100);
 
-    // Somebody joining late starts where the batch is, not at nothing.
+    // Somebody joining late has attended nothing yet.
     $late = Enrollment::query()->create([
         'user_id' => User::factory()->student()->create()->id,
         'course_id' => $this->course->id,
         'batch_id' => $this->batch->id,
         'enrolled_at' => now(),
     ]);
-    expect($late->fresh()->progress_percent)->toBe(100);
+    expect($late->fresh()->progress_percent)->toBe(0);
 });
 
 it('leaves a dropped or paused student where they stopped', function () {

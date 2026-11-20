@@ -29,8 +29,9 @@ class LiveSession extends Model
     protected $attributes = ['status' => 'scheduled', 'duration_minutes' => 90];
 
     /**
-     * A course with no lessons reads its progress from the batch's classes, so
-     * adding, holding, cancelling or removing one moves everybody's figure.
+     * A course with no lessons reads its progress as classes attended out of
+     * the batch's classes, so adding, cancelling or removing one moves
+     * everybody's figure (a mark moves one student's: `Attendance`).
      */
     protected static function booted(): void
     {
