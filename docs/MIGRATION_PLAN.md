@@ -428,6 +428,12 @@ QR code points.
      the first, which the same run has just made, because programs are read in id order);
      the May 2025 Sem-3 program stays a course of its own. The two internships are typed
      as internships in the map.
+   - **Enrolments:** the 11 updated are v2 rows repeating a student and program (10 pairs,
+     checked on the copy by status pattern only). Every pair starts cancelled and none
+     has a finished course followed by a later row, so keeping the latest row keeps the
+     right status. Where the pair spans two batches the enrolment sits in the later one;
+     the cancelled place stays traceable through `legacy_id_map`, and its payments and
+     attendance are imported as they are. Accepted, 2026-11-20.
    - 24 users come across without a mobile another account already holds; 20 bios are not
      carried; 19 settings and 6 mail templates have no place in v3; 3 credentials go in
      `.env` by hand; one page is a draft to read. The search wording of `/privacy-policy`,
