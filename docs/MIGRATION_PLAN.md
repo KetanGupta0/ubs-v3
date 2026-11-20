@@ -419,11 +419,15 @@ QR code points.
    attendance marks, 23 materials with their files, 281 quiz rows, 188 certificates, 223
    payments, 16 tickets, 45 reviews, 3 enquiries. No step failed. Open from it:
    - **Certificates:** v2's `pdf_path` is empty for all 188, so nothing the old site drew is
-     on disk to copy, and v3 would draw each in its own design. Either render them on v2
-     before the day (the plan in §4) or accept v3's design; owner to decide.
-   - **Courses:** v3's catalogue was empty, so all six programs would be made as new drafts,
-     typed from their titles (two internships). `course-map.json` settles the types, and
-     whether v2's cohorts of one programme stay separate courses.
+     on disk to copy. *Decided by the owner, 2026-11-20:* v3 draws them in its own design;
+     the number and the old QR address stay, so nothing printed stops working. This
+     replaces rendering them on v2 first (§4).
+   - **Courses:** v3's catalogue was empty, so the programs arrive as new drafts.
+     *Decided by the owner, 2026-11-20:* the original Web Development Program and its
+     Nov 2024 cohort are one course with two batches (the course map points the second at
+     the first, which the same run has just made, because programs are read in id order);
+     the May 2025 Sem-3 program stays a course of its own. The two internships are typed
+     as internships in the map.
    - 24 users come across without a mobile another account already holds; 20 bios are not
      carried; 19 settings and 6 mail templates have no place in v3; 3 credentials go in
      `.env` by hand; one page is a draft to read. The search wording of `/privacy-policy`,
