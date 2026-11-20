@@ -92,7 +92,7 @@ class CertificatesStep extends Step
                 $file = Files::copy($context, 'certificates', $source, 'any', $row->pdf_path, 'private', 'certificates/legacy');
                 $certificate->pdf_path = $file['path'] ?? null;
             } elseif ($isNew) {
-                $report->warn('certificates', 'no_pdf', $source, 'The old site\'s PDF is not in the storage copy; v3 will draw it in its own design the first time it is downloaded.');
+                $report->warn('certificates', 'no_pdf', $source, 'The old site kept no PDF of it (pdf_path is empty there); v3 will draw it in its own design the first time it is downloaded.');
             }
 
             $certificate->save();

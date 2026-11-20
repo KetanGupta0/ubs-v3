@@ -75,6 +75,12 @@ capped at **100 emails a day**.
   password manager (see Backups).
 - **The one cron entry** in hPanel, every minute:
   `* * * * * php /home/USER/path/artisan schedule:run >/dev/null 2>&1`
+- **Which PHP over SSH.** v3 needs PHP 8.4. On our account the shell's plain `php` is
+  8.2, whatever the website runs, so every command in this guide typed over SSH uses
+  `/opt/alt/php84/usr/bin/php` (`alias php=/opt/alt/php84/usr/bin/php` in `~/.bashrc`
+  does it once; composer then runs as `php $(which composer)`). If the cron entry is a
+  plain `php` command line rather than hPanel's PHP cron type, give it that path too:
+  `/health` saying the scheduler stopped is how it shows.
 - **Sentry:** create a free account and a Laravel project, put its DSN in
   `SENTRY_LARAVEL_DSN`, and run `php artisan sentry:test` once after deploying.
 - **UptimeRobot:** create a free account and an HTTP(s) monitor on `https://<domain>/health`
