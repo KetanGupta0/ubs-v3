@@ -131,6 +131,26 @@ it('keeps every version of a submission, with marks and feedback, and copies eac
         ->and(Storage::disk('private')->get($earlier->files[0]['path']))->toBe('PK first');
 });
 
+it('never puts an attempt made on the old site through the integrity checks', function () {
+    $open = LegacyDatabase::insert('quizzes', ['batch_id' => $this->batch, 'title' => 'Still open', 'passing_score' => 50, 'max_attempts' => 1, 'is_published' => true, 'due_at' => now()->addWeek()]);
+    LegacyDatabase::insert('quizzes', ['batch_id' => $this->batch, 'title' => 'Closed last year', 'passing_score' => 50, 'max_attempts' => 1, 'is_published' => true, 'due_at' => now()->subYear()]);
+    LegacyDatabase::insert('quiz_attempts', ['quiz_id' => $this->quiz, 'student_id' => $this->student, 'attempt_number' => 1, 'started_at' => now()->subYear(), 'submitted_at' => now()->subYear(), 'score' => 2, 'total_marks' => 10, 'percentage' => 20, 'is_graded' => true]);
+
+    importAssessment($this);
+
+    // v2 told nobody what is noted, so a closed quiz is never judged by v3's rules.
+    expect(Quiz::query()->where('title', 'Closed last year')->sole()->integrity_checked_at)->not->toBeNull()
+        ->and(Quiz::query()->where('title', 'Week 1 check')->sole()->integrity_checked_at)->not->toBeNull()
+        ->and(Quiz::query()->where('title', 'Still open')->sole()->integrity_checked_at)->toBeNull();
+
+    $checked = Quiz::query()->where('title', 'Closed last year')->sole()->integrity_checked_at;
+    $this->travel(2)->hours();
+    $this->artisan('quizzes:check-integrity')->assertSuccessful();
+
+    // The scheduled run passes it by: it was never run on it.
+    expect(Quiz::query()->where('title', 'Closed last year')->sole()->integrity_checked_at->equalTo($checked))->toBeTrue();
+});
+
 it('runs again without duplicating attempts, answers or submissions', function () {
     $attempt = LegacyDatabase::insert('quiz_attempts', ['quiz_id' => $this->quiz, 'student_id' => $this->student, 'attempt_number' => 1, 'started_at' => now(), 'submitted_at' => now(), 'score' => 2, 'total_marks' => 10, 'percentage' => 20, 'is_graded' => true]);
     LegacyDatabase::insert('quiz_answers', ['attempt_id' => $attempt, 'question_id' => $this->mcq, 'answer' => json_encode([0]), 'is_correct' => false]);

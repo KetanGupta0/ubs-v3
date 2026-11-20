@@ -442,6 +442,15 @@ QR code points.
    - The shell's `php` on this account is 8.2: every command below is run with
      `/opt/alt/php84/usr/bin/php` (`docs/HOSTING.md`).
 
+   *Decided by the owner, 2026-11-20:* the full rehearsal (a real import and
+   `legacy:reconcile`) runs on the temporary site, which is for testing and sends mail to
+   the log. Before it: SMS on the log too and Razorpay on test keys, checked in the
+   loaded config; a `mysqldump` of v3 taken, so the rehearsal can be taken out again and
+   the day's import starts from a clean database. Preparing it found that every imported
+   quiz that had closed would have gone through `quizzes:check-integrity` on its first
+   run, flagging attempts made on v2 under rules nobody was told, telling trainers and,
+   with a key, sending them for AI review. The import now marks a closed quiz as checked.
+
 1. **Mail set up (X15, decided 2026-11-19: Hostinger's own).** Set the plan's daily limit
    and the part kept for service mail under Settings, Mail, and send one test from
    Settings → Messages. A bulk credential send keeps inside the day's limit: what does not

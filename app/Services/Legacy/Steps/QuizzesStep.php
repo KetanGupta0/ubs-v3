@@ -57,7 +57,7 @@ class QuizzesStep extends Step
             return;
         }
 
-        $this->upsert($context, 'quizzes', $row, Quiz::class, fn () => [
+        $quiz = $this->upsert($context, 'quizzes', $row, Quiz::class, fn () => [
             'course_id' => $batch->course_id,
             'batch_id' => $batch->id,
             'title' => $row->title,
@@ -70,6 +70,16 @@ class QuizzesStep extends Step
             'shuffle_questions' => false,
             'is_published' => (bool) $row->is_published,
         ]);
+
+        // The integrity checks judge a sitting by rules the student was told
+        // before starting (Quiz::rulesForStudents()), and v2 told nobody. A quiz
+        // that has already closed is marked as checked, so quizzes:check-integrity
+        // never flags, reports to trainers or sends for AI review an attempt made
+        // on the old site. One still open is checked when it closes, as v3's own are.
+        if ($quiz instanceof Quiz && $quiz->integrity_checked_at === null
+            && ($quiz->closes_at === null || $quiz->closes_at->isPast())) {
+            $quiz->forceFill(['integrity_checked_at' => now()])->save();
+        }
     }
 
     protected function question(Context $context, object $row): void
