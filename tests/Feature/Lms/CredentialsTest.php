@@ -62,6 +62,25 @@ function markedAt(int $marks, int $outOf = 100): void
 
 /* ------------------------------------------------------------ issuing */
 
+it('opens the credentials page of a batch with several students', function () {
+    // One student never shows a lazy load; the page has to be loaded in one go
+    // for a whole batch, which the imported v2 batches found out.
+    foreach (range(1, 3) as $n) {
+        Enrollment::query()->create([
+            'user_id' => User::factory()->student()->create()->id,
+            'course_id' => $this->course->id,
+            'batch_id' => $this->batch->id,
+            'enrolled_at' => now()->subWeeks(8),
+            'status' => 'completed',
+        ]);
+    }
+
+    $this->actingAs($this->owner)
+        ->get("/admin/batches/{$this->batch->id}/credentials")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->has('students', 4));
+});
+
 it('refuses a certificate for a student who is not passing', function () {
     markedAt(20);
 

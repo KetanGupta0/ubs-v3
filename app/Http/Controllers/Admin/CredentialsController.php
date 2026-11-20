@@ -34,8 +34,10 @@ class CredentialsController extends Controller
     {
         $batch->load('course:id,title,type,issues_certificate,pass_percent,minimum_attendance');
 
+        // ResultCard reads each enrolment's course; loaded here, or the page
+        // is a query per student (and a 500 wherever lazy loading is refused).
         $enrolments = $batch->enrollments()
-            ->with('user:id,name,email')
+            ->with(['user:id,name,email', 'course:id,pass_percent,minimum_attendance'])
             ->get();
 
         $certificates = Certificate::query()
