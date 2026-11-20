@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Lms\Progress;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +21,16 @@ class Enrollment extends Model
     protected $guarded = ['id'];
 
     protected $attributes = ['status' => 'active', 'source' => 'admin', 'progress_percent' => 0];
+
+    /** Joining or moving batch on a course with no lessons: progress follows the new batch's classes. */
+    protected static function booted(): void
+    {
+        static::saved(function (Enrollment $enrolment) {
+            if ($enrolment->wasRecentlyCreated || $enrolment->wasChanged('batch_id')) {
+                app(Progress::class)->recalculateTaughtLive($enrolment);
+            }
+        });
+    }
 
     protected function casts(): array
     {

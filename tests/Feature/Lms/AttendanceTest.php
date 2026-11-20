@@ -118,6 +118,48 @@ it('shows the register of a finished batch with the marks it holds', function ()
         ->and($rows->pluck('status')->unique()->values()->all())->toBe(['present']);
 });
 
+it('reads progress on a course without lessons from the classes held', function () {
+    $classes = collect(range(1, 4))->map(fn (int $day) => liveClass($day));
+    expect($this->enrolment->fresh()->progress_percent)->toBe(0);
+
+    // Saving a register holds the class, and everybody on the batch moves on.
+    $this->actingAs($this->owner)->post("/admin/batches/{$this->batch->id}/sessions/{$classes[0]->id}/register", [
+        'marks' => [['user_id' => $this->student->id, 'status' => 'absent']],
+    ]);
+    expect($this->enrolment->fresh()->progress_percent)->toBe(25);
+
+    $classes[1]->update(['status' => 'held']);
+    $classes[2]->update(['status' => 'cancelled']);
+    expect($this->enrolment->fresh()->progress_percent)->toBe(67);
+
+    $classes[3]->delete();
+    expect($this->enrolment->fresh()->progress_percent)->toBe(100);
+
+    // Somebody joining late starts where the batch is, not at nothing.
+    $late = Enrollment::query()->create([
+        'user_id' => User::factory()->student()->create()->id,
+        'course_id' => $this->course->id,
+        'batch_id' => $this->batch->id,
+        'enrolled_at' => now(),
+    ]);
+    expect($late->fresh()->progress_percent)->toBe(100);
+});
+
+it('never takes a finished enrolment back down, and leaves a course with lessons to its lessons', function () {
+    $this->enrolment->update(['status' => 'completed', 'progress_percent' => 100]);
+    liveClass(1, ['status' => 'held']);
+    liveClass(-7);
+
+    expect($this->enrolment->fresh()->progress_percent)->toBe(100);
+
+    $module = $this->course->modules()->create(['title' => 'Week one', 'is_published' => true]);
+    $module->lessons()->create(['course_id' => $this->course->id, 'title' => 'Hello', 'slug' => 'hello-'.uniqid(), 'type' => 'text', 'is_published' => true]);
+    $this->enrolment->update(['status' => 'active', 'progress_percent' => 10]);
+    liveClass(2, ['status' => 'held']);
+
+    expect($this->enrolment->fresh()->progress_percent)->toBe(10);
+});
+
 it('holds a certificate back when attendance is below the course minimum', function () {
     $held = collect(range(1, 4))->map(fn (int $day) => liveClass($day));
 

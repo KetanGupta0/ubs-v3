@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Lms\Progress;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -26,6 +27,25 @@ class LiveSession extends Model
     protected $guarded = ['id'];
 
     protected $attributes = ['status' => 'scheduled', 'duration_minutes' => 90];
+
+    /**
+     * A course with no lessons reads its progress from the batch's classes, so
+     * adding, holding, cancelling or removing one moves everybody's figure.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (LiveSession $session) {
+            if ($session->wasRecentlyCreated || $session->wasChanged(['status', 'batch_id'])) {
+                app(Progress::class)->recalculateBatch($session->batch_id);
+
+                if ($session->wasChanged('batch_id') && $session->getOriginal('batch_id')) {
+                    app(Progress::class)->recalculateBatch((int) $session->getOriginal('batch_id'));
+                }
+            }
+        });
+
+        static::deleted(fn (LiveSession $session) => app(Progress::class)->recalculateBatch($session->batch_id));
+    }
 
     protected function casts(): array
     {
