@@ -87,9 +87,10 @@ it('saves a design with a background and signature, re-encoded on the private di
         'signature' => UploadedFile::fake()->image('sign.png', 1200, 300),
     ])->assertRedirect()->assertSessionHasNoErrors();
 
-    $template = CertificateTemplate::query()->sole();
+    $template = CertificateTemplate::query()->where('name', 'Internships 2026')->sole();
 
     expect($template->accent)->toBe('#0f766e')
+        ->and($template->layout)->toBe('classic')
         ->and(Storage::disk('private')->exists($template->background_path))->toBeTrue()
         ->and(str_ends_with($template->background_path, '.jpg'))->toBeTrue()
         ->and(str_ends_with($template->signature_path, '.png'))->toBeTrue()
@@ -145,7 +146,7 @@ it('fits a certificate on one page, with the built-in design and with an uploade
         'signature' => UploadedFile::fake()->image('sign.png', 600, 160),
     ]);
 
-    expect(pdfPages($credentials->previewCertificate(CertificateTemplate::query()->sole())))->toBe(1);
+    expect(pdfPages($credentials->previewCertificate(CertificateTemplate::query()->where('name', 'With artwork')->sole())))->toBe(1);
 });
 
 it('fits the internship certificate on one page too', function () {

@@ -21,7 +21,7 @@ defineProps({
         <div class="mx-auto max-w-6xl">
             <PageHeader
                 title="Certificate designs"
-                description="How a course's certificates look: background, wording and who signs. A design with no course is the default for every course without its own. Certificates already issued keep the look they were issued with."
+                description="How a course's certificates look: the layout, the wording and who signs. A design with no course is the default for every course without its own, and new certificates use the newest active design for their course. Certificates already issued keep the look they were issued with."
             >
                 <template #actions>
                     <UiButton href="/admin/certificate-templates/new" size="sm">
@@ -48,7 +48,9 @@ defineProps({
                 </template>
 
                 <template #cell:is_active="{ row }">
-                    <UiBadge :tone="row.is_active ? 'success' : 'neutral'" size="sm" dot>{{ row.is_active ? 'active' : 'off' }}</UiBadge>
+                    <UiBadge v-if="row.inUse" tone="success" size="sm" dot>in use</UiBadge>
+                    <UiBadge v-else-if="row.is_active" tone="neutral" size="sm" dot title="A newer active design for the same certificates is used instead">on, not used</UiBadge>
+                    <UiBadge v-else tone="neutral" size="sm" dot>off</UiBadge>
                 </template>
 
                 <template #rowActions="{ row }">

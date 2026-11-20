@@ -15,6 +15,7 @@ use BaconQrCode\Renderer\ImageRenderer;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 use BaconQrCode\Writer;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
@@ -111,16 +112,64 @@ class Credentials
     protected function certificatePdf(Certificate $certificate, ?CertificateTemplate $template): string
     {
         $verifyUrl = url('/verify/'.$certificate->verification_code);
+        $company = $this->company();
 
-        return Pdf::loadView('credentials.certificate', [
+        // The premium layouts bring their own typefaces, and dompdf keeps what
+        // it learns of each one here.
+        File::ensureDirectoryExists(storage_path('fonts'));
+
+        return Pdf::loadView($template?->view() ?? 'credentials.certificate', [
             'certificate' => $certificate,
-            'company' => $this->company(),
+            'company' => $company,
             'template' => $template,
-            'background' => $this->embed($template?->background_path),
+            'facts' => $this->certificateFacts($certificate, $template, $company),
+            'background' => $template?->takesBackground() ? $this->embed($template->background_path) : null,
             'signature' => $this->embed($template?->signature_path),
             'qr' => ($template?->show_qr ?? true) ? $this->qrDataUri($verifyUrl) : null,
             'verifyUrl' => $verifyUrl,
-        ])->setPaper('a4', 'landscape')->output();
+        ])->setPaper('a4', 'landscape')
+            // Only the letters a certificate uses go into it, not whole typefaces.
+            ->setOption('isFontSubsettingEnabled', true)
+            ->output();
+    }
+
+    /**
+     * What every layout prints, worked out once: the wording with its
+     * defaults, the dates, the grade, and the heading split for layouts that
+     * set "Certificate" larger than what follows it.
+     *
+     * @param  array<string, mixed>  $company
+     * @return array<string, string|null>
+     */
+    protected function certificateFacts(Certificate $certificate, ?CertificateTemplate $template, array $company): array
+    {
+        $heading = trim($template?->heading ?? 'Certificate of completion');
+        preg_match('/^(certificate)\s+(.+)$/i', $heading, $split);
+        $batch = $certificate->batch;
+        $showGrade = $certificate->grade && ($template?->show_grade ?? true);
+
+        return [
+            'name' => $certificate->user->name,
+            'heading' => $heading,
+            'headingLead' => $split[1] ?? $heading,
+            'headingRest' => $split[2] ?? null,
+            'bodyLine' => $template?->body_line ?? 'has completed',
+            'course' => $certificate->title,
+            'period' => $batch?->starts_on && $batch?->ends_on
+                ? $batch->starts_on->format('j M Y').' to '.$batch->ends_on->format('j M Y')
+                : null,
+            'issued' => $certificate->issued_at->format('j M Y'),
+            'year' => $certificate->issued_at->format('Y'),
+            'grade' => $showGrade ? $certificate->grade : null,
+            'percent' => $showGrade && $certificate->final_percent
+                ? rtrim(rtrim(number_format((float) $certificate->final_percent, 1), '0'), '.').'%'
+                : null,
+            'signatory' => $template?->signatory_name ?? 'Authorised signatory',
+            'signatoryTitle' => $template?->signatory_title ?? $company['trading'],
+            'number' => $certificate->number,
+            'code' => $certificate->verification_code,
+            'verifyAt' => preg_replace('~^https?://~', '', url('/verify')),
+        ];
     }
 
     /**

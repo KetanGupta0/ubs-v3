@@ -5,7 +5,9 @@
 //     node resources/brand/render-pdf-logo.cjs
 //
 // Run it again if the mark or the wordmark changes; it writes
-// public/brand/logo-pdf.png, which App\Support\PdfBrand reads.
+// public/brand/logo-pdf.png, and logo-pdf-light.png for a dark ground (the
+// lockup in white, as BrandLogo's monochrome variant draws it in currentColor),
+// which App\Support\PdfBrand reads.
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
@@ -22,6 +24,11 @@ body { margin: 0; background: transparent; }
 .title { font-family: 'Sora Variable'; font-weight: 600; font-size: 18px; line-height: 1; letter-spacing: -0.025em; color: #0B1020; }
 .byte { background-image: linear-gradient(100deg, #6366F1, #22D3EE); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .tagline { margin-top: 2px; font-family: 'Inter Variable'; font-weight: 500; font-size: 9.92px; line-height: 1; letter-spacing: 0.22em; text-transform: uppercase; color: #5E6992; }
+.light .title, .light .tagline { color: #FFFFFF; }
+.light .byte { background-image: none; color: #FFFFFF; }
+.light .tagline { opacity: .7; }
+.light svg * { stroke: #FFFFFF; }
+.light svg rect { fill: #FFFFFF; stroke: none; }
 </style></head><body>
 <div id="logo">
   <!-- The mark's own 64 box trimmed to its painted edges, so the logo lines up
@@ -47,9 +54,12 @@ body { margin: 0; background: transparent; }
     await tab.goto('file://' + page);
     await tab.evaluate(() => document.fonts.ready);
 
-    const out = path.join(root, 'public', 'brand', 'logo-pdf.png');
-    await tab.locator('#logo').screenshot({ path: out, omitBackground: true });
-    await browser.close();
+    for (const [file, light] of [['logo-pdf.png', false], ['logo-pdf-light.png', true]]) {
+        await tab.evaluate((on) => document.body.classList.toggle('light', on), light);
+        const out = path.join(root, 'public', 'brand', file);
+        await tab.locator('#logo').screenshot({ path: out, omitBackground: true });
+        console.log('Wrote', path.relative(root, out));
+    }
 
-    console.log('Wrote', path.relative(root, out));
+    await browser.close();
 })();

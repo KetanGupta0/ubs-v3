@@ -19,6 +19,7 @@ const PDF_VIEWS = [
     'billing.invoice', 'billing.receipt', 'billing.credit-note', 'billing.statement',
     'documents.proposal', 'documents.agreement', 'documents.change-request', 'documents.status-report', 'documents.service-report',
     'credentials.certificate', 'credentials.internship_certificate', 'credentials.offer_letter', 'credentials.mentor_evaluation', 'credentials.project_report',
+    'credentials.certificates.regal', 'credentials.certificates.midnight', 'credentials.certificates.heritage', 'credentials.certificates.laurel',
     'exports.table', 'reports.college-monthly',
 ];
 
@@ -30,8 +31,10 @@ function viewSource(string $view): string
 it('knows every view a PDF is rendered from', function () {
     $rendered = collect(File::allFiles(app_path()))
         ->flatMap(fn ($file) => preg_match_all("/loadView\\('([a-z._-]+)'/", $file->getContents(), $m) ? $m[1] : [])
-        // The internship documents are chosen by kind in Credentials::renderInternshipDocument().
+        // The internship documents are chosen by kind in Credentials::renderInternshipDocument(),
+        // and a certificate's view by its design's layout.
         ->merge(['credentials.internship_certificate', 'credentials.offer_letter', 'credentials.mentor_evaluation', 'credentials.project_report'])
+        ->merge(collect(CertificateTemplate::LAYOUTS)->keys()->map(fn (string $layout) => (new CertificateTemplate(['layout' => $layout]))->view()))
         ->unique()->sort()->values()->all();
 
     expect($rendered)->toBe(collect(PDF_VIEWS)->sort()->values()->all());
@@ -52,6 +55,13 @@ it('draws the logo at its own proportions, as data dompdf needs no file access f
 
     expect((string) PdfBrand::img(11))->toStartWith('<img src="data:image/png;base64,')
         ->toContain('height: 11mm; width: '.round(11 * $width / $height, 2).'mm;');
+});
+
+it('has a white logo for a dark ground, the same lockup at the same proportions', function () {
+    expect(getimagesize(public_path(PdfBrand::LOGO_LIGHT)))->toMatchArray(array_slice(getimagesize(public_path(PdfBrand::LOGO)), 0, 2))
+        ->and((string) PdfBrand::img(9, light: true))
+        ->toContain(base64_encode((string) file_get_contents(public_path(PdfBrand::LOGO_LIGHT))))
+        ->not->toBe((string) PdfBrand::img(9));
 });
 
 it('embeds the logo in a rendered invoice and certificate', function () {

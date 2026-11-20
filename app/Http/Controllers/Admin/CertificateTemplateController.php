@@ -22,23 +22,29 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
 /**
  * Certificate templates: how a course's certificates look.
  *
- * A background, an accent, the wording and the signatory, set into one fixed
- * layout. Changing one never touches a certificate already issued: each
- * records the template it was issued with, and its PDF was cached then.
+ * A layout (CertificateTemplate::LAYOUTS), then the accent, the wording and
+ * the signatory set into it, and for Classic a background. Changing one never
+ * touches a certificate already issued: each records the template it was
+ * issued with, and its PDF was cached then.
  */
 class CertificateTemplateController extends Controller
 {
     public function index(Request $request): Response|HttpResponse
     {
-        $table = Table::for(CertificateTemplate::query()->with('course:id,title'))
+        // What CertificateTemplate::forCourse() picks: the newest active design for each course, and for the default.
+        $inUse = CertificateTemplate::query()->where('is_active', true)
+            ->selectRaw('max(id) as id')->groupBy('course_id')->pluck('id')->map(fn ($id) => (int) $id);
+
+        $table = Table::for(CertificateTemplate::query()->with('course:id,title')->withCount('certificates'))
             ->searchable(['name', 'course.title'])
             ->defaultSort('-updated_at')
             ->exportName('certificate-templates')
             ->columns([
                 Column::make('name', 'Template')->sortable(),
+                Column::make('layout', 'Layout')->sortable(),
                 Column::make('course', 'Used for'),
                 Column::make('signatory', 'Signed by'),
-                Column::make('is_active', 'Active')->sortable(),
+                Column::make('is_active', 'Status')->sortable(),
                 Column::make('issued', 'Certificates issued')->numeric(),
                 Column::make('updated_at', 'Changed')->sortable(),
             ])
@@ -48,11 +54,13 @@ class CertificateTemplateController extends Controller
             ->transform(fn (CertificateTemplate $template) => [
                 'id' => $template->id,
                 'name' => $template->name,
+                'layout' => CertificateTemplate::LAYOUTS[$template->layout]['label'] ?? 'Classic',
                 'course' => $template->course?->title ?? 'Every course without its own',
                 'isDefault' => $template->course_id === null,
                 'signatory' => $template->signatory_name ?? '—',
                 'is_active' => $template->is_active,
-                'issued' => Certificate::query()->where('certificate_template_id', $template->id)->count(),
+                'inUse' => $inUse->contains($template->id),
+                'issued' => $template->certificates_count,
                 'hasBackground' => $template->background_path !== null,
                 'updated_at' => $template->updated_at?->diffForHumans(),
             ]);
@@ -74,6 +82,7 @@ class CertificateTemplateController extends Controller
             'template' => $this->formArray($template),
             'courses' => Course::query()->orderBy('title')->get(['id', 'title'])
                 ->map(fn (Course $course) => ['value' => $course->id, 'label' => $course->title]),
+            'layouts' => $this->layouts(),
         ]);
     }
 
@@ -83,6 +92,7 @@ class CertificateTemplateController extends Controller
             'template' => null,
             'courses' => Course::query()->orderBy('title')->get(['id', 'title'])
                 ->map(fn (Course $course) => ['value' => $course->id, 'label' => $course->title]),
+            'layouts' => $this->layouts(),
         ]);
     }
 
@@ -130,6 +140,8 @@ class CertificateTemplateController extends Controller
     {
         $validated = $this->validatedInput($request, [
             'name' => ['required', 'string', 'max:120'],
+            // Left out, a design keeps its layout (a new one is Classic).
+            'layout' => ['nullable', 'string', Rule::in(array_keys(CertificateTemplate::LAYOUTS))],
             'course_id' => ['nullable', 'integer', Rule::exists('courses', 'id')],
             'heading' => ['required', 'string', 'max:80'],
             'body_line' => ['required', 'string', 'max:120'],
@@ -145,12 +157,14 @@ class CertificateTemplateController extends Controller
             'remove_signature' => ['boolean'],
         ], [
             'accent.regex' => 'Use a colour like #4f46e5.',
+            'layout.in' => 'Choose one of the layouts shown.',
             'background.mimes' => 'Use a JPG or PNG, A4 landscape.',
             'signature.mimes' => 'Use a PNG, ideally with a transparent background.',
         ]);
 
         $template->fill([
             'name' => $validated['name'],
+            'layout' => $validated['layout'] ?? $template->layout ?? 'classic',
             'course_id' => $validated['course_id'],
             'heading' => $validated['heading'],
             'body_line' => $validated['body_line'],
@@ -170,7 +184,8 @@ class CertificateTemplateController extends Controller
             $template->signature_path = null;
         }
 
-        if ($file = $request->file('background')) {
+        // Only Classic draws a background; one kept from before stays for a return to Classic.
+        if ($template->takesBackground() && ($file = $request->file('background'))) {
             // Capped at A4 landscape at 300 dpi.
             $template->background_path = ImageUpload::store($file, 'private', 'certificate-templates', 3508, 'jpg', 'background');
         }
@@ -180,12 +195,34 @@ class CertificateTemplateController extends Controller
         }
     }
 
+    /**
+     * The layouts to choose from, each with a picture of the preview's sample
+     * certificate in it (resources/certificates/render-thumbnails.php).
+     *
+     * @return array<int, array{value: string, label: string, description: string, accent: string, ink: array{fallback: string, against: array<int, string>}|null, picture: string|null}>
+     */
+    protected function layouts(): array
+    {
+        return collect(CertificateTemplate::LAYOUTS)
+            ->map(fn (array $layout, string $key) => [
+                'value' => $key,
+                'label' => $layout['label'],
+                'description' => $layout['description'],
+                'accent' => $layout['accent'],
+                'ink' => $layout['ink'],
+                'picture' => is_file(public_path("images/certificate-layouts/{$key}.webp")) ? "/images/certificate-layouts/{$key}.webp" : null,
+            ])
+            ->values()
+            ->all();
+    }
+
     /** @return array<string, mixed> */
     protected function formArray(CertificateTemplate $template): array
     {
         return [
             'id' => $template->id,
             'name' => $template->name,
+            'layout' => $template->layout,
             'course_id' => $template->course_id,
             'heading' => $template->heading,
             'body_line' => $template->body_line,

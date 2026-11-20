@@ -709,10 +709,21 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
   is recorded in the audit log. Revoking keeps the row so the public check still
   answers, and says it was withdrawn.
 - **A certificate keeps the look it was issued with.** `CertificateTemplate` sets
-  a background, accent, wording and signatory into one fixed layout; the newest
-  active design for the course is used, else the default, else the built-in one.
-  The certificate records which, and its PDF is cached at issue, so editing a
-  design never changes a certificate somebody holds.
+  an accent, wording and signatory into one of the fixed layouts in
+  `CertificateTemplate::LAYOUTS`; the newest active design for the course is used,
+  else the default, else the built-in one. The certificate records which, and its
+  PDF is cached at issue, so editing a design never changes a certificate somebody
+  holds.
+- **Classic is the only layout that takes a background.** Regal, Midnight, Heritage and
+  Laurel (`resources/views/credentials/certificates`) are drawn whole: gold ornaments
+  from `resources/certificates/render-art.cjs` and the OFL typefaces in
+  `resources/fonts/certificates`, both through `App\Support\CertificateArt`, with fonts
+  subset into each PDF and their metrics kept in `storage/fonts`. An accent prints only
+  where it reads at 4.5:1 (`CertificateArt::ink()`), else the layout's own colour. A
+  migration added one design in each, switched off: nothing issued changes until
+  somebody turns one on. A layout that paints the page fills all 210 mm with a `fixed`
+  box outside the 208 mm sheet. The pictures on the form come from
+  `php resources/certificates/render-thumbnails.php`; run it after changing a layout.
 - **PDF layouts are written for dompdf, not for a browser.** It ignores `inset`,
   mishandles `bottom`, and a box exactly as tall as the page spills onto a second
   one. Until November 2026 that left every certificate with an open border, no
@@ -722,7 +733,8 @@ the LMS half of `routes/admin.php`, and `App\Services\Lms`.
 - **Every PDF carries the company logo,** through `App\Support\PdfBrand::img($mm)`: the
   BrandLogo lockup as a PNG (`public/brand/logo-pdf.png`, made by
   `node resources/brand/render-pdf-logo.cjs`), handed to dompdf as data, because dompdf
-  has neither the Sora typeface nor reliable SVG gradients. `PdfBrandTest` lists every
+  has neither the Sora typeface nor reliable SVG gradients; on a dark ground,
+  `img($mm, light: true)` gives the white lockup. `PdfBrandTest` lists every
   view a PDF is rendered from and fails one without the logo, so a new PDF goes on that
   list. Pages keep 12 mm margins (letters 14 to 16 mm). A PDF already issued keeps the
   look it was issued with.

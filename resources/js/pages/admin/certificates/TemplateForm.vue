@@ -1,7 +1,7 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
-import { ArrowLeft, FileText, Trash2 } from 'lucide-vue-next';
+import { ArrowLeft, Check, FileText, Trash2 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import PageHeader from '@/components/Admin/PageHeader.vue';
@@ -17,6 +17,7 @@ import UiCheckbox from '@/components/UI/UiCheckbox.vue';
 const props = defineProps({
     template: { type: Object, default: null },
     courses: { type: Array, default: () => [] },
+    layouts: { type: Array, default: () => [] },
 });
 
 const background = ref([]);
@@ -24,6 +25,7 @@ const signature = ref([]);
 
 const form = useForm({
     name: props.template?.name ?? '',
+    layout: props.template?.layout ?? 'classic',
     course_id: props.template?.course_id ?? null,
     heading: props.template?.heading ?? 'Certificate of completion',
     body_line: props.template?.body_line ?? 'has completed',
@@ -37,6 +39,36 @@ const form = useForm({
     signature: null,
     remove_background: false,
     remove_signature: false,
+});
+
+const chosen = computed(() => props.layouts.find((layout) => layout.value === form.layout) ?? null);
+
+/** The WCAG contrast ratio of two colours written #rrggbb (CertificateArt::contrast on the server). */
+function contrast(one, two) {
+    const luminance = (hex) => [1, 3, 5]
+        .map((at) => {
+            const channel = parseInt(hex.slice(at, at + 2), 16) / 255;
+
+            return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        })
+        .reduce((sum, channel, i) => sum + channel * [0.2126, 0.7152, 0.0722][i], 0);
+    const [a, b] = [luminance(one), luminance(two)];
+
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+
+/**
+ * Whether the chosen layout would set the accent aside: it prints the accent
+ * only where it makes 4.5:1 with every colour it meets, as the server decides.
+ */
+const accentTooLight = computed(() => {
+    const ink = chosen.value?.ink;
+
+    if (!ink || !/^#[0-9a-fA-F]{6}$/.test(form.accent ?? '')) {
+        return false;
+    }
+
+    return ink.against.some((other) => contrast(form.accent, other) < 4.5);
 });
 
 function save() {
@@ -118,6 +150,42 @@ function destroy() {
                     <UiSwitch v-model="form.is_active" label="In use" description="New certificates are issued with the newest active design for their course." />
                 </FormSection>
 
+                <FormSection title="Layout" description="Where everything sits and how it is drawn. Every layout prints the same things: the name, the course, the dates, the grade, the signatory and the verification code.">
+                    <fieldset>
+                        <legend class="sr-only">Layout</legend>
+                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            <label
+                                v-for="layout in layouts"
+                                :key="layout.value"
+                                class="relative flex cursor-pointer flex-col overflow-hidden rounded-xl border transition has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-[var(--ring)]"
+                                :style="form.layout === layout.value
+                                    ? { borderColor: 'var(--ring)', boxShadow: '0 0 0 1px var(--ring)' }
+                                    : { borderColor: 'var(--border-subtle)' }"
+                            >
+                                <input v-model="form.layout" type="radio" name="layout" :value="layout.value" class="sr-only" />
+                                <img
+                                    v-if="layout.picture"
+                                    :src="layout.picture"
+                                    alt=""
+                                    width="600"
+                                    height="425"
+                                    loading="lazy"
+                                    class="aspect-[600/425] w-full border-b object-cover"
+                                    style="border-color: var(--border-subtle); background: var(--surface-sunken)"
+                                />
+                                <span class="flex flex-1 flex-col p-3">
+                                    <span class="flex items-center justify-between gap-2">
+                                        <span class="text-sm font-semibold" style="color: var(--text-strong)">{{ layout.label }}</span>
+                                        <Check v-if="form.layout === layout.value" class="h-4 w-4 shrink-0" style="color: var(--text-brand)" aria-hidden="true" />
+                                    </span>
+                                    <span class="mt-1 text-xs" style="color: var(--text-muted)">{{ layout.description }}</span>
+                                </span>
+                            </label>
+                        </div>
+                    </fieldset>
+                    <p v-if="form.errors.layout" class="text-sm" style="color: var(--text-danger)">{{ form.errors.layout }}</p>
+                </FormSection>
+
                 <FormSection title="Wording">
                     <div class="grid gap-4 sm:grid-cols-2">
                         <UiFormField label="Heading" required :error="form.errors.heading">
@@ -147,20 +215,28 @@ function destroy() {
                 </FormSection>
 
                 <FormSection title="Look">
-                    <UiFormField label="Accent colour" required hint="Used for the organisation name and the course title." :error="form.errors.accent">
+                    <UiFormField label="Accent colour" required :hint="chosen?.accent ?? 'Colours the border and the course title.'" :error="form.errors.accent">
                         <div class="flex items-center gap-3">
                             <input v-model="form.accent" type="color" class="h-10 w-14 cursor-pointer rounded border" style="border-color: var(--border-subtle)" aria-label="Pick the accent colour">
                             <UiInput v-model="form.accent" class="max-w-32" />
                         </div>
                     </UiFormField>
-                    <UiFormField
-                        label="Background"
-                        hint="A4 landscape (297 × 210 mm), JPG or PNG, under 5 MB. Leave room in the middle for the text. Without one, the built-in border is used."
-                        :error="form.errors.background"
-                    >
-                        <UiFileDrop v-model="background" accept="image/jpeg,image/png" :max-size="5" />
-                    </UiFormField>
-                    <UiCheckbox v-if="template?.hasBackground" v-model="form.remove_background" label="Remove the current background" />
+                    <p v-if="accentTooLight" class="text-sm" style="color: var(--text-warning)">
+                        This colour would not stand out enough on {{ chosen?.label ?? 'this layout' }}, so it prints in the layout's own colour instead.
+                    </p>
+                    <template v-if="form.layout === 'classic'">
+                        <UiFormField
+                            label="Background"
+                            hint="A4 landscape (297 × 210 mm), JPG or PNG, under 5 MB. Leave room in the middle for the text. Without one, the built-in border is used."
+                            :error="form.errors.background"
+                        >
+                            <UiFileDrop v-model="background" accept="image/jpeg,image/png" :max-size="5" />
+                        </UiFormField>
+                        <UiCheckbox v-if="template?.hasBackground" v-model="form.remove_background" label="Remove the current background" />
+                    </template>
+                    <p v-else class="text-sm" style="color: var(--text-muted)">
+                        {{ chosen?.label }} is drawn whole, ornaments and all, so it takes no background.<template v-if="template?.hasBackground"> The background saved for Classic is kept, should you go back to it.</template>
+                    </p>
                 </FormSection>
 
                 <div class="flex flex-wrap items-center justify-between gap-3">
