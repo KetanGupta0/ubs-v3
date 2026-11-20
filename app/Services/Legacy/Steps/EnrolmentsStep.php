@@ -79,6 +79,10 @@ class EnrolmentsStep extends Step
                 'enrolled_at' => $row->enrolled_at ?? $row->created_at ?? now(),
                 'completed_at' => $row->status === 'completed' ? ($row->updated_at ?? now()) : null,
                 'dropped_at' => $row->status === 'cancelled' ? ($row->updated_at ?? now()) : null,
+                // v2 kept no progress and its courses arrive with no lessons, so a
+                // finished course would read "0%" beside "completed". Finished is
+                // all of it; anything else keeps what v3 has recorded.
+                ...($row->status === 'completed' ? ['progress_percent' => 100] : []),
             ], $row, $ref, $touchedBatches);
 
             if (! isset(self::STATUSES[$row->status])) {

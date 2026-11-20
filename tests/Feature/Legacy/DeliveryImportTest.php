@@ -6,6 +6,7 @@ use App\Models\Batch;
 use App\Models\Course;
 use App\Models\Enrollment;
 use App\Models\LiveSession;
+use App\Models\User;
 use App\Services\Lms\Performance;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\LegacyDatabase;
@@ -104,6 +105,29 @@ it('enrols students with a mapped status, never one still waiting to pay, and co
 
     expect(collect(lastReport()['steps']['enrolments']['warnings'])->where('code', 'pending_payment')->pluck('source')->all())->toBe(["enrollments#{$pending}"])
         ->and(AuditLog::query()->where('action', 'enrolment.imported_notes')->sole()->changes['admin_notes']['to'])->toBe('Paid in cash at the office');
+});
+
+it('brings a finished course across as finished: completed, at 100%', function () {
+    $other = LegacyDatabase::user();
+    LegacyDatabase::insert('enrollments', ['student_id' => $this->student, 'program_id' => $this->program, 'batch_id' => $this->batch, 'status' => 'completed', 'student_name' => 'x', 'student_email' => 'x']);
+    LegacyDatabase::insert('enrollments', ['student_id' => $other, 'program_id' => $this->program, 'batch_id' => $this->batch, 'status' => 'active', 'student_name' => 'x', 'student_email' => 'x']);
+
+    importAll($this);
+
+    expect(Enrollment::query()->where('status', 'completed')->sole()->progress_percent)->toBe(100)
+        ->and(Enrollment::query()->where('status', 'active')->sole()->progress_percent)->toBe(0);
+
+    // An earlier import left them at 0%: the migration puts those in step, and
+    // nothing that did not come from v2.
+    Enrollment::query()->update(['progress_percent' => 0]);
+    $own = Enrollment::query()->where('status', 'completed')->sole()->replicate(['progress_percent']);
+    $own->forceFill(['user_id' => User::factory()->student()->create()->id, 'progress_percent' => 40])->save();
+
+    (require database_path('migrations/2026_11_20_000002_complete_progress_of_imported_completed_enrolments.php'))->up();
+
+    expect(Enrollment::query()->where('status', 'completed')->whereKeyNot($own->id)->sole()->progress_percent)->toBe(100)
+        ->and($own->fresh()->progress_percent)->toBe(40)
+        ->and(Enrollment::query()->where('status', 'active')->sole()->progress_percent)->toBe(0);
 });
 
 it('finds the batch through batch membership when the enrolment does not name one', function () {
