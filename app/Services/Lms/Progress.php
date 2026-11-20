@@ -150,7 +150,8 @@ class Progress
      */
     protected function fromClasses(Enrollment $enrolment): int
     {
-        if (! $enrolment->batch_id) {
+        // Somebody who left, or paused, did not sit the classes held since.
+        if (! $enrolment->batch_id || in_array($enrolment->status, ['dropped', 'on_hold'], true)) {
             return $enrolment->progress_percent;
         }
 

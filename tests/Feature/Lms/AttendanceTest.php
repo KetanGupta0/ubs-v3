@@ -145,6 +145,23 @@ it('reads progress on a course without lessons from the classes held', function 
     expect($late->fresh()->progress_percent)->toBe(100);
 });
 
+it('leaves a dropped or paused student where they stopped', function () {
+    liveClass(2, ['status' => 'held']);
+    $this->enrolment->refresh()->update(['status' => 'dropped', 'progress_percent' => 0]);
+    $paused = Enrollment::query()->create([
+        'user_id' => User::factory()->student()->create()->id,
+        'course_id' => $this->course->id,
+        'batch_id' => $this->batch->id,
+        'enrolled_at' => now(),
+        'status' => 'on_hold',
+    ]);
+
+    liveClass(1, ['status' => 'held']);
+
+    expect($this->enrolment->fresh()->progress_percent)->toBe(0)
+        ->and($paused->fresh()->progress_percent)->toBe(0);
+});
+
 it('never takes a finished enrolment back down, and leaves a course with lessons to its lessons', function () {
     $this->enrolment->update(['status' => 'completed', 'progress_percent' => 100]);
     liveClass(1, ['status' => 'held']);
