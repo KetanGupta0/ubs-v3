@@ -3,8 +3,10 @@
 use App\Models\AuditLog;
 use App\Models\Enrollment;
 use App\Models\Invoice;
+use App\Models\PaymentRequest;
 use App\Models\Refund;
 use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\LegacyDatabase;
 
@@ -81,4 +83,31 @@ it('never brings the same Razorpay payment in twice', function () {
 
     expect(Transaction::query()->where('gateway_payment_id', 'pay_SAME')->count())->toBe(1)
         ->and(collect($report['steps']['payments']['warnings'])->where('code', 'duplicate_gateway_id')->pluck('source')->all())->toBe(["payments#{$second}"]);
+});
+
+it('shows a fee paid on the old site as paid, for what was paid, and links it once', function () {
+    $owner = User::factory()->owner()->create();
+    LegacyDatabase::insert('payments', ['student_id' => $this->student, 'enrollment_id' => $this->enrolment, 'amount' => '3500.00', 'method' => 'upi', 'status' => 'paid', 'updated_at' => '2026-06-02 09:00:00']);
+    LegacyDatabase::insert('payments', ['student_id' => $this->student, 'enrollment_id' => $this->enrolment, 'amount' => '1000.00', 'method' => 'razorpay', 'razorpay_payment_id' => 'pay_F1', 'status' => 'failed']);
+
+    importPayments($this);
+    importPayments($this);
+
+    $enrolment = Enrollment::query()->sole();
+    $request = PaymentRequest::query()->sole();
+
+    expect($enrolment->has_paid)->toBeTrue()
+        ->and($enrolment->payment_request_id)->toBe($request->id)
+        ->and($request->status)->toBe('paid')
+        ->and($request->total)->toBe(350000)
+        ->and($request->tax)->toBe(0)
+        ->and($request->reference)->toStartWith('V2-FEE-')
+        ->and($request->payable_id)->toBe($enrolment->id)
+        ->and(Transaction::query()->where('status', 'successful')->sole()->payment_request_id)->toBe($request->id)
+        ->and(Transaction::query()->where('status', 'failed')->sole()->payment_request_id)->toBeNull()
+        ->and(Invoice::query()->count())->toBe(0);
+
+    // The enrolments list says paid, never free.
+    $this->actingAs($owner)->get('/admin/enrolments')
+        ->assertInertia(fn ($page) => $page->where('table.rows.0.fee', 'Paid'));
 });

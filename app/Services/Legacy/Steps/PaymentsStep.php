@@ -3,6 +3,7 @@
 namespace App\Services\Legacy\Steps;
 
 use App\Models\Enrollment;
+use App\Models\PaymentRequest;
 use App\Models\Refund;
 use App\Models\Transaction;
 use App\Services\Admin\Auditor;
@@ -131,5 +132,70 @@ class PaymentsStep extends Step
             $context->ledger->record('payments', (int) $row->id, $transaction, $checksum);
             $report->count('payments', $isNew ? 'created' : 'updated');
         });
+
+        $this->linkFees($context);
+    }
+
+    /**
+     * Each imported enrolment that was paid for gets its fee as v3 records one:
+     * a payment request on the enrolment, paid, with the v2 payments attached.
+     * Until November 2026 the payments came across unattached, and an enrolment
+     * paid with nothing attached reads as "Free" everywhere a fee is shown.
+     *
+     * The request is for what was paid, not the listed price: most v2 payments
+     * differ from the enrolment's amount. It carries no tax and no invoice,
+     * because v2 issued none (see above). It is found again by its reference on
+     * every run, so a re-run changes nothing, and an enrolment whose fee was
+     * raised in v3 is left as it is.
+     */
+    protected function linkFees(Context $context): void
+    {
+        $paid = [];
+
+        $context->source()->table('payments')->whereNotNull('enrollment_id')->orderBy('id')
+            ->each(function (object $row) use ($context, &$paid) {
+                if ((self::STATUSES[strtolower((string) $row->status)] ?? null) !== 'successful') {
+                    return;
+                }
+
+                $enrolmentId = $context->ledger->targetId('enrollments', (int) $row->enrollment_id);
+                $transactionId = $context->ledger->targetId('payments', (int) $row->id);
+
+                if ($enrolmentId && $transactionId) {
+                    $paid[$enrolmentId]['source'] = (int) $row->enrollment_id;
+                    $paid[$enrolmentId]['transactions'][] = $transactionId;
+                }
+            });
+
+        foreach ($paid as $enrolmentId => $fee) {
+            $enrolment = Enrollment::query()->with('course:id,title')->find($enrolmentId);
+            $reference = "V2-FEE-{$fee['source']}";
+
+            if (! $enrolment || ($enrolment->payment_request_id
+                && PaymentRequest::query()->whereKey($enrolment->payment_request_id)->value('reference') !== $reference)) {
+                continue;
+            }
+
+            $transactions = Transaction::query()->whereKey($fee['transactions'])->get();
+
+            $request = PaymentRequest::query()->firstOrNew(['reference' => $reference]);
+            $request->forceFill([
+                'user_id' => $enrolment->user_id,
+                'payable_type' => $enrolment->getMorphClass(),
+                'payable_id' => $enrolment->id,
+                'title' => ($enrolment->course?->title ?? 'Course').' fee, paid on the old site',
+                'subtotal' => (int) $transactions->sum('amount'),
+                'tax_rate' => 0,
+                'tax' => 0,
+                'total' => (int) $transactions->sum('amount'),
+                'currency' => 'INR',
+                'status' => 'paid',
+                'paid_at' => $transactions->max('paid_at'),
+                'notes' => 'Brought from the old site, which issued no invoice. The amount is what was paid.',
+            ])->save();
+
+            Transaction::query()->whereKey($fee['transactions'])->update(['payment_request_id' => $request->id]);
+            $enrolment->forceFill(['payment_request_id' => $request->id, 'has_paid' => true])->save();
+        }
     }
 }
