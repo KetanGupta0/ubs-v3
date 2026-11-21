@@ -7,6 +7,7 @@ use App\Enums\OtpChannel;
 use App\Enums\OtpPurpose;
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Rules\PersonName;
 use App\Services\Admin\AccountCreator;
 use App\Services\Auth\AuthAuditor;
 use App\Services\Auth\LoginPipeline;
@@ -39,7 +40,7 @@ class CheckoutController extends Controller
         ]);
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', new PersonName],
             'email' => ['required', 'string', 'email', 'max:255'],
             'mobile' => ['nullable', 'string', 'regex:/^\+\d{10,15}$/'],
             'company' => ['nullable', 'string', 'max:160'],

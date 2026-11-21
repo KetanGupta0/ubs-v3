@@ -45,11 +45,13 @@ class PermissionSeeder extends Seeder
                 'clients.view' => 'View clients',
                 'clients.create' => 'Create client accounts',
                 'clients.update' => 'Edit clients',
+                'clients.delete' => 'Delete client accounts that hold no records (made by a bot or by mistake)',
             ],
             'Students' => [
                 'students.view' => 'View students',
                 'students.create' => 'Create student accounts',
                 'students.update' => 'Edit students',
+                'students.delete' => 'Delete student accounts that hold no records (made by a bot or by mistake)',
                 'lms.doubts' => 'Answer students\' questions on lessons',
                 'quiz.proctor' => 'Watch proctored quizzes live: message a student, give more time, end an attempt',
             ],

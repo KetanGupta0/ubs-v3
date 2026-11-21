@@ -44,7 +44,7 @@ Route::middleware('guest')->group(function () {
     // Students may create their own account. Clients are created by an admin.
     Route::get('register', [RegisteredUserController::class, 'create'])->name('register');
     Route::post('register', [RegisteredUserController::class, 'store'])
-        ->middleware('throttle:10,1')
+        ->middleware(['throttle:10,1', 'throttle:20,60,register-hourly'])
         ->name('register.store');
 
     Route::get('forgot-password', [PasswordResetController::class, 'request'])->name('password.request');

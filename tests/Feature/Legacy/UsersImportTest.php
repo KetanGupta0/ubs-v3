@@ -183,3 +183,17 @@ it('changes nothing and sends nothing on a dry run', function () {
 it('refuses a step it does not know', function () {
     $this->artisan('legacy:import', ['--only' => 'everything', '--dry-run' => true]);
 })->throws(InvalidArgumentException::class);
+
+it('leaves behind an account whose name carries a link, a bot\'s sign up', function () {
+    $bot = LegacyDatabase::user(['name' => '🔥 70.000 TL Sonraki Hamleni Degistirebilir https://bit.ly/4z7oyMl 🔥', 'role' => 'client', 'email' => 'bot@example.test']);
+    LegacyDatabase::user(['name' => 'Asha Verma']);
+    file_put_contents($this->genOneFile, '');
+
+    importUsers($this, ['--generation-one' => $this->genOneFile]);
+
+    expect(User::query()->where('email', 'bot@example.test')->exists())->toBeFalse()
+        ->and(User::query()->where('name', 'Asha Verma')->exists())->toBeTrue();
+
+    $report = json_decode(Storage::disk('local')->get(collect(Storage::disk('local')->files('legacy-reports'))->last()), true);
+    expect(collect($report['steps']['users']['warnings'])->where('code', 'spam_name')->pluck('source')->all())->toBe(["users#{$bot}"]);
+});

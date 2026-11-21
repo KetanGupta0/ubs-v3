@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
 use App\Models\RegistrationForm;
+use App\Rules\PersonName;
 use App\Services\Lms\Registrar;
 use App\Support\HumanCheck;
 use App\Support\Identifier;
@@ -89,7 +90,7 @@ class RegistrationController extends Controller
         ]);
 
         $rules = [
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', new PersonName],
             'email' => ['required', 'string', 'email', 'max:255'],
             'mobile' => ['required', 'string', 'regex:/^\+\d{10,15}$/'],
             // A field a person never sees and a crude bot usually fills.

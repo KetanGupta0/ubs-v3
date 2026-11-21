@@ -157,6 +157,18 @@ Rules that are easy to break and expensive to get wrong:
   sign out included, keeps chat closed because opening it marks messages read,
   mutes `Activity` so nothing lands in their record, and ends it after 30 minutes.
   The way back is `POST /viewing-as/stop`.
+- **A person's name is letters only (`App\Rules\PersonName`).** It is repeated in the
+  mail an account receives, so a form that took anything let bots put an advert and a
+  link there for our domain to mail out: three such "clients" came from v2 in November
+  2026. Every form that names a person uses the rule; the student sign up has the
+  honeypot, the human check and an hourly limit like the other account forms, and the
+  importer leaves behind a v2 account whose name carries a link (`spam_name`).
+- **Deleting a student or client is `App\Services\Admin\AccountDeleter`,** and only an
+  account that holds nothing: almost every key to `users` cascades, so a delete would
+  take payments, invoices and certificates with it. Blockers are read from the
+  database's foreign keys (a new table blocks until it is listed in `OWNED`), named to
+  whoever asked, and suspending is the way to shut such an account. `students.delete`
+  and `clients.delete`, audited, permanent so the address is free again.
 - Anything flashed for a single render, such as a two factor secret or a set of
   recovery codes, has to be listed in `HandleInertiaRequests::share` under
   `flash` or it never reaches the client.

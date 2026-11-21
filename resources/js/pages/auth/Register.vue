@@ -2,7 +2,7 @@
 /**
  * Student self registration. Clients are created by an administrator.
  */
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { User, Mail, Phone, Lock, Eye, EyeOff, ArrowRight } from 'lucide-vue-next';
 
@@ -13,10 +13,12 @@ import UiFormField from '@/components/UI/UiFormField.vue';
 import UiCheckbox from '@/components/UI/UiCheckbox.vue';
 import GoogleButton from '@/components/Auth/GoogleButton.vue';
 
-defineProps({
+const props = defineProps({
     googleEnabled: { type: Boolean, default: false },
     /** The course somebody chose with "Enrol now", if that is how they got here. */
     enrolling: { type: String, default: null },
+    /** Cloudflare Turnstile's public key, when the site has the human check switched on. */
+    humanCheck: { type: String, default: null },
 });
 
 const showPassword = ref(false);
@@ -28,6 +30,33 @@ const form = useForm({
     password: '',
     password_confirmation: '',
     terms: false,
+    website: '',
+    'cf-turnstile-response': '',
+});
+
+/* Cloudflare Turnstile, only when the site has it switched on. */
+const widget = ref(null);
+
+function renderWidget() {
+    if (!props.humanCheck || !widget.value || !window.turnstile) return;
+    window.turnstile.render(widget.value, {
+        sitekey: props.humanCheck,
+        callback: (token) => { form['cf-turnstile-response'] = token; },
+        'expired-callback': () => { form['cf-turnstile-response'] = ''; },
+    });
+}
+
+onMounted(() => {
+    if (!props.humanCheck) return;
+    if (window.turnstile) {
+        renderWidget();
+        return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    script.onload = renderWidget;
+    document.head.appendChild(script);
 });
 
 function submit() {
@@ -161,6 +190,16 @@ function submit() {
                 <p v-if="form.errors.terms" class="mt-1 text-xs font-medium text-danger">
                     {{ form.errors.terms }}
                 </p>
+            </div>
+
+            <!-- Hidden from people and from screen readers. -->
+            <div class="absolute -left-[9999px] h-px w-px overflow-hidden" aria-hidden="true">
+                <label>Website <input v-model="form.website" type="text" tabindex="-1" autocomplete="off"></label>
+            </div>
+
+            <div v-if="humanCheck">
+                <div ref="widget" />
+                <p v-if="form.errors.human" class="mt-1.5 text-sm text-danger">{{ form.errors.human }}</p>
             </div>
 
             <UiButton type="submit" size="lg" block :loading="form.processing">

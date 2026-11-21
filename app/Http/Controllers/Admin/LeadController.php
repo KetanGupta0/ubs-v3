@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Lead;
 use App\Models\LeadNote;
 use App\Models\User;
+use App\Rules\PersonName;
 use App\Services\Admin\AccountCreator;
 use App\Services\Admin\Auditor;
 use App\Support\Table\Column;
@@ -137,7 +138,7 @@ class LeadController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', new PersonName],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'mobile' => ['nullable', 'string', 'regex:/^\+\d{10,15}$/', Rule::unique('users', 'mobile')],
             'company' => ['nullable', 'string', 'max:160'],

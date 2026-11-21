@@ -131,6 +131,12 @@ Route::middleware(['auth', 'password.owned', 'role:admin'])
             Route::put('{role}s/{user}/status', [PeopleController::class, 'setStatus'])
                 ->whereIn('role', ['client', 'student'])
                 ->name('people.status');
+            // Only an account that holds nothing (AccountDeleter); the action
+            // checks the permission for the role it is deleting.
+            Route::delete('{role}s/{user}', [PeopleController::class, 'destroy'])
+                ->whereIn('role', ['client', 'student'])
+                ->middleware(['permission:clients.delete,students.delete', 'throttle:30,1'])
+                ->name('people.destroy');
         });
 
         /* ------------------------------------------- client organisations */

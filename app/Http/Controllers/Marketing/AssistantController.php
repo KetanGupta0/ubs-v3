@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Marketing;
 
 use App\Http\Controllers\Controller;
 use App\Models\AssistantConversation;
+use App\Rules\PersonName;
 use App\Services\Assistant\Assistant;
 use App\Support\Identifier;
 use Illuminate\Http\JsonResponse;
@@ -92,7 +93,7 @@ class AssistantController extends Controller
 
         $validated = $this->validatedInput($request, [
             'token' => ['required', 'string', 'size:40'],
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', new PersonName],
             'email' => ['required', 'string', 'email', 'max:255'],
             'mobile' => ['nullable', 'string', 'regex:/^\+\d{10,15}$/'],
             'need' => ['required', 'string', 'max:1000'],

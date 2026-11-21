@@ -7,6 +7,7 @@ use App\Models\Course;
 use App\Models\Lead;
 use App\Models\Service;
 use App\Models\Solution;
+use App\Rules\PersonName;
 use App\Services\Leads\LeadNotifier;
 use App\Support\Identifier;
 use Illuminate\Http\RedirectResponse;
@@ -33,7 +34,7 @@ class LeadController extends Controller
         ]);
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', new PersonName],
             'email' => ['required', 'string', 'email', 'max:255'],
             'mobile' => ['nullable', 'string', 'regex:/^\+\d{10,15}$/'],
             'company' => ['nullable', 'string', 'max:160'],
@@ -104,7 +105,7 @@ class LeadController extends Controller
         ]);
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', new PersonName],
             'email' => ['required', 'string', 'email', 'max:255'],
             'mobile' => ['nullable', 'string', 'regex:/^\+\d{10,15}$/'],
             'company' => ['nullable', 'string', 'max:160'],

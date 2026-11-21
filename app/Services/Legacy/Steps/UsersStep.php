@@ -73,6 +73,17 @@ class UsersStep extends Step
                 return;
             }
 
+            // v2 took any name, and bots used it to carry an advert and a link
+            // (three "clients" on 1 Sep 2026, never verified, never signed in).
+            // An account named with a link is a bot's: bringing it would have
+            // our mail repeat the link to whatever address it typed.
+            if (preg_match('~https?://|www\.|bit\.ly/|t\.me/~i', (string) $row->name)) {
+                $report->count('users', 'skipped');
+                $report->warn('users', 'spam_name', $source, 'Its name carries a link, which is a bot\'s sign up; not imported.');
+
+                return;
+            }
+
             $checksum = Ledger::checksum($row);
             $entry = $context->ledger->find('users', (int) $row->id);
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Client;
 
 use App\Models\ClientMember;
+use App\Rules\PersonName;
 use App\Services\Client\Organisation;
 use App\Support\Identifier;
 use Illuminate\Http\RedirectResponse;
@@ -66,7 +67,7 @@ class PeopleController extends ClientController
         ]);
 
         $validated = $this->validatedInput($request, [
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', new PersonName],
             'email' => ['required', 'string', 'email', 'max:255'],
             'mobile' => ['nullable', 'string', 'regex:/^\+\d{10,15}$/'],
             'role' => ['required', Rule::in(array_keys(ClientMember::ROLES))],

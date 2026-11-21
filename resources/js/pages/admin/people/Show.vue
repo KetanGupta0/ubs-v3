@@ -3,7 +3,7 @@ import { ref } from 'vue';
 import { Head, router, useForm } from '@inertiajs/vue3';
 import {
     ArrowLeft, KeyRound, ShieldCheck, ShieldOff, MailCheck, MailWarning,
-    PhoneCall, Send, CheckCircle2, XCircle, Clock, Eye,
+    PhoneCall, Send, CheckCircle2, XCircle, Clock, Eye, Trash2,
 } from 'lucide-vue-next';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -31,6 +31,8 @@ const props = defineProps({
     canSeeBilling: { type: Boolean, default: false },
     canManageStudent: { type: Boolean, default: false },
     canViewAs: { type: Boolean, default: false },
+    /** Holds students.delete or clients.delete for this role. Whether the account holds records is checked on delete. */
+    canDelete: { type: Boolean, default: false },
     organisation: { type: Object, default: null },
     memberRoles: { type: Array, default: () => [] },
     canManageClient: { type: Boolean, default: false },
@@ -73,6 +75,21 @@ function save() {
 
 function setStatus(status) {
     router.put(`/admin/${props.role}s/${props.person.id}/status`, { status }, { preserveScroll: true });
+}
+
+/* Delete an account that holds nothing (a bot's or a mistake's); one with records is refused and named. */
+const deleting = ref(false);
+const deleteProcessing = ref(false);
+
+function destroy() {
+    deleteProcessing.value = true;
+    router.delete(`/admin/${props.role}s/${props.person.id}`, {
+        preserveScroll: true,
+        onFinish: () => {
+            deleteProcessing.value = false;
+            deleting.value = false;
+        },
+    });
 }
 
 function resend() {
@@ -121,6 +138,10 @@ function resend() {
                     <UiButton v-else variant="secondary" size="sm" @click="setStatus('active')">
                         <template #leading><ShieldCheck class="h-3.5 w-3.5" /></template>
                         Reactivate
+                    </UiButton>
+                    <UiButton v-if="canDelete" variant="danger" size="sm" @click="deleting = true">
+                        <template #leading><Trash2 class="h-3.5 w-3.5" /></template>
+                        Delete
                     </UiButton>
                 </template>
             </PageHeader>
@@ -367,6 +388,20 @@ function resend() {
             <template #footer>
                 <UiButton variant="secondary" @click="resending = false">Cancel</UiButton>
                 <UiButton @click="resend">Generate and send</UiButton>
+            </template>
+        </UiModal>
+
+        <UiModal
+            :open="deleting"
+            :title="`Delete ${person.name}?`"
+            description="For an account made by a bot or by mistake. It is deleted for good and the address can be used again; the audit log keeps who it was. An account with any record (an enrolment, a payment, an invoice, a message) cannot be deleted and you will be told what keeps it: suspend that one instead."
+            size="sm"
+            :persistent="deleteProcessing"
+            @close="deleting = false"
+        >
+            <template #footer>
+                <UiButton variant="secondary" @click="deleting = false">Cancel</UiButton>
+                <UiButton variant="danger" :loading="deleteProcessing" @click="destroy">Delete for good</UiButton>
             </template>
         </UiModal>
 

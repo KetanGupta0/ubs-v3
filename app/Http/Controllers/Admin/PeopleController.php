@@ -9,7 +9,9 @@ use App\Models\ClientMember;
 use App\Models\College;
 use App\Models\CredentialDelivery;
 use App\Models\User;
+use App\Rules\PersonName;
 use App\Services\Admin\AccountCreator;
+use App\Services\Admin\AccountDeleter;
 use App\Services\Admin\Auditor;
 use App\Services\Admin\CredentialBulkSender;
 use App\Services\Lms\StudentRecord;
@@ -82,7 +84,7 @@ class PeopleController extends Controller
         ]);
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', new PersonName],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'mobile' => ['nullable', 'string', 'regex:/^\+\d{10,15}$/', Rule::unique('users', 'mobile')],
 
@@ -165,6 +167,7 @@ class PeopleController extends Controller
             'canSeeBilling' => $request->user()->hasPermission('billing.view'),
             'canManageStudent' => $roleEnum === Role::Student && $request->user()->hasPermission('students.update'),
             'canViewAs' => $request->user()->hasPermission('people.view_as'),
+            'canDelete' => $request->user()->hasPermission("{$roleEnum->value}s.delete"),
             // A client's organisation (CL8): its people if this is the account,
             // or which organisation this person works in if they joined one.
             'organisation' => $roleEnum === Role::Client ? $this->organisationFor($user) : null,
@@ -201,7 +204,7 @@ class PeopleController extends Controller
         ]);
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', new PersonName],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'mobile' => ['nullable', 'string', 'regex:/^\+\d{10,15}$/', Rule::unique('users', 'mobile')->ignore($user->id)],
             'company' => ['nullable', 'string', 'max:160'],
@@ -340,6 +343,29 @@ class PeopleController extends Controller
         }
 
         return implode(' ', $parts);
+    }
+
+    /**
+     * Delete an account that holds nothing worth keeping: a bot's or a
+     * mistake's. Anything with a record is refused with what keeps it, and
+     * suspending is the way to shut it.
+     */
+    public function destroy(Request $request, string $role, User $user, AccountDeleter $deleter): RedirectResponse
+    {
+        $roleEnum = $this->roleFrom($role);
+        abort_unless($user->role === $roleEnum, 404);
+        abort_unless($request->user()->hasPermission("{$role}s.delete"), 403);
+
+        $blockers = $deleter->blockers($user);
+
+        if ($blockers !== []) {
+            return back()->with('error', "{$user->name} has ".implode(', ', $blockers).' on record, so the account cannot be deleted. Suspend it instead.');
+        }
+
+        $name = $user->name;
+        $deleter->delete($user);
+
+        return redirect("/admin/{$role}s")->with('success', "{$name}'s account was deleted.");
     }
 
     public function setStatus(Request $request, string $role, User $user, Auditor $auditor): RedirectResponse
