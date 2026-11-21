@@ -91,7 +91,7 @@ function remove(assignment) {
             { label: 'Assignments' },
         ]"
     >
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Assignments and projects"
                 :description="`What students hand in for ${course.title}. Marks from here carry half the final result.`"

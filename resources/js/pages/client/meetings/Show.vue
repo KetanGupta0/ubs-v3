@@ -42,7 +42,7 @@ function question() {
     <Head :title="meeting.title" />
 
     <AppLayout :title="meeting.title" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Meetings', href: '/client/meetings' }, { label: meeting.title }]">
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="meeting.title" :description="meeting.project ? meeting.project.name : null">
                 <template #actions>
                     <UiButton href="/client/meetings" variant="ghost" size="sm">

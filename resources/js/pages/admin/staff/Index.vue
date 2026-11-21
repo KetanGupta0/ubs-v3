@@ -99,7 +99,7 @@ function setStatus(member, status) {
     <Head title="Staff" />
 
     <AppLayout title="Staff" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Staff' }]">
-        <div class="mx-auto max-w-5xl">
+        <div>
             <PageHeader
                 title="Staff"
                 description="Who works here, and what each of them may do. The owner holds everything; everybody else holds only what is ticked."

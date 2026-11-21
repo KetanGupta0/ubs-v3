@@ -30,7 +30,7 @@ const tones = { successful: 'success', failed: 'danger', refunded: 'warning', cr
     <Head title="Transactions" />
 
     <AppLayout title="Transactions" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Transactions' }]">
-        <div class="mx-auto max-w-7xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Transactions"
                 description="Every payment attempt on your account. Download the whole statement, or a single receipt."

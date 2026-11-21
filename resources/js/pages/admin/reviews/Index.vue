@@ -42,7 +42,7 @@ const promote = () => router.post(`/admin/reviews/${current.value.id}/testimonia
     <Head title="Reviews" />
 
     <AppLayout title="Reviews" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Reviews' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Reviews"
                 description="What students say about their courses. Nothing shows to anybody else until it is approved, and nothing reaches the public site unless its author agreed."

@@ -85,7 +85,7 @@ const tones = { successful: 'success', failed: 'danger', refunded: 'warning', cr
             { label: payment.reference },
         ]"
     >
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="payment.title" :description="payment.description">
                 <template #actions>
                     <UiButton href="/admin/billing" variant="ghost" size="sm">

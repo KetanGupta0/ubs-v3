@@ -55,7 +55,7 @@ function decline(registration, notMe) {
     <Head title="Registrations" />
 
     <AppLayout title="Registrations" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Registrations' }]">
-        <div class="mx-auto max-w-3xl">
+        <div>
             <PageHeader
                 title="Registrations"
                 description="Courses your address was registered for through one of our registration forms."

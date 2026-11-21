@@ -80,7 +80,7 @@ const responseText = (answer) =>
             { label: attempt.student },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 :title="attempt.quiz"
                 :description="`${attempt.student} · ${attempt.course} · sat ${attempt.submittedAt}`"

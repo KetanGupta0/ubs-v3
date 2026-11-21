@@ -217,7 +217,7 @@ function setStatus(status) {
             { label: project.code },
         ]"
     >
-        <div class="mx-auto max-w-6xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="project.name" :description="project.summary">
                 <template #actions>
                     <UiButton href="/admin/projects" variant="ghost" size="sm">

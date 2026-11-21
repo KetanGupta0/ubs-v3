@@ -31,7 +31,7 @@ function draft(row) {
     <Head title="Satisfaction" />
 
     <AppLayout title="Satisfaction" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Satisfaction' }]">
-        <div class="mx-auto max-w-7xl space-y-5">
+        <div class="space-y-5">
             <PageHeader title="Satisfaction" description="Ticket ratings, and what clients said when a project was handed over." />
 
             <div class="grid gap-3 sm:grid-cols-3">

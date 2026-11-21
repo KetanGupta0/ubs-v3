@@ -30,7 +30,7 @@ const icons = {
             { label: 'Materials' },
         ]"
     >
-        <div class="mx-auto max-w-3xl">
+        <div>
             <PageHeader
                 title="Study materials"
                 description="Everything attached to lessons you can open. Handouts for sealed lessons appear as those open."

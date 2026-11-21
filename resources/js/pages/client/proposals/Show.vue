@@ -61,7 +61,7 @@ const tones = { accepted: 'success', rejected: 'danger', expired: 'neutral', sen
             { label: proposal.number },
         ]"
     >
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="proposal.title" :description="proposal.summary">
                 <template #actions>
                     <UiButton href="/client/proposals" variant="ghost" size="sm">

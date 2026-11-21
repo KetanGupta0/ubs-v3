@@ -25,7 +25,7 @@ function stop(schedule) {
     <Head title="Reports" />
 
     <AppLayout title="Reports" :breadcrumbs="[{ label: 'Dashboard', href: '/admin' }, { label: 'Reports' }]">
-        <div class="mx-auto max-w-5xl space-y-6">
+        <div class="space-y-6">
             <PageHeader
                 title="Reports"
                 description="The numbers needed to run the business. Every one of them downloads, prints, and can arrive by email on a cadence."

@@ -41,7 +41,7 @@ function destroy() {
         :title="agreement.number"
         :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Agreements', href: '/admin/agreements' }, { label: agreement.number }]"
     >
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="agreement.title" :description="`${agreement.kind} · ${agreement.number}${agreement.version > 1 ? ` · version ${agreement.version}` : ''} · ${agreement.client}`">
                 <template #actions>
                     <UiButton href="/admin/agreements" variant="ghost" size="sm">

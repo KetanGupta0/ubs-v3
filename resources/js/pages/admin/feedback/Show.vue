@@ -37,7 +37,7 @@ function comment() {
     <Head :title="item.title" />
 
     <AppLayout :title="item.title" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Staging feedback', href: '/admin/feedback' }, { label: item.title }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="item.title" :description="`${item.kind} · ${item.client} · ${item.project.name}${item.milestone ? ` · holds up ${item.milestone}` : ''}`">
                 <template #actions>
                     <UiButton href="/admin/feedback" variant="ghost" size="sm">

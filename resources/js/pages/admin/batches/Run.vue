@@ -223,7 +223,7 @@ const attendanceTone = (student) => {
             { label: batch.name },
         ]"
     >
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 :title="batch.name"
                 :description="[batch.course, batch.code, batch.college].filter(Boolean).join(' · ')"

@@ -49,7 +49,7 @@ function save() {
     <Head title="Search wording" />
 
     <AppLayout title="Search wording" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Search wording' }]">
-        <div class="mx-auto max-w-6xl">
+        <div>
             <PageHeader
                 title="Search wording"
                 description="What a search result and a shared link show for the site's fixed pages. Leave a field empty to keep the page's own wording. Pages you write, and courses, solutions and services, have their own."

@@ -128,7 +128,7 @@ function saveMail() {
     <Head title="Settings" />
 
     <AppLayout title="Settings" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Settings' }]">
-        <div class="mx-auto max-w-4xl">
+        <div>
             <PageHeader
                 title="Settings"
                 description="The details that appear on invoices and in automated messages."

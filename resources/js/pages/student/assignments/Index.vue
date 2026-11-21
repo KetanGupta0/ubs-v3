@@ -16,7 +16,7 @@ defineProps({
     <Head title="Assignments" />
 
     <AppLayout title="Assignments" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Assignments' }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Assignments and projects"
                 description="What has been set, what you have handed in, and what came back."

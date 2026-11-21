@@ -61,7 +61,7 @@ const attentionTones = {
     <Head title="Admin" />
 
     <AppLayout title="Dashboard">
-        <div class="mx-auto max-w-6xl">
+        <div>
             <PageHeader
                 title="Dashboard"
                 description="What needs doing, then how things stand."

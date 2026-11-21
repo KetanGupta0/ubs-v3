@@ -72,7 +72,7 @@ const comboOptions = [
     <Head title="Design system" />
 
     <AppLayout title="Design system" :breadcrumbs="[{ label: 'Internal' }, { label: 'Design system' }]">
-        <div class="mx-auto max-w-6xl space-y-10">
+        <div class="space-y-10">
             <!-- ------------------------------------------------------- brand -->
             <section class="space-y-4">
                 <header>

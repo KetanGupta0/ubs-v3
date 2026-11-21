@@ -21,7 +21,7 @@ const tones = { accepted: 'success', rejected: 'danger', sent: 'brand', draft: '
     <Head title="Proposals" />
 
     <AppLayout title="Proposals" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Proposals' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader title="Proposals" description="What we have quoted, and what came back.">
                 <template #actions>
                     <UiButton href="/admin/proposals/new" size="sm">

@@ -65,7 +65,7 @@ const states = {
             { label: 'Milestone' },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="milestone.title" :description="`${project.name}${milestone.dueDate ? ` · due ${milestone.dueDate}` : ''}`">
                 <template #actions>
                     <UiButton :href="`/client/projects/${project.id}`" variant="ghost" size="sm">

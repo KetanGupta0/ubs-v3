@@ -15,7 +15,7 @@ defineProps({
     <Head title="Site menus" />
 
     <AppLayout title="Site menus" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Site menus' }]">
-        <div class="mx-auto max-w-4xl">
+        <div>
             <PageHeader
                 title="Site menus"
                 description="The links in the public site's header and footer. Each menu saves on its own and is live on every page straight away. Published legal documents are always listed at the end of the footer, so they are not here."

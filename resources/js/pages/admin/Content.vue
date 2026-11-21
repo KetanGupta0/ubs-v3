@@ -163,7 +163,7 @@ function togglePublished(testimonial) {
     <Head title="Site content" />
 
     <AppLayout title="Site content" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Content' }]">
-        <div class="mx-auto max-w-5xl">
+        <div>
             <PageHeader
                 title="Site content"
                 description="The questions answered on the public site, and the quotes we are allowed to print."

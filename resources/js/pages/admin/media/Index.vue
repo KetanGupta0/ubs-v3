@@ -64,7 +64,7 @@ function remove(row) {
     <Head title="Media library" />
 
     <AppLayout title="Media library" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Media library' }]">
-        <div class="mx-auto max-w-6xl space-y-6">
+        <div class="space-y-6">
             <PageHeader
                 title="Media library"
                 :description="`Pictures for the public site's pages: upload once, use on any page. ${summary.count} ${summary.count === 1 ? 'picture' : 'pictures'}, ${summary.size} in all.`"

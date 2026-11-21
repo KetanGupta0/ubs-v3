@@ -150,7 +150,7 @@ function createFolder() {
     <Head title="Documents" />
 
     <AppLayout title="Documents" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Documents' }]">
-        <div class="mx-auto max-w-6xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Client documents"
                 description="Proposals, specifications, reports and handover files. Replacing one keeps the version it replaced."

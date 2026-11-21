@@ -28,7 +28,7 @@ const form = useForm({ ...props.details });
     <Head title="Billing details" />
 
     <AppLayout title="Billing details" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Payments', href: '/client/payments' }, { label: 'Billing details' }]">
-        <div class="mx-auto max-w-2xl space-y-5">
+        <div class="space-y-5">
             <PageHeader title="Billing details" description="What we put on your invoices. A change applies to invoices issued from now on; one already issued keeps what it was issued with.">
                 <template #actions>
                     <UiButton href="/client/payments" variant="ghost" size="sm">

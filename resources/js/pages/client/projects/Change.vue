@@ -49,7 +49,7 @@ function decline() {
             { label: change.number },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="change.title" :description="`${change.number} · ${change.project.name}`">
                 <template #actions>
                     <UiButton :href="`/client/projects/${change.project.id}`" variant="ghost" size="sm">

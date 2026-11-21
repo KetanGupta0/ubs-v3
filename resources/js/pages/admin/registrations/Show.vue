@@ -92,7 +92,7 @@ async function copyLink() {
             { label: form.title },
         ]"
     >
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader :title="form.title" :description="`${form.course}${form.batch ? ` · ${form.batch}` : ''} · ${form.fee} · ${form.approval === 'review' ? 'each one approved by the team' : 'on the course once the address is confirmed'}`">
                 <template #actions>
                     <UiButton href="/admin/registration-forms" variant="ghost" size="sm">

@@ -33,7 +33,7 @@ function setHidden(hidden) {
         :title="`Question on ${doubt.lesson}`"
         :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Questions', href: '/admin/doubts?filter[status]=open' }, { label: doubt.lesson }]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="doubt.lesson" :description="`${doubt.course}${doubt.batch ? ` · ${doubt.batch}` : ''}`">
                 <template #actions>
                     <UiButton href="/admin/doubts?filter[status]=open" variant="ghost" size="sm">

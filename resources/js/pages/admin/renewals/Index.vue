@@ -72,7 +72,7 @@ const label = (row) => (row.status !== 'active' ? 'Not watching' : row.days < 0 
     <Head title="Renewals" />
 
     <AppLayout title="Renewals" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Renewals' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader title="Renewals" description="Domains, hosting, certificates and update windows we keep an eye on for clients. They and we are reminded at 30, 14 and 3 days; contracts and subscriptions are reminded about from their own screens.">
                 <template #actions>
                     <UiButton size="sm" @click="start()">

@@ -74,7 +74,7 @@ function cancel() {
     <Head :title="`Order ${order.number}`" />
 
     <AppLayout :title="`Order ${order.number}`" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Orders', href: '/client/orders' }, { label: order.number }]">
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="`Order ${order.number}`" :description="`Placed ${order.placedAt}${order.placedBy ? ` by ${order.placedBy}` : ''}.`">
                 <template #actions>
                     <UiButton href="/client/orders" variant="ghost" size="sm">

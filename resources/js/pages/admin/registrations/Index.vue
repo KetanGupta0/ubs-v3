@@ -27,7 +27,7 @@ const states = {
     <Head title="Registration forms" />
 
     <AppLayout title="Registration forms" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Registration forms' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Registration forms"
                 description="Forms for one course that anybody can fill without an account: for a poster, a college visit or a workshop. Each has its own address and QR code."

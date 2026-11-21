@@ -15,7 +15,7 @@ const tones = { new: 'warning', acknowledged: 'brand', in_progress: 'brand', fix
     <Head title="Staging feedback" />
 
     <AppLayout title="Staging feedback" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Staging feedback' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader title="Staging feedback" description="What clients found on the staging previews. Move each along; when it is fixed, the person who reported it is asked to check." />
 
             <DataTable :table="table" search-placeholder="Search feedback…" empty-title="Nothing reported" empty-description="Clients report from their project's Feedback page.">

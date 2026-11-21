@@ -15,7 +15,7 @@ defineProps({ table: { type: Object, required: true } });
     <Head title="Support" />
 
     <AppLayout title="Support" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Support' }]">
-        <div class="mx-auto max-w-4xl">
+        <div>
             <PageHeader title="Support" description="Ask us about a course, a class, your fees or the site. A person reads every ticket and replies here, and by email.">
                 <template #actions>
                     <UiButton href="/student/support/new" size="sm">

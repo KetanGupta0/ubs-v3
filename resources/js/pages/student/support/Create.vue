@@ -25,7 +25,7 @@ const submit = () => form.post('/student/support');
         title="New ticket"
         :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Support', href: '/student/support' }, { label: 'New ticket' }]"
     >
-        <form class="mx-auto max-w-2xl space-y-5" @submit.prevent="submit">
+        <form class="space-y-5" @submit.prevent="submit">
             <PageHeader title="New ticket" description="The more specific the first message, the faster the answer.">
                 <template #actions>
                     <UiButton href="/student/support" variant="ghost" size="sm">

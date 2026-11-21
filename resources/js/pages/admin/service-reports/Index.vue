@@ -13,7 +13,7 @@ defineProps({ table: { type: Object, required: true } });
     <Head title="Service reports" />
 
     <AppLayout title="Service reports" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Service reports' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader title="Service reports" description="One a month for each maintenance contract, drafted on the 1st with the ticket figures. Add uptime, hours and the work done, then publish it into the client's documents." />
 
             <DataTable :table="table" empty-title="No reports yet" empty-description="The first drafts appear on the 1st of next month.">

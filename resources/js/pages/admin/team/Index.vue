@@ -16,7 +16,7 @@ defineProps({ table: { type: Object, required: true } });
     <Head title="Team and mentors" />
 
     <AppLayout title="Team and mentors" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Team and mentors' }]">
-        <div class="mx-auto max-w-6xl">
+        <div>
             <PageHeader
                 title="Team and mentors"
                 description="The people on the About page and the mentors on the Training page. Real people only: with nobody added, each section stays off the site."

@@ -24,7 +24,7 @@ const tone = (key) => ({ paid: 'success', pending: 'warning', cancelled: 'neutra
     <Head title="Shop orders" />
 
     <AppLayout title="Shop orders" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Shop orders' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader title="Shop orders" :description="`Bought from the cart. ${counts.paidThisMonth} sold this month before tax; ${counts.pending} waiting for payment.`">
                 <template #actions>
                     <UiButton href="/admin/licences" variant="ghost" size="sm">

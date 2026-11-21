@@ -19,7 +19,7 @@ defineProps({
     <Head title="My progress" />
 
     <AppLayout title="My progress" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'My progress' }]">
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader title="My progress" description="How each of your courses is going, from what has been recorded. Your trainer sees the same." />
 
             <UiEmptyState v-if="!courses.length" :icon="TrendingUp" title="Nothing to show yet" description="Join a course and this fills in as you go.">

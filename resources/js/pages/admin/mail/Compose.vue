@@ -143,7 +143,7 @@ function submit(action) {
     <Head :title="campaign ? 'Change the announcement' : 'New announcement'" />
 
     <AppLayout :title="campaign ? 'Change the announcement' : 'New announcement'" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Announcements', href: '/admin/mail/broadcasts' }, { label: campaign ? 'Change' : 'New' }]">
-        <div class="mx-auto max-w-4xl space-y-6">
+        <div class="space-y-6">
             <PageHeader :title="campaign ? 'Change the announcement' : 'New announcement'" description="Nobody gets more than a couple of these a week, and every one says how to stop them.">
                 <template #actions>
                     <UiButton href="/admin/mail/broadcasts" variant="ghost" size="sm">

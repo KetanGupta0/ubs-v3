@@ -47,7 +47,7 @@ function close() {
             { label: ticket.reference },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="ticket.subject" :description="ticket.reference">
                 <template #actions>
                     <UiButton href="/client/support" variant="ghost" size="sm">

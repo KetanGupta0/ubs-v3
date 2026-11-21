@@ -17,7 +17,7 @@ defineProps({
     <Head :title="`Conversation · ${conversation.started}`" />
 
     <AppLayout title="Conversation" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Website assistant', href: '/admin/assistant' }, { label: conversation.started }]">
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 :title="`Started ${conversation.started}`"
                 :description="`${conversation.page ? `On ${conversation.page}. ` : ''}${conversation.outcome ? `${conversation.outcome}. ` : ''}${conversation.tokens.toLocaleString('en-IN')} tokens. Deleted on ${conversation.deletes}.`"

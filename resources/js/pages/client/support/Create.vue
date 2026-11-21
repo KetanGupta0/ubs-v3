@@ -42,7 +42,7 @@ function submit() {
             { label: 'New ticket' },
         ]"
     >
-        <form class="mx-auto max-w-2xl space-y-5" @submit.prevent="submit">
+        <form class="space-y-5" @submit.prevent="submit">
             <PageHeader
                 title="Raise a ticket"
                 description="Tell us what is happening. The more specific the first message, the fewer rounds it takes."

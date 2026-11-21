@@ -15,7 +15,7 @@ defineProps({ table: { type: Object, required: true } });
     <Head title="Pages" />
 
     <AppLayout title="Pages" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Pages' }]">
-        <div class="mx-auto max-w-6xl">
+        <div>
             <PageHeader
                 title="Pages"
                 description="Pages on the public site that you write here: an event, a policy, a campaign. Each lives at /pages/its-address once published."

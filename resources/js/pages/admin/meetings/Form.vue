@@ -56,7 +56,7 @@ function save() {
         :title="meeting ? 'Change the meeting' : 'Schedule a meeting'"
         :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Meetings', href: '/admin/meetings' }, { label: meeting ? meeting.title : 'New' }]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 :title="meeting ? 'Change the meeting' : 'Schedule a meeting'"
                 description="Times are India time. The client's people are told by email and in their account; if a meeting already happened, record it and write the minutes."

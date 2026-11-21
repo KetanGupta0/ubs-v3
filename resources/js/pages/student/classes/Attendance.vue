@@ -18,7 +18,7 @@ defineProps({
     <Head title="Attendance" />
 
     <AppLayout title="Attendance" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Attendance' }]">
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Attendance"
                 description="Which classes you were at, and which you missed. Recordings are linked where there is one."

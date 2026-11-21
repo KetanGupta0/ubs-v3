@@ -36,7 +36,7 @@ const readAll = () => router.post('/notifications/read-all', {}, { preserveScrol
     <Head title="Notifications" />
 
     <AppLayout title="Notifications" :breadcrumbs="[{ label: 'Notifications' }]">
-        <div class="mx-auto max-w-4xl">
+        <div>
             <PageHeader title="Notifications" description="What we have told you here. The same things also come by email, unless they are only for this screen.">
                 <template #actions>
                     <UiButton v-if="unread && !viewingAs" size="sm" variant="secondary" @click="readAll">

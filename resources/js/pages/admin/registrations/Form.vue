@@ -129,7 +129,7 @@ function destroy() {
             { label: editing ? form.title : 'New' },
         ]"
     >
-        <div class="mx-auto max-w-3xl">
+        <div>
             <PageHeader
                 :title="editing ? 'Change the form' : 'New registration form'"
                 description="Anybody can fill it without an account. New addresses get an account and their sign in details; an existing student has to confirm from their own account first."

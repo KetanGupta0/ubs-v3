@@ -100,7 +100,7 @@ const statusTones = { active: 'success', revoked: 'danger', rotated: 'neutral', 
     <Head title="API keys" />
 
     <AppLayout title="API keys" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'API keys' }]">
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="API keys"
                 description="Keys for the products that need them, with the quota each one is using."

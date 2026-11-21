@@ -24,7 +24,7 @@ const form = useForm({ project_id: props.preselectedProject, title: '', descript
     <Head title="Record a change" />
 
     <AppLayout title="Record a change" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Change requests', href: '/admin/change-requests' }, { label: 'New' }]">
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader title="Record a change" description="What the client asked for, in their words where you can. You estimate it on the next screen.">
                 <template #actions>
                     <UiButton href="/admin/change-requests" variant="ghost" size="sm">

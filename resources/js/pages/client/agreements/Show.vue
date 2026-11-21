@@ -23,7 +23,7 @@ const tones = { sent: 'warning', signed: 'brand', countersigned: 'success', supe
     <Head :title="agreement.title" />
 
     <AppLayout :title="agreement.number" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Agreements', href: '/client/agreements' }, { label: agreement.number }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="agreement.title" :description="`${agreement.kind} · ${agreement.number}${agreement.version > 1 ? ` · version ${agreement.version}` : ''} · sent ${agreement.sentAt}`">
                 <template #actions>
                     <UiButton href="/client/agreements" variant="ghost" size="sm">

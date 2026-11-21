@@ -86,7 +86,7 @@ function cancel(row) {
     <Head title="Subscriptions" />
 
     <AppLayout title="Subscriptions" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Subscriptions' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Subscriptions"
                 description="Everything that renews: hosting, maintenance, licences and API plans."

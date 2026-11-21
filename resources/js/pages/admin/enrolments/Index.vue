@@ -115,7 +115,7 @@ const submitWaive = () => waiveForm.post(`/admin/enrolments/${current.value.id}/
     <Head title="Enrolments" />
 
     <AppLayout title="Enrolments" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Enrolments' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Enrolments"
                 description="Everyone on every course. Put somebody on a course, move them between batches, take a payment made by bank transfer, or let them off a fee."

@@ -21,7 +21,7 @@ const priorityTones = { urgent: 'danger', high: 'warning', normal: 'neutral', lo
     <Head title="Tickets" />
 
     <AppLayout title="Tickets" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Tickets' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Support tickets"
                 description="Everything clients and students have raised. Client tickets run against their maintenance cover; student tickets have no promised response time."

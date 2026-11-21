@@ -25,7 +25,7 @@ function togglePublished(id) {
     <Head title="Solutions" />
 
     <AppLayout title="Solutions" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Solutions' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Solutions catalogue"
                 description="What the public catalogue renders. Publishing here changes the site immediately."

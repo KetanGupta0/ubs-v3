@@ -53,7 +53,7 @@ function fileError() {
             { label: 'Waiting on you' },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="item.title" :description="`${item.kindLabel} · ${project.name}`">
                 <template #actions>
                     <UiButton :href="`/client/projects/${project.id}`" variant="ghost" size="sm">

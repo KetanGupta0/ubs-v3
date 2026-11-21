@@ -59,7 +59,7 @@ function submit() {
             { label: 'New' },
         ]"
     >
-        <form class="mx-auto max-w-3xl space-y-5" @submit.prevent="submit">
+        <form class="space-y-5" @submit.prevent="submit">
             <PageHeader :title="`Add a ${roleLabel.toLowerCase()}`">
                 <template #actions>
                     <UiButton :href="`/admin/${role}s`" variant="ghost" size="sm">

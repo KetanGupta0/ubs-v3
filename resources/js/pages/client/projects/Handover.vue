@@ -37,7 +37,7 @@ function acknowledge() {
     <Head :title="`Handover · ${project.name}`" />
 
     <AppLayout :title="`Handover · ${project.name}`" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Projects', href: '/client/projects' }, { label: project.code ?? project.name, href: `/client/projects/${project.id}` }, { label: 'Handover' }]">
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="`Handover · ${project.name}`" :description="`Revision ${handover.revision}, ${handover.publishedAt}.`">
                 <template #actions>
                     <UiButton :href="`/client/projects/${project.id}`" variant="ghost" size="sm">

@@ -26,7 +26,7 @@ const mark = (value) => (value === null || value === undefined ? '—' : `${valu
     <Head title="Results" />
 
     <AppLayout title="Results" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Results' }]">
-        <div class="mx-auto max-w-4xl space-y-6">
+        <div class="space-y-6">
             <PageHeader
                 title="Your results"
                 description="One figure per course, and everything that went into it. The weights are shown so the number can be argued with."

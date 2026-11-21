@@ -15,7 +15,7 @@ defineProps({ statement: { type: Object, required: true } });
     <Head title="Statement of account" />
 
     <AppLayout title="Statement of account" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Payments', href: '/client/payments' }, { label: 'Statement' }]">
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader title="Statement of account" description="Invoices, and the payments, TDS and credit notes that settled them, with the balance after each. It starts at the beginning of the financial year.">
                 <template #actions>
                     <UiButton href="/client/payments" variant="ghost" size="sm">

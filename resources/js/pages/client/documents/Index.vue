@@ -57,7 +57,7 @@ function openFolder(id) {
     <Head title="Documents" />
 
     <AppLayout title="Documents" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Documents' }]">
-        <div class="mx-auto max-w-6xl">
+        <div>
             <PageHeader
                 title="Documents"
                 description="Everything we have shared with you: proposals, specifications, reports and handover files."

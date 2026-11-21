@@ -72,7 +72,7 @@ function destroy() {
             { label: isEdit ? 'Edit' : 'New' },
         ]"
     >
-        <form class="mx-auto max-w-4xl space-y-5" @submit.prevent="submit">
+        <form class="space-y-5" @submit.prevent="submit">
             <PageHeader :title="title" :description="isEdit ? project.code : null">
                 <template #actions>
                     <UiButton :href="isEdit ? `/admin/projects/${project.id}` : '/admin/projects'" variant="ghost" size="sm">

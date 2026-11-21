@@ -30,7 +30,7 @@ defineProps({
             { label: invoice.number },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="`Invoice ${invoice.number}`" :description="`Issued ${invoice.issuedAt}`">
                 <template #actions>
                     <UiButton href="/client/transactions" variant="ghost" size="sm">

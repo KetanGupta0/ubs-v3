@@ -67,7 +67,7 @@ function destroy() {
         :title="member ? member.name : 'Add a person'"
         :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Team and mentors', href: '/admin/team' }, { label: member ? member.name : 'New' }]"
     >
-        <div class="mx-auto max-w-3xl">
+        <div>
             <PageHeader :title="member ? member.name : 'Add a person'">
                 <template #actions>
                     <UiButton href="/admin/team" variant="ghost" size="sm">

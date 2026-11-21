@@ -71,7 +71,7 @@ function save() {
         :title="agreement ? agreement.number : 'New agreement'"
         :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Agreements', href: '/admin/agreements' }, { label: agreement ? agreement.number : 'New' }]"
     >
-        <div class="mx-auto max-w-4xl">
+        <div>
             <PageHeader :title="agreement ? `Draft ${agreement.number}` : 'New agreement'" description="A draft. Nothing reaches the client until you send it, and after that the text is fixed.">
                 <template #actions>
                     <UiButton :href="agreement ? `/admin/agreements/${agreement.id}` : '/admin/agreements'" variant="ghost" size="sm">

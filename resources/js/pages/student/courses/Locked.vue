@@ -33,7 +33,7 @@ const icons = { payment: CreditCard, schedule: Calendar, prerequisite: Circle, q
             { label: 'Locked' },
         ]"
     >
-        <div class="mx-auto max-w-xl">
+        <div>
             <UiCard>
                 <div class="text-center">
                     <span

@@ -18,7 +18,7 @@ defineProps({
     <Head title="Certificate designs" />
 
     <AppLayout title="Certificate designs" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Certificate designs' }]">
-        <div class="mx-auto max-w-6xl">
+        <div>
             <PageHeader
                 title="Certificate designs"
                 description="How a course's certificates look: the layout, the wording and who signs. A design with no course is the default for every course without its own, and new certificates use the newest active design for their course. Certificates already issued keep the look they were issued with."

@@ -53,7 +53,7 @@ function changeRows(changes) {
     <Head title="Audit log" />
 
     <AppLayout title="Audit log" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Audit log' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Audit log"
                 description="Every change made from the admin panel, with the account that made it. Nothing here can be edited or removed from inside the application."

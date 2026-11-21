@@ -38,7 +38,7 @@ const listError = (prefix) => Object.entries(form.errors).find(([key]) => key.st
     <Head :title="`Handover · ${project.name}`" />
 
     <AppLayout :title="`Handover · ${project.name}`" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Projects', href: '/admin/projects' }, { label: project.code ?? project.name, href: `/admin/projects/${project.id}` }, { label: 'Handover' }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="`Handover pack · ${project.name}`" description="What the client comes back to a year later: where the code is, how to deploy it, what is licensed, training and the warranty.">
                 <template #actions>
                     <UiButton :href="`/admin/projects/${project.id}`" variant="ghost" size="sm">

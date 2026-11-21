@@ -176,7 +176,7 @@ function toggleComplete() {
             { label: module.title },
         ]"
     >
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div class="min-w-0">
                     <p class="text-xs font-medium uppercase tracking-wide" style="color: var(--text-muted)">

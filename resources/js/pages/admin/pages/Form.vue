@@ -107,7 +107,7 @@ const adding = ref(false);
         :title="page ? page.title : 'New page'"
         :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Pages', href: '/admin/pages' }, { label: page ? page.title : 'New' }]"
     >
-        <div class="mx-auto max-w-3xl">
+        <div>
             <PageHeader :title="page ? page.title : 'New page'">
                 <template #actions>
                     <UiButton href="/admin/pages" variant="ghost" size="sm">

@@ -76,7 +76,7 @@ const tone = (state) => ({ On: 'success', Off: 'neutral', Ended: 'neutral', 'Not
     <Head title="Discount codes" />
 
     <AppLayout title="Discount codes" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Discount codes' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader title="Discount codes" description="Codes buyers type in the cart. Each is checked when the cart is priced and again when the order is placed, and every use is kept against its order.">
                 <template #actions>
                     <UiButton size="sm" @click="start()">

@@ -60,7 +60,7 @@ function release(licence, site) {
     <Head :title="`Order ${order.number}`" />
 
     <AppLayout :title="`Order ${order.number}`" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Shop orders', href: '/admin/orders' }, { label: order.number }]">
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="`Order ${order.number}`" :description="`Placed ${order.placedAt}${order.buyer ? ` by ${order.buyer.name} (${order.buyer.email})` : ''}, for ${order.client.name}.`">
                 <template #actions>
                     <UiButton href="/admin/orders" variant="ghost" size="sm">

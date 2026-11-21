@@ -21,7 +21,7 @@ const tones = { paid: 'success', issued: 'brand', partially_paid: 'warning', can
     <Head title="Invoices" />
 
     <AppLayout title="Invoices" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Invoices' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Invoices"
                 description="Every invoice issued, in one numbered sequence per financial year."

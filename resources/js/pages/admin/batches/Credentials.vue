@@ -94,7 +94,7 @@ function issueDocument() {
             { label: 'Credentials' },
         ]"
     >
-        <div class="mx-auto max-w-4xl space-y-4">
+        <div class="space-y-4">
             <PageHeader
                 title="Certificates and documents"
                 :description="`${batch.course} · pass mark ${batch.passPercent}%${batch.minimumAttendance ? `, ${batch.minimumAttendance}% attendance` : ''}.`"

@@ -23,7 +23,7 @@ const tone = (key) => ({ paid: 'success', pending: 'warning', cancelled: 'neutra
     <Head title="Orders" />
 
     <AppLayout title="Orders" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Orders' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader title="Orders" description="What your organisation bought from our shop: licences and downloads for source code, hosted plans and add-ons, each with its invoice.">
                 <template #actions>
                     <UiButton href="/solutions" :inertia="false" variant="secondary" size="sm">

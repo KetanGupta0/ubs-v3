@@ -95,7 +95,7 @@ function submit() {
             { label: college.name },
         ]"
     >
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 :title="college.name"
                 :description="[college.university, college.city, college.coordinator].filter(Boolean).join(' · ')"

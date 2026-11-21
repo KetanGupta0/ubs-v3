@@ -22,7 +22,7 @@ defineProps({
         title="Contracts"
         :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Contracts' }]"
     >
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Maintenance contracts"
                 description="What each client is covered for, and how fast we promised to answer."

@@ -81,7 +81,7 @@ const statusTones = { active: 'success', revoked: 'danger', rotated: 'neutral', 
     <Head title="API plans" />
 
     <AppLayout title="API plans" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'API plans' }]">
-        <div class="mx-auto max-w-5xl space-y-6">
+        <div class="space-y-6">
             <PageHeader
                 title="API plans"
                 description="What a client can buy a key against, and every key issued."

@@ -48,7 +48,7 @@ const byCourse = computed(() => {
     <Head title="My notes" />
 
     <AppLayout title="My notes" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'My notes' }]">
-        <div class="mx-auto max-w-3xl">
+        <div>
             <PageHeader title="My notes" description="What you wrote and bookmarked on your lessons. Only you can read these.">
                 <template #actions>
                     <span class="flex items-center gap-1 text-xs" style="color: var(--text-muted)"><Lock class="h-3 w-3" /> Private</span>

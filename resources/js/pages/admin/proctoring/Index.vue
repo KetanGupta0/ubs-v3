@@ -31,7 +31,7 @@ const states = {
     <Head title="Proctoring" />
 
     <AppLayout title="Proctoring" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Proctoring' }]">
-        <div class="mx-auto max-w-5xl space-y-6">
+        <div class="space-y-6">
             <PageHeader
                 title="Proctoring"
                 description="Proctored quizzes are sat in full screen during a sitting, and the console shows every student sitting one, live: in full screen or not, in the quiz or away, what they tried. You can message a student, give more time or end an attempt. Nobody's screen or camera is seen, and nothing is recorded."

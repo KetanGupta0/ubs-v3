@@ -51,7 +51,7 @@ function submit() {
             { label: assignment.title },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="assignment.title" :description="assignment.course">
                 <template #actions>
                     <UiButton href="/student/assignments" variant="ghost" size="sm">

@@ -17,7 +17,7 @@ const tones = { draft: 'neutral', sent: 'warning', signed: 'brand', countersigne
     <Head title="Agreements" />
 
     <AppLayout title="Agreements" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Agreements' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Agreements"
                 description="Service agreements, statements of work, NDAs and licences. A draft can change; once sent, its text and PDF are fixed, and a change is a new version."

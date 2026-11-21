@@ -21,7 +21,7 @@ defineProps({
     <Head title="Payments" />
 
     <AppLayout title="Payments" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Payments' }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Payments"
                 description="What is due, and what has already been settled. Every invoice is downloadable before you pay it."

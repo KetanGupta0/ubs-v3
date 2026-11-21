@@ -56,7 +56,7 @@ function comment() {
             { label: item.title },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="item.title" :description="`${item.kind}${item.milestone ? ` · holds up ${item.milestone}` : ''}`">
                 <template #actions>
                     <UiButton :href="`/client/projects/${project.id}/feedback`" variant="ghost" size="sm">

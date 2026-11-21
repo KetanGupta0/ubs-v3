@@ -20,7 +20,7 @@ defineProps({
     <Head title="Your projects" />
 
     <AppLayout title="Projects" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Projects' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Projects"
                 description="Everything we are building for you, and how far along each one is."

@@ -27,7 +27,7 @@ function check(row, matches) {
     <Head title="TDS register" />
 
     <AppLayout title="TDS register" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'TDS register' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="TDS register"
                 description="Tax clients deducted at source from our invoices. Each settles its invoice when declared; the Form 16A proves it, so check each one against Form 26AS."

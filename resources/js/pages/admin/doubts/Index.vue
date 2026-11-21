@@ -20,7 +20,7 @@ const tones = { open: 'warning', answered: 'success', hidden: 'neutral' };
     <Head title="Questions" />
 
     <AppLayout title="Questions" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Questions' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Questions on lessons"
                 description="What students asked while studying. An answer here goes to the student who asked and shows to their whole batch under the lesson."

@@ -51,7 +51,7 @@ function restore(row) {
     <Head title="Licences" />
 
     <AppLayout title="Licences" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Shop orders', href: '/admin/orders' }, { label: 'Licences' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader title="Licences" description="Source code licences sold through the shop: the sites using each, when its updates end, and the last time its software checked in. Search by the key's first group, such as UBS-7K3QX." />
 
             <DataTable :table="table" search-placeholder="Search by product or key prefix…" empty-title="No licences yet" empty-description="A licence is issued when an order for source code is paid.">

@@ -66,7 +66,7 @@ const scheduleLine = (batch) =>
     <Head title="Course catalogue" />
 
     <AppLayout title="Catalogue" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Catalogue' }]">
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Join another course"
                 description="Everything open to you, including programmes that run inside the portal only."

@@ -128,7 +128,7 @@ const missingKey = computed(() => needsOptions.value && form.correct.length === 
             { label: quiz.title },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 :title="quiz.title"
                 :description="quiz.instructions || 'Add the questions, then publish the quiz.'"

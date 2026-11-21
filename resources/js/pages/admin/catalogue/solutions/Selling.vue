@@ -170,7 +170,7 @@ function removeVersion(row) {
         :title="`Selling ${solution.title}`"
         :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Solutions', href: '/admin/solutions' }, { label: solution.title, href: `/admin/solutions/${solution.id}/edit` }, { label: 'Selling' }]"
     >
-        <div class="mx-auto max-w-5xl space-y-6">
+        <div class="space-y-6">
             <PageHeader :title="`Selling ${solution.title}`" :description="`Prices here are before tax. The cart and the invoice add GST at ${taxRate}%, split by the buyer's state.`">
                 <template #actions>
                     <UiButton :href="`/admin/solutions/${solution.id}/edit`" variant="ghost" size="sm">

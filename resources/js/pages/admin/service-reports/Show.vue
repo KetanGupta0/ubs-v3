@@ -30,7 +30,7 @@ const percent = (value) => (value === null ? '—' : `${value}%`);
     <Head :title="`Service report · ${report.month}`" />
 
     <AppLayout :title="`Service report · ${report.month}`" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Service reports', href: '/admin/service-reports' }, { label: report.month }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="`${report.month} · ${report.client}`" :description="report.contract">
                 <template #actions>
                     <UiButton href="/admin/service-reports" variant="ghost" size="sm">

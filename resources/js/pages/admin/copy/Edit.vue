@@ -83,7 +83,7 @@ function discard() {
         :title="`Wording: ${page.label}`"
         :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Page wording', href: '/admin/copy' }, { label: page.label }]"
     >
-        <div class="mx-auto max-w-3xl">
+        <div>
             <PageHeader :title="`${page.label} page`" :description="`The words on ${page.path}. Save keeps a draft; Preview shows it on the real page; Publish puts it live.`">
                 <template #actions>
                     <UiButton href="/admin/copy" variant="ghost" size="sm">

@@ -46,7 +46,7 @@ function evaluate(status) {
             { label: submission.student },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 :title="assignment.title"
                 :description="`${submission.student} · ${assignment.course}`"

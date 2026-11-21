@@ -136,7 +136,7 @@ const eventLabels = {
     <Head title="Security" />
 
     <AppLayout title="Security" :breadcrumbs="[{ label: 'Settings' }, { label: 'Security' }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <!-- ------------------------------------------------- two factor -->
             <UiCard>
                 <template #header>

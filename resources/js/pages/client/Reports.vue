@@ -26,7 +26,7 @@ defineProps({
     <Head title="Reports" />
 
     <AppLayout title="Reports" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Reports' }]">
-        <div class="mx-auto max-w-5xl space-y-6">
+        <div class="space-y-6">
             <PageHeader
                 title="Reports"
                 description="Where the work stands, what it has cost, and how support is going."

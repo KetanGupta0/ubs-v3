@@ -35,7 +35,7 @@ function publicPath(row) {
     <Head title="Courses and internships" />
 
     <AppLayout title="Courses and internships" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Courses' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Courses and internships"
                 description="They share a table because they are the same shape. The type decides which public path serves it."

@@ -19,7 +19,7 @@ const label = (row) => (row.days < 0 ? 'Lapsed' : row.days === 0 ? 'Today' : `In
     <Head title="Renewals" />
 
     <AppLayout title="Renewals" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Renewals' }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader title="Renewals" description="Subscriptions, contracts, domains, hosting and certificates, soonest first. We remind you at 30, 14 and 3 days." />
 
             <UiCard v-if="!renewals.length">

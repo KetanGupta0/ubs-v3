@@ -32,7 +32,7 @@ const acknowledge = (id) => {
     <Head title="Notices" />
 
     <AppLayout title="Notices" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Notices' }]">
-        <div class="mx-auto max-w-3xl space-y-4">
+        <div class="space-y-4">
             <PageHeader
                 title="Notices about your progress"
                 description="Sent when attendance or work slips, while there is still time to do something about it."

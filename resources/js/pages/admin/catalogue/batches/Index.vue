@@ -21,7 +21,7 @@ const statusTones = { upcoming: 'brand', running: 'success', completed: 'neutral
     <Head title="Batches" />
 
     <AppLayout title="Batches" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Batches' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Batches"
                 description="Seat counts are shown on the public site, so they are treated as numbers that must be true."

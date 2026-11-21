@@ -51,7 +51,7 @@ function isCurrent(view) {
     <Head title="Classes" />
 
     <AppLayout title="Classes" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Classes' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Classes"
                 description="Every live class across every batch. Classes are scheduled and registers marked from each batch's own screen."

@@ -29,7 +29,7 @@ const base = `/admin/batches/${props.batch.routeKey}`;
         :title="`Performance: ${batch.name}`"
         :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Batches', href: '/admin/batches' }, { label: batch.name, href: `${base}/run` }, { label: 'Performance' }]"
     >
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 :title="`How ${batch.name} is doing`"
                 :description="`${batch.course}. Counted from classes marked, work handed in, quizzes sat and lessons finished. A signal is a prompt to look, not a verdict; warnings are still yours to give.`"

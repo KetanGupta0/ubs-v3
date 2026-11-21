@@ -17,7 +17,7 @@ const tones = { sent: 'warning', signed: 'brand', countersigned: 'success', supe
     <Head title="Agreements" />
 
     <AppLayout title="Agreements" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Agreements' }]">
-        <div class="mx-auto max-w-4xl">
+        <div>
             <PageHeader title="Agreements" description="Everything we have agreed in writing, each as the PDF it was sent as." />
 
             <UiEmptyState v-if="!agreements.length" :icon="ScrollText" title="No agreements yet" description="Agreements we send you appear here." />

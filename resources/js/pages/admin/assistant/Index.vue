@@ -45,7 +45,7 @@ const blocked = computed(() => {
     <Head title="Website assistant" />
 
     <AppLayout title="Website assistant" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Website assistant' }]">
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Website assistant"
                 description="An AI on the public site that answers from the catalogue and points visitors to the right page. It never invents a price, a date or a seat, says so when it does not know, and passes on a visitor's details only when they press Send."

@@ -32,7 +32,7 @@ function cancel() {
     <Head :title="campaign.subject" />
 
     <AppLayout :title="campaign.subject" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Announcements', href: '/admin/mail/broadcasts' }, { label: campaign.subject }]">
-        <div class="mx-auto max-w-6xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="campaign.subject" :description="campaign.occasion ? `The greeting for ${campaign.occasion}.` : 'An announcement.'">
                 <template #actions>
                     <UiButton href="/admin/mail/broadcasts" variant="ghost" size="sm">

@@ -19,7 +19,7 @@ defineProps({
     <Head title="Meetings" />
 
     <AppLayout title="Meetings" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Meetings' }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader title="Meetings" description="Calls with us, and their minutes. Times are India time." />
 
             <UiCard v-if="!upcoming.length && !past.length">

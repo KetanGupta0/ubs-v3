@@ -63,7 +63,7 @@ function destroy() {
             { label: isEdit ? 'Edit' : 'New' },
         ]"
     >
-        <form class="mx-auto max-w-3xl space-y-5" @submit.prevent="submit">
+        <form class="space-y-5" @submit.prevent="submit">
             <PageHeader :title="isEdit ? batch.name : 'New batch'">
                 <template #actions>
                     <UiButton href="/admin/batches" variant="ghost" size="sm">

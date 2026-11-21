@@ -111,7 +111,7 @@ function destroy() {
             { label: template ? template.name : 'New' },
         ]"
     >
-        <div class="mx-auto max-w-3xl">
+        <div>
             <PageHeader
                 :title="template ? template.name : 'New certificate design'"
                 :description="template?.issued ? `${template.issued} certificates have been issued with this design. Changes apply to new ones only.` : 'Changes apply to certificates issued from now on.'"

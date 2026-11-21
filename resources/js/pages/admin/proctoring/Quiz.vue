@@ -97,7 +97,7 @@ const states = {
             { label: 'Proctoring' },
         ]"
     >
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="quiz.title" description="Proctoring: how it is watched, when it can be sat, and Safe Exam Browser for a final assessment.">
                 <template #actions>
                     <UiButton v-if="canProctor && quiz.proctoring !== 'off'" :href="`${base}/console`" size="sm" variant="secondary">

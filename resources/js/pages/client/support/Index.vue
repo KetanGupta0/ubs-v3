@@ -22,7 +22,7 @@ const priorityTones = { urgent: 'danger', high: 'warning', normal: 'neutral', lo
     <Head title="Support" />
 
     <AppLayout title="Support" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Support' }]">
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Support"
                 description="Your maintenance cover, and everything you have raised against it."

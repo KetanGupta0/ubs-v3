@@ -20,7 +20,7 @@ defineProps({
     <Head :title="message.subject" />
 
     <AppLayout :title="message.subject" :breadcrumbs="[{ label: 'Messages' }, { label: message.date }]">
-        <div class="mx-auto max-w-2xl space-y-5">
+        <div class="space-y-5">
             <UiCard>
                 <p class="text-xs" style="color: var(--text-muted)">{{ message.date }}</p>
                 <h1 class="mt-1 text-xl font-semibold">{{ message.subject }}</h1>

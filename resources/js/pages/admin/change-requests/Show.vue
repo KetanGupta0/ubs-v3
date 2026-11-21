@@ -46,7 +46,7 @@ function withdraw() {
     <Head :title="change.number" />
 
     <AppLayout :title="change.number" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Change requests', href: '/admin/change-requests' }, { label: change.number }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="change.title" :description="`${change.number} · ${change.client}${change.project ? ` · ${change.project.name}` : ''}`">
                 <template #actions>
                     <UiButton href="/admin/change-requests" variant="ghost" size="sm">

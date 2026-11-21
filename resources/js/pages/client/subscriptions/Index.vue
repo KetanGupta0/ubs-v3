@@ -27,7 +27,7 @@ function setAutoRenew(subscription, value) {
     <Head title="Subscriptions" />
 
     <AppLayout title="Subscriptions" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Subscriptions' }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Subscriptions"
                 :description="renewingSoon

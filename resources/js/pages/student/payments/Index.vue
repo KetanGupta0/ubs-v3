@@ -30,7 +30,7 @@ const tones = { successful: 'success', failed: 'danger', refunded: 'warning', cr
     <Head title="Fees" />
 
     <AppLayout title="Fees" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Fees' }]">
-        <div class="mx-auto max-w-7xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Fees and payments"
                 description="What is due, what has been paid, and a receipt for every one of them."

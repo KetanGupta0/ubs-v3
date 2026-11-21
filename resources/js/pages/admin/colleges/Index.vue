@@ -19,7 +19,7 @@ defineProps({
     <Head title="Colleges" />
 
     <AppLayout title="Colleges" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Colleges' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Colleges"
                 description="Institutions we run internships with. The memorandum, the coordinator and the batches belong to the college, not to any one student."

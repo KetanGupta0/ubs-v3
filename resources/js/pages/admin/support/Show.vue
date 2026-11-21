@@ -53,7 +53,7 @@ const priorityTones = { urgent: 'danger', high: 'warning', normal: 'neutral', lo
             { label: ticket.reference },
         ]"
     >
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="ticket.subject" :description="ticket.reference">
                 <template #actions>
                     <UiButton href="/admin/tickets" variant="ghost" size="sm">

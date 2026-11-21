@@ -91,7 +91,7 @@ function submit() {
             { label: 'New' },
         ]"
     >
-        <form class="mx-auto max-w-3xl space-y-5" @submit.prevent="submit">
+        <form class="space-y-5" @submit.prevent="submit">
             <PageHeader
                 title="Raise a payment request"
                 description="The invoice is issued at the same moment, so they have the document before they pay."

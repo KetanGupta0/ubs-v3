@@ -88,7 +88,7 @@ function remove(review) {
             { label: 'Reviews' },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-4">
+        <div class="space-y-4">
             <PageHeader
                 title="Weekly reviews"
                 :description="`${batch.course} · ${batch.name}. Saving the same student and week again replaces that week's review.`"

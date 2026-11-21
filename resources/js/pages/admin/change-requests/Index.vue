@@ -17,7 +17,7 @@ const tones = { requested: 'warning', quoted: 'brand', approved: 'success', decl
     <Head title="Change requests" />
 
     <AppLayout title="Change requests" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Change requests' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Change requests"
                 description="Work outside the agreed scope. Estimate it and send it as an addendum; the client approves by signing, and the project's value, dates and milestones follow."

@@ -51,7 +51,7 @@ const silence = () => silenceForm.post(`/admin/chat/reports/${silencing.value.id
     <Head title="Reported messages" />
 
     <AppLayout title="Reported messages" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Reported messages' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Reported messages"
                 description="Messages members reported in their batch groups. Nothing is taken down until somebody here decides."

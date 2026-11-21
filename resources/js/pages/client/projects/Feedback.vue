@@ -59,7 +59,7 @@ const screenshotError = () => Object.entries(form.errors).find(([key]) => key.st
             { label: 'Feedback' },
         ]"
     >
-        <div class="mx-auto max-w-6xl">
+        <div>
             <PageHeader title="Feedback on staging" :description="`${project.name}. Report what is broken or should change on the preview; we tell you as it moves, and you confirm the fix.`">
                 <template #actions>
                     <UiButton :href="`/client/projects/${project.id}`" variant="ghost" size="sm">

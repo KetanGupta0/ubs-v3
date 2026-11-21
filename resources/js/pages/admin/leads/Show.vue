@@ -89,7 +89,7 @@ const facts = [
             { label: lead.reference },
         ]"
     >
-        <div class="mx-auto max-w-5xl">
+        <div>
             <PageHeader :title="lead.name" :description="lead.subject">
                 <template #actions>
                     <UiButton href="/admin/leads" variant="ghost" size="sm">

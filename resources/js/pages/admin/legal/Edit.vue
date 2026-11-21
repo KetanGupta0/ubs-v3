@@ -69,7 +69,7 @@ function discard() {
         :title="document.title"
         :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Legal documents', href: '/admin/legal' }, { label: document.title }]"
     >
-        <div class="mx-auto max-w-3xl">
+        <div>
             <PageHeader :title="document.title">
                 <template #actions>
                     <UiButton href="/admin/legal" variant="ghost" size="sm">

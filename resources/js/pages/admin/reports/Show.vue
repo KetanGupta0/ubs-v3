@@ -149,7 +149,7 @@ function stop(one) {
             { label: report.title },
         ]"
     >
-        <div class="mx-auto max-w-6xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="report.title" :description="report.description">
                 <template #actions>
                     <UiButton href="/admin/reports" variant="ghost" size="sm" class="no-print">

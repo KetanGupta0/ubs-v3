@@ -21,7 +21,7 @@ defineProps({
     <Head title="Live classes" />
 
     <AppLayout title="Live classes" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Classes' }]">
-        <div class="mx-auto max-w-4xl space-y-6">
+        <div class="space-y-6">
             <PageHeader
                 title="Live classes"
                 description="Every class runs on Google Meet. The join button opens fifteen minutes before the start."

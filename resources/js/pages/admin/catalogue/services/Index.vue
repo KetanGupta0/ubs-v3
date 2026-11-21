@@ -15,7 +15,7 @@ defineProps({ services: { type: Array, default: () => [] } });
     <Head title="Services" />
 
     <AppLayout title="Services" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Services' }]">
-        <div class="mx-auto max-w-4xl">
+        <div>
             <PageHeader title="Services" description="The three service pages on the public site.">
                 <template #actions>
                     <UiButton href="/admin/services/new" size="sm">

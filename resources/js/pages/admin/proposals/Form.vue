@@ -47,7 +47,7 @@ function submit() {
             { label: 'New' },
         ]"
     >
-        <form class="mx-auto max-w-4xl space-y-5" @submit.prevent="submit">
+        <form class="space-y-5" @submit.prevent="submit">
             <PageHeader
                 title="New proposal"
                 description="Write it here, price it on the next screen, then send it."

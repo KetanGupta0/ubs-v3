@@ -21,7 +21,7 @@ const tones = { paid: 'success', pending: 'brand', cancelled: 'neutral', refunde
     <Head title="Billing" />
 
     <AppLayout title="Billing" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Billing' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Payment requests"
                 description="Money asked for, across both business lines. Raising one issues its invoice at the same moment."

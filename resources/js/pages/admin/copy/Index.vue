@@ -13,7 +13,7 @@ defineProps({ pages: { type: Array, required: true } });
     <Head title="Page wording" />
 
     <AppLayout title="Page wording" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Page wording' }]">
-        <div class="mx-auto max-w-4xl">
+        <div>
             <PageHeader
                 title="Page wording"
                 description="The words on the site's fixed pages. Changes are saved as a draft, previewed on the real page, and reach visitors when you publish. Only words change; the layout stays as designed."

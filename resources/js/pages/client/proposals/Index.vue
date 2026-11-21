@@ -21,7 +21,7 @@ const tones = { accepted: 'success', rejected: 'danger', expired: 'neutral', sen
     <Head title="Proposals" />
 
     <AppLayout title="Proposals" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'Proposals' }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Proposals"
                 :description="awaiting

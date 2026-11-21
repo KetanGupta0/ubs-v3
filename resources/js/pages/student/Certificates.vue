@@ -32,7 +32,7 @@ const copy = async (url, key) => {
     <Head title="Certificates" />
 
     <AppLayout title="Certificates" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Certificates' }]">
-        <div class="mx-auto max-w-3xl space-y-6">
+        <div class="space-y-6">
             <PageHeader
                 title="Certificates and documents"
                 description="Everything we have issued you. Each one carries a code anybody can check without an account."

@@ -19,7 +19,7 @@ defineProps({
     <Head title="Your courses" />
 
     <AppLayout title="My courses" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Courses' }]">
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader title="My courses" description="Everything you are enrolled on, and how far through you are.">
                 <template #actions>
                     <UiButton href="/student/catalogue" variant="secondary" size="sm">

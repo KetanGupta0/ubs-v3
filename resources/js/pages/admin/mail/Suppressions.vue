@@ -46,7 +46,7 @@ function allow(row) {
     <Head title="Do not mail" />
 
     <AppLayout title="Do not mail" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Announcements', href: '/admin/mail/broadcasts' }, { label: 'Do not mail' }]">
-        <div class="mx-auto max-w-6xl">
+        <div>
             <PageHeader title="Do not mail" description="No greetings or announcements go to these addresses. Messages about an account still do: sign in codes, receipts, reminders.">
                 <template #actions>
                     <UiButton size="sm" @click="start">

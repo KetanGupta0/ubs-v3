@@ -38,7 +38,7 @@ function resolve(warning) {
             { label: 'Notices' },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-4">
+        <div class="space-y-4">
             <PageHeader
                 title="Notices sent"
                 :description="`${batch.course} · ${batch.name}. Sent while there is still time to act on them, not at the end.`"

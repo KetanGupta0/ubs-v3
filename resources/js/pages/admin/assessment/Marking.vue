@@ -29,7 +29,7 @@ const tone = (days) => (days >= 7 ? 'danger' : days >= 3 ? 'warning' : 'neutral'
     <Head title="Marking" />
 
     <AppLayout title="Marking" :breadcrumbs="[{ label: 'Dashboard', href: '/admin' }, { label: 'Marking' }]">
-        <div class="mx-auto max-w-4xl space-y-6">
+        <div class="space-y-6">
             <PageHeader
                 title="Waiting to be marked"
                 description="Oldest first. A mark that arrives three weeks later is not feedback, it is a receipt."

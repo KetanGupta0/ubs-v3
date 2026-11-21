@@ -44,7 +44,7 @@ const medal = (rank) => ({ 1: '🥇', 2: '🥈', 3: '🥉' })[rank] ?? null;
     <Head title="Leaderboard" />
 
     <AppLayout title="Leaderboard" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Leaderboard' }]">
-        <div class="mx-auto max-w-3xl space-y-6">
+        <div class="space-y-6">
             <PageHeader
                 title="Leaderboard"
                 description="Your own batch, not the whole platform. Being bottom of a list of everybody who ever enrolled tells you nothing you can act on."

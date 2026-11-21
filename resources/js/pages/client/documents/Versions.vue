@@ -25,7 +25,7 @@ defineProps({
             { label: 'Versions' },
         ]"
     >
-        <div class="mx-auto max-w-2xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 :title="document.name"
                 description="Every version is kept. An earlier one is still downloadable."

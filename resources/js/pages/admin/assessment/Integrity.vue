@@ -50,7 +50,7 @@ function aiLine(ai) {
             { label: 'Integrity' },
         ]"
     >
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 :title="quiz.title"
                 :description="`Attempts the checks flagged, the most worrying first. ${quiz.submitted} submitted. ${quiz.checkedAt ? `Last checked ${quiz.checkedAt}.` : quiz.closesAt ? `Checked once it closes, ${quiz.closesAt}.` : 'It has no closing time, so it is checked when you ask.'}`"

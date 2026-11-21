@@ -42,7 +42,7 @@ const icons = { quiz: ClipboardList, assignment: FileText };
     <Head title="Your learning" />
 
     <AppLayout title="Dashboard">
-        <div class="mx-auto max-w-7xl space-y-6">
+        <div class="space-y-6">
             <!-- ------------------------------------------------ warnings -->
             <Link
                 v-if="unreadWarnings"

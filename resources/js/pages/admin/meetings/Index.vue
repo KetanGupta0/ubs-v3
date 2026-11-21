@@ -17,7 +17,7 @@ const tones = { scheduled: 'brand', held: 'success', cancelled: 'neutral' };
     <Head title="Meetings" />
 
     <AppLayout title="Meetings" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Meetings' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Meetings"
                 description="Calls with clients and their minutes. Published minutes never change; the client acknowledges them or says what is wrong, and a correction is the next version."

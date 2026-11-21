@@ -20,7 +20,7 @@ defineProps({
     <Head title="Projects" />
 
     <AppLayout title="Projects" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Projects' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader title="Projects" description="Everything in delivery, and how far along it is.">
                 <template #actions>
                     <UiButton href="/admin/projects/new" size="sm">

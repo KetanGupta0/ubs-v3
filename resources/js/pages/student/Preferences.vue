@@ -37,7 +37,7 @@ const recorded = [
     <Head title="Reminders" />
 
     <AppLayout title="Reminders" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Reminders' }]">
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader title="Reminders and your record" description="What we remind you about, and what we keep about your studying." />
 
             <form @submit.prevent="save">

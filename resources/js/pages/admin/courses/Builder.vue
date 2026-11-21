@@ -239,7 +239,7 @@ function lockSummary(lesson) {
             { label: course.title },
         ]"
     >
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 :title="course.title"
                 description="Modules hold lessons, lessons hold content and files. A student sees them in this order."

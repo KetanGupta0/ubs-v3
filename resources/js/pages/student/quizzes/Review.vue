@@ -63,7 +63,7 @@ function key(answer) {
             { label: `Attempt ${attempt.number}` },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h1 class="text-xl font-semibold sm:text-2xl">{{ quiz.title }}</h1>

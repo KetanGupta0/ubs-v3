@@ -37,7 +37,7 @@ function setEnquiries(on) {
     <Head title="Announcements" />
 
     <AppLayout title="Announcements" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Announcements' }]">
-        <div class="mx-auto max-w-7xl space-y-5">
+        <div class="space-y-5">
             <PageHeader title="Announcements and greetings" :description="`Everything sent by email to students, clients and enquiry senders. ${budget.promotionalLeft} more can go today: they stop once the day's mail leaves only the ${budget.reserve} kept for sign in codes, receipts and reminders, and the rest waits for tomorrow.`">
                 <template #actions>
                     <UiButton href="/admin/mail/occasions" variant="ghost" size="sm">

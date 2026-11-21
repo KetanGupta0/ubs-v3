@@ -60,7 +60,7 @@ const actionError = (prefix) => Object.entries(form.errors).find(([key]) => key.
     <Head :title="meeting.title" />
 
     <AppLayout :title="meeting.title" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Meetings', href: '/admin/meetings' }, { label: meeting.title }]">
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="meeting.title" :description="`${meeting.client}${meeting.project ? ` · ${meeting.project.name}` : ''}`">
                 <template #actions>
                     <UiButton href="/admin/meetings" variant="ghost" size="sm">

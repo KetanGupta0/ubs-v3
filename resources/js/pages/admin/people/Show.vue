@@ -111,7 +111,7 @@ function resend() {
             { label: person.name },
         ]"
     >
-        <div class="mx-auto max-w-5xl">
+        <div>
             <PageHeader :title="person.name" :description="person.email">
                 <template #actions>
                     <UiButton :href="`/admin/${role}s`" variant="ghost" size="sm">

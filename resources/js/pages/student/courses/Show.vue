@@ -55,7 +55,7 @@ const lockIcons = {
             { label: course.title },
         ]"
     >
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="course.title" :description="course.tagline">
                 <template #actions>
                     <UiButton :href="`/student/courses/${course.id}/materials`" variant="secondary" size="sm">

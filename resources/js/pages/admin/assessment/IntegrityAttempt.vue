@@ -75,7 +75,7 @@ const shown = (value) => (Array.isArray(value) ? value.join(', ') : value ?? '�
             { label: attempt.student },
         ]"
     >
-        <div class="mx-auto max-w-5xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 :title="`${attempt.student}, attempt ${attempt.number}`"
                 :description="`${quiz.title} · ${attempt.score} of ${attempt.totalMarks} (${Math.round(attempt.percent)}%) · started ${attempt.startedAt}, took ${attempt.took}${attempt.proctored ? ' · proctored' : ''}`"

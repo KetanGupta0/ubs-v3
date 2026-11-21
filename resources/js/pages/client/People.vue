@@ -59,7 +59,7 @@ const roleOptions = props.roles.map((role) => ({ value: role.value, label: role.
     <Head title="People" />
 
     <AppLayout title="People" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'People' }]">
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 :title="`People in ${organisation}`"
                 description="Everybody here sees the organisation's projects, documents and invoices. What they may do depends on their role."

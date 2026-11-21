@@ -104,7 +104,7 @@ function remove(quiz) {
             { label: 'Quizzes' },
         ]"
     >
-        <div class="mx-auto max-w-4xl space-y-5">
+        <div class="space-y-5">
             <PageHeader
                 title="Quizzes"
                 :description="`Assessment for ${course.title}. Timing is kept on the server, so a closed laptop does not buy anybody extra minutes.`"

@@ -29,7 +29,7 @@ const statusTones = {
     <Head title="Enquiries" />
 
     <AppLayout title="Enquiries" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Enquiries' }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 title="Enquiries"
                 description="Everything that came through a form on the site, with the page it came from."

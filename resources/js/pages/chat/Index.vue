@@ -279,7 +279,7 @@ const othersHere = computed(() =>
 
     <AppLayout title="Chat" :breadcrumbs="[{ label: 'Chat' }]">
         <div
-            class="mx-auto flex h-[calc(100dvh-10rem)] max-w-6xl overflow-hidden rounded-[var(--radius-card)] border"
+            class="flex h-[calc(100dvh-10rem)] overflow-hidden rounded-[var(--radius-card)] border"
             style="border-color: var(--border-subtle); background: var(--surface)"
         >
             <!-- ------------------------------------------------ the list -->

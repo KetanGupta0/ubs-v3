@@ -72,7 +72,7 @@ function save() {
             { label: 'Register' },
         ]"
     >
-        <div class="mx-auto max-w-3xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="session.title" :description="`${session.at} · ${session.duration} min · ${batch.name}`">
                 <template #actions>
                     <UiButton :href="`/admin/batches/${batch.id}/run`" variant="ghost" size="sm">

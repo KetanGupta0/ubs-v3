@@ -65,7 +65,7 @@ function destroy() {
             { label: isEdit ? 'Edit' : 'New' },
         ]"
     >
-        <form class="mx-auto max-w-4xl space-y-5" @submit.prevent="submit">
+        <form class="space-y-5" @submit.prevent="submit">
             <PageHeader :title="title">
                 <template #actions>
                     <UiButton href="/admin/contracts" variant="ghost" size="sm">

@@ -15,7 +15,7 @@ defineProps({ table: { type: Object, required: true } });
     <Head title="Legal documents" />
 
     <AppLayout title="Legal documents" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: 'Legal documents' }]">
-        <div class="mx-auto max-w-6xl">
+        <div>
             <PageHeader
                 title="Legal documents"
                 description="The privacy policy, terms and refund policy on the public site. A change is a new version with a note on what changed; every published version stays readable, because people agreed to it."

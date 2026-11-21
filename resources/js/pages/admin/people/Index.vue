@@ -82,7 +82,7 @@ const sendCount = computed(() => (sendForm.scope === 'selected' ? selected.value
     <Head :title="plural" />
 
     <AppLayout :title="plural" :breadcrumbs="[{ label: 'Admin', href: '/admin' }, { label: plural }]">
-        <div class="mx-auto max-w-7xl">
+        <div>
             <PageHeader
                 :title="plural"
                 :description="selfRegisterable

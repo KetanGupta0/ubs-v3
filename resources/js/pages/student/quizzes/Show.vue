@@ -77,7 +77,7 @@ async function start() {
             { label: 'Quiz' },
         ]"
     >
-        <div class="mx-auto max-w-2xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="quiz.title">
                 <template #actions>
                     <UiButton :href="`/student/courses/${quiz.courseId}`" variant="ghost" size="sm">

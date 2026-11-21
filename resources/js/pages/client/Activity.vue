@@ -24,7 +24,7 @@ defineProps({
     <Head title="Who did what" />
 
     <AppLayout title="Who did what" :breadcrumbs="[{ label: 'Overview', href: '/client' }, { label: 'People', href: '/client/people' }, { label: 'Activity' }]">
-        <div class="mx-auto max-w-7xl space-y-5">
+        <div class="space-y-5">
             <PageHeader title="Who did what" description="What people in your organisation have done here, with where they were. If something was done in somebody's name that they do not remember, tell us at once.">
                 <template #actions>
                     <UiButton href="/client/people" variant="ghost" size="sm">

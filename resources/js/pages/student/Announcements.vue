@@ -17,7 +17,7 @@ defineProps({
     <Head title="Announcements" />
 
     <AppLayout title="Announcements" :breadcrumbs="[{ label: 'Dashboard', href: '/student' }, { label: 'Announcements' }]">
-        <div class="mx-auto max-w-3xl space-y-4">
+        <div class="space-y-4">
             <PageHeader
                 title="Announcements"
                 description="Notices from your trainers, newest first. Pinned ones stay at the top."

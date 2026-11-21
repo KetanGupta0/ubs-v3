@@ -150,7 +150,7 @@ function simulate(outcome) {
             { label: payment.reference },
         ]"
     >
-        <div class="mx-auto max-w-2xl space-y-5">
+        <div class="space-y-5">
             <PageHeader :title="payment.title" :description="payment.description">
                 <template #actions>
                     <UiButton :href="payment.orderId ? `/client/orders/${payment.orderId}` : '/client/payments'" variant="ghost" size="sm">
