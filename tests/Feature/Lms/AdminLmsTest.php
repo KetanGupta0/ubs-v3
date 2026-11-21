@@ -7,10 +7,12 @@ use App\Models\Course;
 use App\Models\CourseModule;
 use App\Models\Enrollment;
 use App\Models\Lesson;
+use App\Models\Material;
 use App\Models\Permission;
 use App\Models\Quiz;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
+use Illuminate\Support\Facades\Storage;
 
 beforeEach(function () {
     $this->seed(PermissionSeeder::class);
@@ -200,4 +202,24 @@ it('does not let a trainer issue a certificate without the permission for it', f
     $this->actingAs($trainer)
         ->post("/admin/enrolments/{$enrolment->id}/certificate", ['force' => true])
         ->assertForbidden();
+});
+
+it('shows files for the whole course on the structure page, with no module needed', function () {
+    Storage::fake('private');
+    Storage::disk('private')->put('courses/handout.pdf', '%PDF-1.4 test');
+
+    $everybody = Material::query()->create(['course_id' => $this->course->id, 'title' => 'Syllabus', 'path' => 'courses/handout.pdf', 'mime' => 'application/pdf', 'size' => 13]);
+    Material::query()->create(['course_id' => $this->course->id, 'batch_id' => $this->batch->id, 'title' => 'Batch notes', 'external_url' => 'https://example.com/notes']);
+
+    $this->actingAs($this->owner)->get("/admin/courses/{$this->course->id}/builder")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->has('modules', 0)
+            ->has('courseMaterials', 2)
+            ->where('courseMaterials.0.title', 'Syllabus')
+            ->where('courseMaterials.0.batch', null)
+            ->where('courseMaterials.1.batch', 'September batch')
+            ->where('courseMaterials.1.isLink', true));
+
+    $this->actingAs($this->owner)->get("/admin/courses/{$this->course->id}/materials/{$everybody->id}")->assertOk();
 });

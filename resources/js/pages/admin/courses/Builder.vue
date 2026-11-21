@@ -31,6 +31,8 @@ import UiEmptyState from '@/components/UI/UiEmptyState.vue';
 const props = defineProps({
     course: { type: Object, required: true },
     modules: { type: Array, default: () => [] },
+    /** Files for the whole course, not one lesson (all of v2's are). */
+    courseMaterials: { type: Array, default: () => [] },
     allLessons: { type: Array, default: () => [] },
     quizzes: { type: Array, default: () => [] },
     batches: { type: Array, default: () => [] },
@@ -274,6 +276,66 @@ function lockSummary(lesson) {
                     <UiButton @click="openModule()">Add the first module</UiButton>
                 </template>
             </UiEmptyState>
+
+            <!-- ---------------------------------------- course level files -->
+            <UiCard padding="p-0">
+                <template #header>
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                            <h2 class="text-sm font-semibold" style="color: var(--text-strong)">Files for the whole course</h2>
+                            <p class="text-xs" style="color: var(--text-muted)">
+                                Not tied to a lesson. Students find them under Materials on the course; one set for a batch is seen by that batch only.
+                            </p>
+                        </div>
+                        <UiButton variant="secondary" size="sm" @click="openMaterial()">
+                            <template #leading><Plus class="h-3.5 w-3.5" /></template>
+                            Add a file
+                        </UiButton>
+                    </div>
+                </template>
+
+                <ul v-if="courseMaterials.length" class="divide-y" style="border-color: var(--border-subtle)">
+                    <li
+                        v-for="material in courseMaterials"
+                        :key="material.id"
+                        class="flex flex-wrap items-center gap-2 px-4 py-2.5 text-sm sm:px-5"
+                    >
+                        <component :is="material.isLink ? Link2 : Paperclip" class="h-3.5 w-3.5 shrink-0" style="color: var(--text-muted)" />
+                        <span class="min-w-0 flex-1 truncate" style="color: var(--text-strong)">{{ material.title }}</span>
+                        <span class="text-xs" style="color: var(--text-muted)">
+                            {{ material.kind }}<span v-if="material.size"> · {{ material.size }}</span>
+                            · {{ material.batch ? `${material.batch} only` : 'everybody on the course' }}
+                        </span>
+                        <a
+                            v-if="material.isLink"
+                            :href="material.url"
+                            target="_blank"
+                            rel="noopener"
+                            class="inline-flex items-center gap-1 text-xs hover:underline"
+                        >
+                            <Link2 class="h-3 w-3" /> open
+                        </a>
+                        <a
+                            v-else
+                            :href="`${base}/materials/${material.id}`"
+                            class="inline-flex items-center gap-1 text-xs hover:underline"
+                        >
+                            <Download class="h-3 w-3" /> download
+                        </a>
+                        <button
+                            type="button"
+                            class="text-xs hover:underline"
+                            style="color: var(--text-danger)"
+                            @click="deleteMaterial(material)"
+                        >
+                            remove
+                        </button>
+                    </li>
+                </ul>
+                <p v-else class="px-4 py-4 text-sm sm:px-5" style="color: var(--text-muted)">
+                    No files for the whole course yet.
+                </p>
+            </UiCard>
 
             <!-- ------------------------------------------------- modules -->
             <UiCard v-for="(module, moduleIndex) in modules" :key="module.id" padding="p-0">

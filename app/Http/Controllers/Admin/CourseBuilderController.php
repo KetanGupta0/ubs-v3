@@ -64,19 +64,20 @@ class CourseBuilderController extends Controller
                     'minQuizScore' => $lesson->min_quiz_score,
                     'isPreview' => $lesson->is_preview,
                     'isPublished' => $lesson->is_published,
-                    'materials' => $lesson->materials->map(fn (Material $material) => [
-                        'id' => $material->id,
-                        'title' => $material->title,
-                        'kind' => $material->kind(),
-                        'size' => $material->sizeLabel(),
-                        'isLink' => $material->isLink(),
-                        'url' => $material->external_url,
-                        'downloadable' => $material->is_downloadable,
-                        // Null is the whole course; otherwise only that batch sees it.
-                        'batch' => $material->batch?->name,
-                    ]),
+                    'materials' => $lesson->materials->map(fn (Material $material) => $this->materialRow($material)),
                 ]),
             ]),
+            // Files for the whole course rather than one lesson: every file
+            // brought from v2 is one. Until November 2026 they could be added
+            // here and were then shown nowhere, so staff could neither see
+            // nor remove what students were being handed.
+            'courseMaterials' => Material::query()
+                ->where('course_id', $course->id)
+                ->whereNull('lesson_id')
+                ->with('batch:id,name')
+                ->orderBy('sort_order')
+                ->get()
+                ->map(fn (Material $material) => $this->materialRow($material)),
             'allLessons' => $course->lessons()
                 ->orderBy('sort_order')
                 ->get(['id', 'title'])
@@ -88,6 +89,22 @@ class CourseBuilderController extends Controller
             'batches' => $course->batches()->get(['id', 'name'])
                 ->map(fn ($batch) => ['value' => $batch->id, 'label' => $batch->name]),
         ]);
+    }
+
+    /** @return array<string, mixed> */
+    protected function materialRow(Material $material): array
+    {
+        return [
+            'id' => $material->id,
+            'title' => $material->title,
+            'kind' => $material->kind(),
+            'size' => $material->sizeLabel(),
+            'isLink' => $material->isLink(),
+            'url' => $material->external_url,
+            'downloadable' => $material->is_downloadable,
+            // Null is the whole course; otherwise only that batch sees it.
+            'batch' => $material->batch?->name,
+        ];
     }
 
     /* ---------------------------------------------------------- modules */
