@@ -38,7 +38,7 @@ const tones = { paid: 'success', pending: 'brand', cancelled: 'neutral', refunde
                 </template>
             </PageHeader>
 
-            <div class="mb-5 grid gap-3 sm:grid-cols-3">
+            <div class="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <StatTile label="Outstanding" :value="totals.pending ?? '₹0.00'" tone="brand" />
                 <StatTile
                     label="Overdue"
@@ -47,6 +47,13 @@ const tones = { paid: 'success', pending: 'brand', cancelled: 'neutral', refunde
                     :hint="`${totals.overdueCount ?? 0} past the due date`"
                 />
                 <StatTile label="Collected this month" :value="totals.collectedThisMonth ?? '₹0.00'" tone="success" />
+                <StatTile
+                    label="Total collected"
+                    :value="totals.collectedTotal ?? '₹0.00'"
+                    tone="success"
+                    :hint="`${totals.collectedCount ?? 0} payments, after refunds`"
+                />
+
             </div>
 
             <DataTable

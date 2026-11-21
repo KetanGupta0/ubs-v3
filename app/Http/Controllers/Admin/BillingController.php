@@ -60,6 +60,15 @@ class BillingController extends Controller
                     ->whereBetween('paid_at', [now()->startOfMonth(), now()->endOfMonth()])
                     ->sum('amount')),
                 'overdueCount' => PaymentRequest::query()->overdue()->count(),
+                // Everything ever received, the old site's payments included,
+                // less what was handed back on payments that still stand.
+                'collectedTotal' => Money::display(
+                    (int) Transaction::query()->successful()->sum('amount')
+                    - (int) Refund::query()->where('status', 'processed')
+                        ->whereIn('transaction_id', Transaction::query()->successful()->select('id'))
+                        ->sum('amount'),
+                ),
+                'collectedCount' => Transaction::query()->successful()->count(),
             ],
         ]);
     }

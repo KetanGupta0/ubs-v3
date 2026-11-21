@@ -246,3 +246,21 @@ it('renders an invoice PDF that carries its own number', function () {
 
     expect($invoice->fresh()->pdf_path)->not->toBeNull();
 });
+
+it('shows the total ever collected on the billing page, after refunds', function () {
+    $paid = fn (int $amount, string $status = 'successful', ?string $at = '2024-03-01') => Transaction::query()->create([
+        'user_id' => $this->client->id, 'gateway' => 'offline', 'amount' => $amount, 'status' => $status, 'paid_at' => $at,
+    ]);
+
+    $paid(500000);
+    $partly = $paid(200000, at: now()->toDateTimeString());
+    $paid(90000, 'failed', null);
+    $partly->refunds()->create(['amount' => 50000, 'reason' => 'Overpaid', 'status' => 'processed', 'processed_at' => now()]);
+    $partly->refunds()->create(['amount' => 10000, 'reason' => 'Asked for', 'status' => 'pending']);
+
+    $this->actingAs($this->owner)->get('/admin/billing')
+        ->assertInertia(fn ($page) => $page
+            ->where('totals.collectedTotal', Money::display(650000))
+            ->where('totals.collectedCount', 2)
+            ->where('totals.collectedThisMonth', Money::display(200000)));
+});
