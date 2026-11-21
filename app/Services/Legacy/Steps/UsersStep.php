@@ -44,6 +44,12 @@ class UsersStep extends Step
         return 'users';
     }
 
+    /** A name carrying a link is a bot's sign up; the importer and the reconciliation both leave it out. */
+    public static function isSpamName(string $name): bool
+    {
+        return preg_match('~https?://|www\.|bit\.ly/|t\.me/~i', $name) === 1;
+    }
+
     public function sourceTables(): array
     {
         return ['users'];
@@ -77,7 +83,7 @@ class UsersStep extends Step
             // (three "clients" on 1 Sep 2026, never verified, never signed in).
             // An account named with a link is a bot's: bringing it would have
             // our mail repeat the link to whatever address it typed.
-            if (preg_match('~https?://|www\.|bit\.ly/|t\.me/~i', (string) $row->name)) {
+            if (self::isSpamName((string) $row->name)) {
                 $report->count('users', 'skipped');
                 $report->warn('users', 'spam_name', $source, 'Its name carries a link, which is a bot\'s sign up; not imported.');
 

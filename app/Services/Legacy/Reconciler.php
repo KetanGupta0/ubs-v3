@@ -58,8 +58,10 @@ class Reconciler
             return;
         }
 
-        $expected = $this->source('users')->get(['id', 'email', 'role'])
-            ->filter(fn ($row) => isset(UsersStep::ROLES[strtolower((string) $row->role)]) && filter_var(Str::lower(trim($row->email)), FILTER_VALIDATE_EMAIL));
+        // A bot's sign up (a link in its name) is deliberately left behind.
+        $expected = $this->source('users')->get(['id', 'email', 'role', 'name'])
+            ->filter(fn ($row) => isset(UsersStep::ROLES[strtolower((string) $row->role)]) && filter_var(Str::lower(trim($row->email)), FILTER_VALIDATE_EMAIL))
+            ->reject(fn ($row) => UsersStep::isSpamName((string) $row->name));
 
         $missing = $expected->filter(fn ($row) => User::query()->withTrashed()->where('email', Str::lower(trim($row->email)))->count() !== 1);
 

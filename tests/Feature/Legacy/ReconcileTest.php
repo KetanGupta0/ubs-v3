@@ -59,3 +59,11 @@ it('fails when a student did not come across', function () {
 
     $this->artisan('legacy:reconcile')->assertFailed();
 });
+
+it('does not count a bot\'s sign up the import left behind as missing', function () {
+    LegacyDatabase::user(['name' => 'Win big https://bit.ly/x', 'role' => 'client', 'email' => 'bot@example.test']);
+    $this->artisan('legacy:import', ['--all-generation-one' => true])->assertSuccessful();
+
+    expect(User::query()->where('email', 'bot@example.test')->exists())->toBeFalse();
+    $this->artisan('legacy:reconcile')->assertSuccessful();
+});
